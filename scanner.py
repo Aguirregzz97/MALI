@@ -1,21 +1,35 @@
 import ply.lex as lex
 
-tokens = (
+reserved = {
+  'class' : 'CLASS',
+  'extends' : 'EXTENDS',
+  'int' : 'INT',
+  'float' : 'FLOAT',
+  'char' : 'CHAR',
+  'bool' : 'BOOL',
+  'public' : 'PUBLIC',
+  'private' : 'PRIVATE',
+  'protected' : 'PROTECTED',
+  'void' : 'VOID',
+  'main' : 'MAIN',
+  'func' : 'FUNCTION',
+  'init' : 'INIT',
+  'return' : 'RETURN',
+  'and' : 'AND',
+  'or' : 'OR',
+  'not' : 'NOT',
+  'true' : 'TRUE',
+  'false' : 'FALSE',
+  'read' : 'READ',
+  'write' : 'WRITE',
+  'if' : 'IF',
+  'elif' : 'ELIF',
+  'else' : 'ELSE',
+  'while' : 'WHILE'
+}
+
+tokens = [
   'ID',
-  'CLASS',
-  'EXTENDS',
-  'INT',
-  'FLOAT',
-  'CHAR',
-  'BOOL',
-  'PUBLIC',
-  'PRIVATE',
-  'PROTECTED',
-  'VOID',
-  'MAIN',
-  'FUNCTION',
-  'INIT',
-  'RETURN',
   'CTE_I',
   'CTE_F',
   'CTE_CH',
@@ -40,34 +54,9 @@ tokens = (
   'MORE_T',
   'DIFFERENT',
   'LESS_ET',
-  'MORE_ET',
-  'AND',
-  'OR',
-  'NOT',
-  'TRUE',
-  'FALSE',
-  'READ',
-  'WRITE',
-  'IF',
-  'ELIF',
-  'ELSE',
-  'WHILE',
-)
+  'MORE_ET'
+] + list(reserved.values())
 
-t_CLASS = r'class'
-t_EXTENDS = r'extends'
-t_INT = r'int'
-t_FLOAT = r'float'
-t_CHAR = r'char'
-t_BOOL = r'bool'
-t_PUBLIC = r'public'
-t_PRIVATE = r'private'
-t_PROTECTED = r't_protected'
-t_VOID = r'void'
-t_MAIN = r'main'
-t_FUNCTION = r'func'
-t_INIT = r'init'
-t_RETURN = r'return'
 t_SC = r';'
 t_COLON = r':'
 t_COMMA = r','
@@ -89,20 +78,13 @@ t_MORE_T = r'>'
 t_DIFFERENT = r'<>'
 t_LESS_ET = r'<='
 t_MORE_ET = r'>='
-t_AND = r'and'
-t_OR = r'or'
-t_NOT = r'not'
-t_TRUE = r'true'
-t_FALSE = r'false'
-t_READ = r'read'
-t_WRITE = r'write'
-t_IF = r'if'
-t_ELIF = r'elif'
-t_ELSE = r'else'
-t_WHILE = r'while'
-t_ID = r'[a-z][a-zA-Z]*'
 t_CTE_STR = r'("[^"]*")'
 t_CTE_CH = r'\'[A-Za-z]\''
+
+def t_ID(t):
+  r'[a-zA-Z_][a-zA-Z_0-9]*'
+  t.type = reserved.get(t.value,'ID')
+  return t
 
 def t_CTE_I(t):
   r'[-+]?[0-9]+'
@@ -123,7 +105,7 @@ def t_comment(t):
   t.lexer.lineno += len(t.value)
   pass
 
-t_ignore = r' \t'
+t_ignore = ' \t'
 
 def t_error(t):
   print("SCAN ERROR ", t)
@@ -131,7 +113,11 @@ def t_error(t):
 
 lexer = lex.lex()
 
+'''------------------
+
 lexer.input('main { }')
 
 for tok in lexer:
   print(tok)
+
+'''
