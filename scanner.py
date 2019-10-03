@@ -1,5 +1,8 @@
+# Scanner implementation for MALI language.
+
 import ply.lex as lex
 
+# Language's reserved keywords.
 reserved = {
   'class' : 'CLASS',
   'extends' : 'EXTENDS',
@@ -28,6 +31,7 @@ reserved = {
   'while' : 'WHILE'
 }
 
+# Declaration of tokens accepted by the language.
 tokens = [
   'ID',
   'CTE_I',
@@ -57,6 +61,7 @@ tokens = [
   'MORE_ET'
 ] + list(reserved.values())
 
+# Regular expressions associated with language's tokens.
 t_SC = r';'
 t_COLON = r':'
 t_COMMA = r','
@@ -83,6 +88,7 @@ t_CTE_CH = r'\'.\''
 
 def t_ID(t):
   r'[a-zA-Z_][a-zA-Z_0-9]*'
+  # Check if matched id is a reserved keyword.
   t.type = reserved.get(t.value,'ID')
   return t
 
@@ -105,19 +111,12 @@ def t_comment(t):
   t.lexer.lineno += len(t.value)
   pass
 
+# Ignore space and tab characters.
 t_ignore = ' \t'
 
 def t_error(t):
   print("SCAN ERROR ", t)
   t.lexer.skip(1)
 
+# Build scanner.
 lexer = lex.lex()
-
-'''------------------
-
-lexer.input('main { }')
-
-for tok in lexer:
-  print(tok)
-
-'''
