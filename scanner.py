@@ -79,7 +79,7 @@ t_DIFFERENT = r'<>'
 t_LESS_ET = r'<='
 t_MORE_ET = r'>='
 t_CTE_STR = r'("[^"]*")'
-t_CTE_CH = r'\'[A-Za-z]\''
+t_CTE_CH = r'\'.\''
 
 def t_ID(t):
   r'[a-zA-Z_][a-zA-Z_0-9]*'
