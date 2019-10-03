@@ -141,20 +141,26 @@ def p_while(p):
   '''while : WHILE LEFT_P expression RIGHT_P block'''
 
 def p_expression(p):
-  '''expression : exp 
-                | exp AND exp 
-                | exp OR exp  
-                | exp MORE_T exp 
-                | exp LESS_T exp 
-                | exp DIFFERENT exp 
-                | exp ISEQUAL exp 
-                | exp LESS_ET exp 
-                | exp MORE_ET exp'''
+  '''expression : exp AND exp
+                | exp'''
 
 def p_exp(p):
-  '''exp : term PLUS exp 
-         | term MINUS exp 
-         | term'''
+  '''exp : xp OR xp
+         | xp'''
+
+def p_xp(p):
+  '''xp : x 
+        | x MORE_T x 
+        | x LESS_T x 
+        | x DIFFERENT x 
+        | x ISEQUAL x 
+        | x LESS_ET x 
+        | x MORE_ET x'''
+
+def p_x(p):
+  '''x : term PLUS x 
+       | term MINUS x 
+       | term'''
 
 def p_term(p):
   '''term : factor TIMES term 
