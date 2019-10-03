@@ -1,5 +1,9 @@
+# Parser implementation for MALI language.
+
 import ply.yacc as yacc
 from scanner import tokens
+
+# Syntax rules.
 
 def p_program(p):
   '''program : classes vars modules main
@@ -45,7 +49,7 @@ def p_access(p):
             | PROTECTED'''
 
 def p_vars(p):
-  '''vars : var vars 
+  '''vars : var vars
           | var'''
 
 def p_var(p):
@@ -198,12 +202,7 @@ def p_empty(p):
 def p_error(p):
   print("Syntax error in input! ", p)
 
-'''
-precedence = (
-  ('left', 'SC'),
-  ('left', 'ID')
-)'''
-
+# Build parser.
 parser = yacc.yacc(start='program')
 
 result = parser.parse('main { }')
