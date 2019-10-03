@@ -162,25 +162,26 @@ def p_term(p):
           | factor'''
 
 def p_factor(p):
-  '''factor : NOT LEFT_P expression RIGHT_P 
-            | LEFT_P expression RIGHT_P 
-            | PLUS cte 
-            | MINUS cte 
-            | cte'''
+  '''factor : not LEFT_P expression RIGHT_P 
+            | not sign cte'''
+
+def p_not(p):
+  '''not : NOT 
+         | empty'''
+
+def p_sign(p):
+  '''sign : PLUS
+         | MINUS'''
 
 def p_cte(p):
-  '''cte : NOT cte_aux
-         | cte_aux'''
-
-def p_cte_aux(p):
-  '''cte_aux : ID 
-             | CTE_I 
-             | CTE_F 
-             | CTE_CH 
-             | TRUE 
-             | FALSE 
-             | arraccess 
-             | call'''
+  '''cte : ID 
+         | CTE_I 
+         | CTE_F 
+         | CTE_CH 
+         | TRUE 
+         | FALSE 
+         | arraccess 
+         | call'''
 
 def p_arraccess(p):
   '''arraccess : ID arr_index'''
