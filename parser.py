@@ -2,30 +2,42 @@ import ply.yacc as yacc
 from scanner import tokens
 
 def p_program(p):
-  '''program : classes vars modules main '''
+  '''program : classes vars modules main
+             | classes modules main
+             | modules main
+             | vars modules main 
+             | classes main
+             | vars main
+             | main'''
 
 def p_classes(p):
   '''classes : class classes 
-             | empty'''
+             | class'''
 
 def p_class(p):
   '''class : CLASS ID classblock 
            | CLASS ID EXTENDS ID classblock'''
 
 def p_classblock(p):
-  '''classblock : LEFT_B attributes init methods RIGHT_B'''
+  '''classblock : LEFT_B attributes init methods RIGHT_B
+                | LEFT_B init methods RIGHT_B 
+                | LEFT_B attributes init RIGHT_B
+                | LEFT_B init RIGHT_B'''
 
 def p_attributes(p):
-  '''attributes : access var attributes 
-                | empty'''
+  '''attributes : access var attributes
+                | access var'''
 
 def p_init(p):
-  '''init : INIT ID LEFT_P param RIGHT_P proc_block 
-          | INIT ID LEFT_P param RIGHT_P COLON ID LEFT_P param RIGHT_P proc_block'''
+  '''init : INIT ID LEFT_P param RIGHT_P init_factor'''
+
+def p_init_factor(p):
+  '''init_factor : proc_block
+                 | COLON ID LEFT_P param RIGHT_P proc_block '''
 
 def p_methods(p):
   '''methods : access proc methods 
-             | empty'''
+             | access proc'''
 
 def p_access(p):
   '''access : PUBLIC 
@@ -34,29 +46,36 @@ def p_access(p):
 
 def p_vars(p):
   '''vars : var vars 
-          | empty'''
+          | var'''
 
 def p_var(p):
-  '''var : type ID SC 
-         | type ID arr_index SC'''
+  '''var : type var_aux SC'''
+
+def p_var_aux(p):
+  '''var_aux : ID COMMA var_aux
+             | ID
+             | ID arr_index COMMA var_aux
+             | ID arr_index'''
 
 def p_type(p):
   '''type : INT 
           | FLOAT 
           | CHAR 
-          | BOOL 
+          | BOOL
           | ID'''
 
 def p_modules(p):
   '''modules : FUNCTION proc modules 
-             | empty'''
+             | FUNCTION proc'''
 
 def p_proc(p):
   '''proc : type ID LEFT_P param RIGHT_P proc_block 
           | VOID ID LEFT_P param RIGHT_P proc_block'''
 
 def p_proc_block(p):
-  '''proc_block : LEFT_B vars statements RIGHT_B'''
+  '''proc_block : LEFT_B vars statements RIGHT_B
+                | LEFT_B vars RIGHT_B
+                | block'''
 
 def p_param(p):
   '''param : params 
@@ -70,7 +89,7 @@ def p_params(p):
 
 def p_statements(p):
   '''statements : statement SC statements 
-                | empty'''
+                | statement SC'''
 
 def p_statement(p):
   '''statement : assign 
@@ -120,8 +139,7 @@ def p_while(p):
 def p_expression(p):
   '''expression : exp 
                 | exp AND exp 
-                | exp OR exp 
-                | exp NOT exp 
+                | exp OR exp  
                 | exp MORE_T exp 
                 | exp LESS_T exp 
                 | exp DIFFERENT exp 
@@ -140,20 +158,25 @@ def p_term(p):
           | factor'''
 
 def p_factor(p):
-  '''factor : LEFT_P expression RIGHT_P 
+  '''factor : NOT LEFT_P expression RIGHT_P 
+            | LEFT_P expression RIGHT_P 
             | PLUS cte 
             | MINUS cte 
             | cte'''
 
 def p_cte(p):
-  '''cte : ID 
-         | CTE_I 
-         | CTE_F 
-         | CTE_CH 
-         | TRUE 
-         | FALSE 
-         | arraccess 
-         | call'''
+  '''cte : NOT cte_aux
+         | cte_aux'''
+
+def p_cte_aux(p):
+  '''cte_aux : ID 
+             | CTE_I 
+             | CTE_F 
+             | CTE_CH 
+             | TRUE 
+             | FALSE 
+             | arraccess 
+             | call'''
 
 def p_arraccess(p):
   '''arraccess : ID arr_index'''
@@ -174,6 +197,12 @@ def p_empty(p):
 
 def p_error(p):
   print("Syntax error in input! ", p)
+
+'''
+precedence = (
+  ('left', 'SC'),
+  ('left', 'ID')
+)'''
 
 parser = yacc.yacc(start='program')
 
