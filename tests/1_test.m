@@ -22,16 +22,23 @@ class Perro extends Animal {
   }
 }
 
-int cont;
+var {
+  int cont;
+}
 
 func void printAnimal(Animal a) {
+  var {
+    int x, y;
+  }
+
   write a.nombre;
 }
 
 main {
-  Animal a;
-
-  
+  var {
+    Animal a;
+    int x;
+  }
 
   a = Perro(5);
 

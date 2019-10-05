@@ -49,8 +49,11 @@ def p_access(p):
             | PROTECTED'''
 
 def p_vars(p):
-  '''vars : var vars
-          | var'''
+  '''vars : VAR LEFT_B vars_dec RIGHT_B'''
+
+def p_vars_dec(p):
+  '''vars_dec : var vars_dec
+              | var'''
 
 def p_var(p):
   '''var : type var_aux SC'''
@@ -112,14 +115,14 @@ def p_assign(p):
 def p_call(p):
   '''call : path LEFT_P expression RIGHT_P
           | path LEFT_P RIGHT_P
-          | path'''
+          | path_aux '''
 
 def p_path(p):
-  '''path : ID DOT path_aux'''
+  '''path : ID DOT path
+          | ID'''
 
 def p_path_aux(p):
-  '''path_aux : ID DOT path_aux
-              | ID'''
+  '''path_aux : ID DOT path'''
 
 def p_return(p):
   '''return : RETURN expression'''
