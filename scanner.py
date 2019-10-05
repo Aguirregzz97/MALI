@@ -108,7 +108,7 @@ def t_newline(t):
 
 def t_comment(t):
   r'\#.*\n'
-  t.lexer.lineno += len(t.value)
+  t.lexer.lineno += 1
   pass
 
 # Ignore space and tab characters.
