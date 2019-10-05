@@ -1,8 +1,9 @@
-import glob
+import glob, os
 from parser import parser
 
 
 if __name__ == '__main__':
+    os.chdir('tests')
     for file_name in glob.glob('*_test.m'):
         file = open(file_name, 'r')
         try:
