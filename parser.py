@@ -115,8 +115,11 @@ def p_call(p):
           | path'''
 
 def p_path(p):
-  '''path : ID DOT path
-          | ID'''
+  '''path : ID DOT path_aux'''
+
+def p_path_aux(p):
+  '''path_aux : ID DOT path_aux
+              | ID'''
 
 def p_return(p):
   '''return : RETURN expression'''
@@ -203,7 +206,7 @@ def p_block(p):
            | LEFT_B RIGHT_B'''
 
 def p_main(p):
-  '''main : MAIN block'''
+  '''main : MAIN proc_block'''
 
 def p_empty(p):
   '''empty :'''

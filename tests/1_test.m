@@ -29,11 +29,13 @@ func void printAnimal(Animal a) {
 }
 
 main {
-  cont = 0;
-
   Animal a;
 
+  
+
   a = Perro(5);
+
+  cont = 0;
 
   a.Ladrar;
 }
