@@ -37,7 +37,7 @@ def p_init(p):
 
 def p_init_factor(p):
   '''init_factor : proc_block
-                 | COLON ID LEFT_P param RIGHT_P proc_block '''
+                 | COLON ID LEFT_P expression RIGHT_P proc_block '''
 
 def p_methods(p):
   '''methods : access proc methods
@@ -111,7 +111,8 @@ def p_assign(p):
 
 def p_call(p):
   '''call : path LEFT_P expression RIGHT_P
-          | path LEFT_P RIGHT_P'''
+          | path LEFT_P RIGHT_P
+          | path'''
 
 def p_path(p):
   '''path : ID DOT path
@@ -177,7 +178,8 @@ def p_not(p):
 
 def p_sign(p):
   '''sign : PLUS
-         | MINUS'''
+         | MINUS
+         | empty'''
 
 def p_cte(p):
   '''cte : ID
