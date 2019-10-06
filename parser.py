@@ -2,7 +2,7 @@
 
 import ply.yacc as yacc
 from scanner import tokens
-from semanticTables import *
+from semantic import *
 
 import pprint
 pp = pprint.PrettyPrinter(depth=6)
@@ -229,68 +229,41 @@ def p_error(p):
 
 def p_r_seenClass(p):
   'r_seenClass : '
-
-  class_name = p[-1]
-  if class_name in classes:
-    p_error(f"Repeated class name: {class_name}")
-  else:
-    global current_class
-    current_class = class_name
-    classes[class_name] = new_class_dict()
+  e = seenClass(class_name=p[-1])
+  if e: p_error(e)
 
 
 def p_r_classParent(p):
   'r_classParent : '
+  e = classParent(class_parent=p[-1])
+  if e: p_error(e)
   
-  class_parent = p[-1]
-  if class_parent not in classes:
-    p_error(f"Undeclared class parent: {class_parent}")
-  else:
-    classes[current_class]['parent'] = class_parent
-
 
 def p_r_finishClass(p):
   'r_finishClass : '
-
-  global current_class
-  current_class = 'global'
+  finishClass()
 
 
 def p_r_seenAttr(p):
   'r_seenAttr : '
-
-  global current_function
-  current_function = 'global'
-  classes[current_class][current_function] = new_func_dict(name='attributes')
+  seenAttr()
 
 
 def p_r_seenAccess(p):
   'r_seenAccess : '
-
-  global current_access
-  current_access = p[-1]
+  seenAccess(new_access=p[-1])
 
 
 def p_r_seenType(p):
   'r_seenType : '
-
-  global current_type
-  current_type = p[-1]
+  e = seenType(new_type=p[-1])
+  if e: p_error(e)
 
 
 def p_r_varName(p):
   'r_varName : '
+  e = varName(var_name=p[-1])
 
-  var_name = p[-1]
-  if var_name in classes[current_class][current_function]:
-    p_error(f"Redeclared variable: {var_name}")
-  else:
-    if current_class != 'global':
-      classes[current_class][current_function][var_name] = (
-          new_var_dict(type=current_type, access=current_access))
-    else:
-      classes[current_class][current_function][var_name] = (
-          new_var_dict(type=current_type))
 
 # Build parser.
 parser = yacc.yacc(start='program')
