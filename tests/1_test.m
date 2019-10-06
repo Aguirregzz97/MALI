@@ -3,7 +3,10 @@ class Animal {
     public int edad;
   }
 
-  init Animal(int e) {
+  init(int e) {
+    var {
+      int a;
+    }
     edad = e;
   }
 
@@ -17,7 +20,7 @@ class Perro extends Animal {
     public char nombre, raza;
   }
 
-  init Perro(int e, char n, char r) : Animal(e) {
+  init(int e, char n, char r) : Animal(e) {
     nombre = n;
     raza = r;
   }
@@ -39,10 +42,15 @@ func void printAnimal(Animal a) {
   write a.nombre;
 }
 
+func void printAlgo() {
+
+  write "Algo";
+}
+
 main {
   var {
     Animal a;
-    int x;
+    int x[5][10];
   }
 
   a = Perro(5);
