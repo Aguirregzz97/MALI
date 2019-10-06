@@ -263,7 +263,7 @@ def p_r_seenAttr(p):
 
   global current_function
   current_function = 'global'
-  classes[current_class][current_function] = new_methods_dict()
+  classes[current_class][current_function] = new_func_dict()
 
 
 def p_r_seenAccess(p):
@@ -288,9 +288,11 @@ def p_r_varName(p):
     p_error(f"Redeclared variable: {var_name}")
   else:
     if in_class:
-      classes[current_class][current_function][var_name] = new_attr_dict(type=current_type, access=current_access)
+      classes[current_class][current_function][var_name] = (
+          new_var_dict(type=current_type, access=current_access))
     else:
-      classes[current_class][current_function][var_name] = new_attr_dict(type=current_type)
+      classes[current_class][current_function][var_name] = (
+          new_var_dict(type=current_type))
 
 # Build parser.
 parser = yacc.yacc(start='program')
