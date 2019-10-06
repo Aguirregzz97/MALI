@@ -62,10 +62,15 @@ def p_var(p):
   '''var : type var_aux SC'''
 
 def p_var_aux(p):
-  '''var_aux : ID COMMA var_aux
-             | ID
-             | ID arr_index COMMA var_aux
-             | ID arr_index'''
+  '''var_aux : ID var_aux_f'''
+
+def p_var_aux_f(p):
+  '''var_aux_f : arr_index var_aux_ff
+               | var_aux_ff'''
+
+def p_var_aux_ff(p):
+  '''var_aux_ff : COMMA var_aux
+                | empty'''
 
 def p_type(p):
   '''type : INT
@@ -92,10 +97,12 @@ def p_param(p):
            | empty'''
 
 def p_params(p):
-  '''params : type ID COMMA params
-            | type ID
-            | type ID arr_index COMMA params
-            | type ID arr_index'''
+  '''params : type ID params_f
+            | type ID arr_index params_f'''
+
+def p_params_f(p):
+  '''params_f : COMMA params
+              | empty'''
 
 def p_statements(p):
   '''statements : statement SC statements
@@ -110,10 +117,12 @@ def p_statement(p):
                | while'''
 
 def p_assign(p):
-  '''assign : ID arr_index EQUAL expression
-            | ID arr_index EQUAL READ
-            | ID EQUAL expression
-            | ID EQUAL READ'''
+  '''assign : ID arr_index assign_f
+            | ID EQUAL assign_f'''
+
+def p_assign_f(p):
+  '''assign_f : expression
+              | READ'''
 
 def p_call(p):
   '''call : path LEFT_P expression RIGHT_P
@@ -143,9 +152,12 @@ def p_if(p):
   '''if : IF condition'''
 
 def p_condition(p):
-  '''condition : LEFT_P expression RIGHT_P block ELIF condition
-               | LEFT_P expression RIGHT_P block ELSE block
-               | LEFT_P expression RIGHT_P block'''
+  '''condition : LEFT_P expression RIGHT_P block condition_f'''
+
+def p_condition_f(p):
+  '''condition_f  : ELIF condition
+                  | ELSE block
+                  | empty'''
 
 def p_while(p):
   '''while : WHILE LEFT_P expression RIGHT_P block'''
