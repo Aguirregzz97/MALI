@@ -1,4 +1,4 @@
-from parser import parser
+from parser import *
 import sys
 
 if __name__ == '__main__':
@@ -7,3 +7,6 @@ if __name__ == '__main__':
         raise SyntaxError('mali needs 1 file.')
     file = open(sys.argv[1], 'r')
     parser.parse(file.read())
+    pp.pprint(classes)
+
+

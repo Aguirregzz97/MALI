@@ -2,6 +2,10 @@
 
 import ply.yacc as yacc
 from scanner import tokens
+from semanticTables import *
+
+import pprint
+pp = pprint.PrettyPrinter(depth=6)
 
 # Syntax rules.
 
@@ -19,8 +23,9 @@ def p_classes(p):
              | class'''
 
 def p_class(p):
-  '''class : CLASS ID classblock
-           | CLASS ID EXTENDS ID classblock'''
+  '''class : CLASS ID r_seenClass classblock r_finishClass
+           | CLASS ID r_seenClass EXTENDS ID r_classParent classblock \
+             r_finishClass'''
 
 def p_classblock(p):
   '''classblock : LEFT_B attributes init methods RIGHT_B
@@ -29,7 +34,7 @@ def p_classblock(p):
                 | LEFT_B init RIGHT_B'''
 
 def p_attributes(p):
-  '''attributes : ATTR LEFT_B attr_dec RIGHT_B'''
+  '''attributes : ATTR r_seenAttr LEFT_B attr_dec RIGHT_B'''
 
 def p_attr_dec(p):
   '''attr_dec : access var attr_dec
@@ -47,9 +52,9 @@ def p_methods(p):
              | access proc'''
 
 def p_access(p):
-  '''access : PUBLIC
-            | PRIVATE
-            | PROTECTED'''
+  '''access : PUBLIC r_seenAccess
+            | PRIVATE r_seenAccess
+            | PROTECTED r_seenAccess'''
 
 def p_vars(p):
   '''vars : VAR LEFT_B vars_dec RIGHT_B'''
@@ -59,18 +64,16 @@ def p_vars_dec(p):
               | var'''
 
 def p_var(p):
-  '''var : type var_aux SC'''
+  '''var : type r_seenType var_aux SC'''
 
 def p_var_aux(p):
-  '''var_aux : ID var_aux_f'''
+  '''var_aux : ID r_varName var_aux_f'''
 
-def p_var_aux_f(p):
-  '''var_aux_f : arr_index var_aux_ff
-               | var_aux_ff'''
-
-def p_var_aux_ff(p):
-  '''var_aux_ff : COMMA var_aux
-                | empty'''
+def p_var_aux(p):
+  '''var_aux : ID COMMA var_aux
+             | ID
+             | ID arr_index COMMA var_aux
+             | ID arr_index'''
 
 def p_type(p):
   '''type : INT
@@ -97,12 +100,10 @@ def p_param(p):
            | empty'''
 
 def p_params(p):
-  '''params : type ID params_f
-            | type ID arr_index params_f'''
-
-def p_params_f(p):
-  '''params_f : COMMA params
-              | empty'''
+  '''params : type ID COMMA params 
+            | type ID 
+            | type ID arr_index COMMA params 
+            | type ID arr_index''' 
 
 def p_statements(p):
   '''statements : statement SC statements
@@ -117,12 +118,10 @@ def p_statement(p):
                | while'''
 
 def p_assign(p):
-  '''assign : ID arr_index assign_f
-            | ID EQUAL assign_f'''
-
-def p_assign_f(p):
-  '''assign_f : expression
-              | READ'''
+  '''assign : ID arr_index EQUAL expression 
+            | ID arr_index EQUAL READ 
+            | ID EQUAL expression 
+            | ID EQUAL READ'''
 
 def p_call(p):
   '''call : path LEFT_P expression RIGHT_P
@@ -152,13 +151,10 @@ def p_if(p):
   '''if : IF condition'''
 
 def p_condition(p):
-  '''condition : LEFT_P expression RIGHT_P block condition_f'''
-
-def p_condition_f(p):
-  '''condition_f  : ELIF condition
-                  | ELSE block
-                  | empty'''
-
+  '''condition : LEFT_P expression RIGHT_P block ELIF condition 
+               | LEFT_P expression RIGHT_P block ELSE block 
+               | LEFT_P expression RIGHT_P block''' 
+               
 def p_while(p):
   '''while : WHILE LEFT_P expression RIGHT_P block'''
 
@@ -230,7 +226,74 @@ def p_empty(p):
   '''empty :'''
 
 def p_error(p):
-  print("Syntax error in input! ", p)
+  print("Error! ", p)
+
+# Semantic rules
+
+def p_r_seenClass(p):
+  'r_seenClass : '
+
+  class_name = p[-1]
+  if class_name in classes:
+    p_error(f"Repeated class name: {class_name}")
+  else:
+    global current_class, in_class
+    in_class = True
+    current_class = class_name
+    classes[class_name] = new_class_dict()
+
+
+def p_r_classParent(p):
+  'r_classParent : '
+  
+  class_parent = p[-1]
+  if class_parent not in classes:
+    p_error(f"Undeclared class parent: {class_parent}")
+  else:
+    classes[current_class]['parent'] = class_parent
+
+
+def p_r_finishClass(p):
+  'r_finishClass : '
+
+  global current_class, in_class
+  current_class = 'global'
+  in_class = False
+
+
+def p_r_seenAttr(p):
+  'r_seenAttr : '
+
+  global current_function
+  current_function = 'global'
+  classes[current_class][current_function] = new_methods_dict()
+
+
+def p_r_seenAccess(p):
+  'r_seenAccess : '
+
+  global current_access
+  current_access = p[-1]
+
+
+def p_r_seenType(p):
+  'r_seenType : '
+
+  global current_type
+  current_type = p[-1]
+
+
+def p_r_varName(p):
+  'r_varName : '
+
+  var_name = p[-1]
+  if var_name in classes[current_class][current_function]:
+    p_error(f"Redeclared variable: {var_name}")
+  else:
+    if in_class:
+      classes[current_class][current_function][var_name] = new_attr_dict(access = current_access)
+    else:
+      classes[current_class][current_function][var_name] = new_attr_dict()
 
 # Build parser.
 parser = yacc.yacc(start='program')
