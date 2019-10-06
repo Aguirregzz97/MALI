@@ -67,13 +67,10 @@ def p_var(p):
   '''var : type r_seenType var_aux SC'''
 
 def p_var_aux(p):
-  '''var_aux : ID r_varName var_aux_f'''
-
-def p_var_aux(p):
-  '''var_aux : ID COMMA var_aux
-             | ID
-             | ID arr_index COMMA var_aux
-             | ID arr_index'''
+  '''var_aux : ID r_varName COMMA var_aux
+             | ID r_varName
+             | ID r_varName arr_index COMMA var_aux
+             | ID r_varName arr_index'''
 
 def p_type(p):
   '''type : INT
@@ -154,7 +151,7 @@ def p_condition(p):
   '''condition : LEFT_P expression RIGHT_P block ELIF condition 
                | LEFT_P expression RIGHT_P block ELSE block 
                | LEFT_P expression RIGHT_P block''' 
-               
+
 def p_while(p):
   '''while : WHILE LEFT_P expression RIGHT_P block'''
 
@@ -238,8 +235,8 @@ def p_r_seenClass(p):
     p_error(f"Repeated class name: {class_name}")
   else:
     global current_class, in_class
-    in_class = True
     current_class = class_name
+    in_class = True
     classes[class_name] = new_class_dict()
 
 
@@ -291,9 +288,9 @@ def p_r_varName(p):
     p_error(f"Redeclared variable: {var_name}")
   else:
     if in_class:
-      classes[current_class][current_function][var_name] = new_attr_dict(access = current_access)
+      classes[current_class][current_function][var_name] = new_attr_dict(type=current_type, access=current_access)
     else:
-      classes[current_class][current_function][var_name] = new_attr_dict()
+      classes[current_class][current_function][var_name] = new_attr_dict(type=current_type)
 
 # Build parser.
 parser = yacc.yacc(start='program')
