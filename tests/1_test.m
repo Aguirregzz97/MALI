@@ -1,5 +1,7 @@
 class Animal {
-  public int edad;
+  attr {
+    public int edad;
+  }
 
   init Animal(int e) {
     edad = e;
@@ -11,10 +13,13 @@ class Animal {
 }
 
 class Perro extends Animal {
-  public char nombre, raza;
+  attr {
+    public char nombre, raza;
+  }
 
-  init Perro(int e) : Animal(e) {
-
+  init Perro(int e, char n, char r) : Animal(e) {
+    nombre = n;
+    raza = r;
   }
 
   public void Ladrar() {

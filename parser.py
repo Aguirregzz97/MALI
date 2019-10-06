@@ -29,8 +29,11 @@ def p_classblock(p):
                 | LEFT_B init RIGHT_B'''
 
 def p_attributes(p):
-  '''attributes : access var attributes
-                | access var'''
+  '''attributes : ATTR LEFT_B attr_dec RIGHT_B'''
+
+def p_attr_dec(p):
+  '''attr_dec : access var attr_dec
+              | access var'''
 
 def p_init(p):
   '''init : INIT ID LEFT_P param RIGHT_P init_factor'''

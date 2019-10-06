@@ -29,7 +29,8 @@ reserved = {
   'elif' : 'ELIF',
   'else' : 'ELSE',
   'while' : 'WHILE',
-  'var' : 'VAR'
+  'var' : 'VAR',
+  'attr' : 'ATTR'
 }
 
 # Declaration of tokens accepted by the language.
