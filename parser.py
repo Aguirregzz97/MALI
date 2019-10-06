@@ -64,7 +64,7 @@ def p_vars_dec(p):
               | var'''
 
 def p_var(p):
-  '''var : type r_seenType var_aux SC'''
+  '''var : type var_aux SC'''
 
 def p_var_aux(p):
   '''var_aux : ID r_varName COMMA var_aux
@@ -73,11 +73,11 @@ def p_var_aux(p):
              | ID r_varName arr_index'''
 
 def p_type(p):
-  '''type : INT
-          | FLOAT
-          | CHAR
-          | BOOL
-          | ID'''
+  '''type : INT r_seenType 
+          | FLOAT r_seenType 
+          | CHAR r_seenType 
+          | BOOL r_seenType 
+          | ID r_seenType '''
 
 def p_modules(p):
   '''modules : FUNCTION proc modules
@@ -234,9 +234,8 @@ def p_r_seenClass(p):
   if class_name in classes:
     p_error(f"Repeated class name: {class_name}")
   else:
-    global current_class, in_class
+    global current_class
     current_class = class_name
-    in_class = True
     classes[class_name] = new_class_dict()
 
 
@@ -253,9 +252,8 @@ def p_r_classParent(p):
 def p_r_finishClass(p):
   'r_finishClass : '
 
-  global current_class, in_class
+  global current_class
   current_class = 'global'
-  in_class = False
 
 
 def p_r_seenAttr(p):
@@ -263,7 +261,7 @@ def p_r_seenAttr(p):
 
   global current_function
   current_function = 'global'
-  classes[current_class][current_function] = new_func_dict()
+  classes[current_class][current_function] = new_func_dict(name='attributes')
 
 
 def p_r_seenAccess(p):
@@ -287,7 +285,7 @@ def p_r_varName(p):
   if var_name in classes[current_class][current_function]:
     p_error(f"Redeclared variable: {var_name}")
   else:
-    if in_class:
+    if current_class != 'global':
       classes[current_class][current_function][var_name] = (
           new_var_dict(type=current_type, access=current_access))
     else:

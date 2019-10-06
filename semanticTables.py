@@ -3,7 +3,6 @@
 current_class = 'global'
 current_function = 'global'
 current_access = 'public'
-in_class = False
 
 var_dict = {'id': None, 'access': None}
 function_dict = {'type': None, 'global': var_dict}
@@ -16,12 +15,12 @@ classes = {'global': class_dict}
 # TODO: modificar para que solo se incluya access en el diccionario si se 
 # especifica.
 def new_var_dict(id=None, type=None, access=None):
-  return {'id': id, 'type': None, 'access': access}
+  return {'id': id, 'type': type, 'access': access}
 
 # TODO: modificar para que solo se incluya access en el diccionario si se 
 # especifica.
-def new_func_dict(type=None, access=None):
-  return {'type': type, 'global': {}, 'access': access}
+def new_func_dict(name='global', type=None, access=None):
+  return {'type': type, name: {}, 'access': access}
 
 
 def new_class_dict(parent=None):
