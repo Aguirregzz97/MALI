@@ -21,20 +21,18 @@ def p_program(p):
              | vars main
              | main'''
   add_to_tree('program', p)
-  pp.pprint(p[0])
+  #pp.pprint(p[0])
 
 def p_classes(p):
   '''classes : class classes
              | class'''
   add_to_tree('classes', p)
 
-
 def p_class(p):
   '''class : CLASS ID r_seenClass classblock r_finishClass
            | CLASS ID r_seenClass EXTENDS ID r_classParent classblock \
              r_finishClass'''
   add_to_tree('class', p)
-
 
 def p_classblock(p):
   '''classblock : LEFT_B attributes init methods RIGHT_B
@@ -43,29 +41,24 @@ def p_classblock(p):
                 | LEFT_B init RIGHT_B'''
   add_to_tree('classblock', p)
 
-
 def p_attributes(p):
   '''attributes : ATTR r_seenAttr LEFT_B attr_dec RIGHT_B'''
   add_to_tree('attributes', p)
-
 
 def p_attr_dec(p):
   '''attr_dec : access var attr_dec
               | access var'''
   add_to_tree('attr_dec', p)
 
-
 def p_init(p):
   '''init : INIT r_seenInit LEFT_P param RIGHT_P init_factor'''
   add_to_tree('init', p)
-
 
 def p_init_factor(p):
   '''init_factor : proc_block
                  | COLON ID r_callParent LEFT_P expression RIGHT_P \
                    proc_block '''
   add_to_tree('init_factor', p)
-
 
 def p_methods(p):
   '''methods : access proc methods
@@ -106,14 +99,14 @@ def p_type(p):
           | ID r_seenType '''
   add_to_tree('type', p)
 
-def p_modules(p):
+def p_1(p):
   '''modules : FUNCTION proc modules
              | FUNCTION proc'''
   add_to_tree('modules', p)
 
 def p_proc(p):
-  '''proc : type ID LEFT_P param RIGHT_P proc_block
-          | VOID ID LEFT_P param RIGHT_P proc_block'''
+  '''proc : type r_seenType ID r_funcName LEFT_P param RIGHT_P proc_block
+          | VOID r_seenType ID r_funcName LEFT_P param RIGHT_P proc_block'''
   add_to_tree('proc', p)
 
 def p_proc_block(p):
@@ -346,6 +339,13 @@ def p_r_callParent(p):
   'r_callParent : '
   e = callParent(parent=p[-1])
   if e: print(e)
+
+
+def p_r_funcName(p):
+  'r_funcName : '
+  e = seenFunc(new_function=p[-1], recordType=True)
+  if e: print(e)
+
 
 # Build parser.
 parser = yacc.yacc(start='program')

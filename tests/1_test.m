@@ -26,6 +26,9 @@ class Perro extends Animal {
   }
 
   public void Ladrar() {
+    var {
+      int z;
+    }
     write "Woof Woof";
   }
 }

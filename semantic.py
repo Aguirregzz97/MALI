@@ -3,8 +3,8 @@
 current_class = 'global'
 current_function = 'global'
 current_access = 'public'
+current_type = None
 is_param = False
-current_id = None
 current_x = None
 current_y = None
 
@@ -70,14 +70,18 @@ def finishClass():
   current_function = 'global'
 
 
-def seenFunc(new_function):
+def seenFunc(new_function, recordType=False):
   if new_function in classes[current_class]:
     return f"Redeclared function {new_function}"
   else:
     global current_function
     print(new_function)
     current_function = new_function
-    classes[current_class][current_function] = new_func_dict()
+    if recordType:
+      classes[current_class][current_function] = new_func_dict(
+          type=current_type)
+    else:
+      classes[current_class][current_function] = new_func_dict()
 
 
 def seenAccess(new_access):
@@ -99,6 +103,7 @@ def exists_variable(var_name):
   return var_name in classes[current_class][current_function]['params'] or (
       var_name in classes[current_class][current_function])
 
+
 def varName(var_name):
   print(classes[current_class])
   if exists_variable(var_name):
@@ -114,9 +119,11 @@ def varName(var_name):
       classes[current_class][current_function][var_name] = (
           new_var_dict(type=current_type))
 
+
 def setParam(val):
   global is_param
   is_param = val
+
 
 def callParent(parent):
   if parent is not classes[current_class]['parent']:
