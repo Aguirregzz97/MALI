@@ -30,19 +30,6 @@ def new_class_dict(parent=None):
   return class_dict
 
 
-'''
-def get_attr_table(class_name, method_name):
-  return classes[class_name][method_name]
-
-
-def get_methods_table(class_name):
-  return classes[class_name]
-
-
-def set_parent(class_name, parent):
-  classes[class_name]
-'''
-
 classes = {'global': new_class_dict()}
 classes['global']['attributes'] = new_func_dict()
 types = {"int", "float", "char", "bool", "void"}
