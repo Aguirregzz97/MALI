@@ -105,7 +105,7 @@ def p_1(p):
   add_to_tree('modules', p)
 
 def p_proc(p):
-  '''proc : type r_seenType ID r_funcName LEFT_P param RIGHT_P proc_block
+  '''proc : type ID r_funcName LEFT_P param RIGHT_P proc_block
           | VOID r_seenType ID r_funcName LEFT_P param RIGHT_P proc_block'''
   add_to_tree('proc', p)
 
@@ -121,10 +121,10 @@ def p_param(p):
   add_to_tree('param', p)
 
 def p_params(p):
-  '''params : type r_seenType ID r_varName COMMA params
-            | type r_seenType ID r_varName
-            | type r_seenType ID r_varName arr_index r_seenIndex COMMA params
-            | type r_seenType ID r_varName arr_index r_seenIndex'''
+  '''params : type ID r_varName COMMA params
+            | type ID r_varName
+            | type ID r_varName arr_index r_seenIndex COMMA params
+            | type ID r_varName arr_index r_seenIndex'''
   add_to_tree('params', p)
 
 def p_statements(p):
