@@ -1,4 +1,4 @@
-class Animal {
+class  {
   attr {
     public int edad;
   }
