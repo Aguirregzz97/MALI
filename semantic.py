@@ -130,21 +130,12 @@ def setParam(val):
 
 
 def callParent(parent):
-  if parent not in classes[current_class]['parent']:
+  if 'parent' not in classes[current_class]:
+    return f"{current_class} has no parent class but tries to extend \
+        constructor"
+  elif parent not in classes[current_class]['parent']:
     return f"{parent} is not {current_class}'s parent"
 
 
 def isMethod():
   classes[current_class][current_function]['access'] = current_access
-
-
-def checkVar(var_name):
-  if 'params' in classes[current_class][current_function]: 
-    if var_name not in classes[current_class][current_function] and (
-        var_name not in classes[current_class][current_function]['params']) and (
-        var_name not in classes[current_class]['attributes']):
-      return f"Unrecognized variable {var_name}"
-  else:
-    if var_name not in classes[current_class][current_function] and (
-        var_name not in classes[current_class]['attributes']):
-      return f"Unrecognized variable {var_name}"

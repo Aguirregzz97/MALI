@@ -243,7 +243,7 @@ def p_sign(p):
   add_to_tree('sign', p)
 
 def p_cte(p):
-  '''cte : ID r_checkVar
+  '''cte : ID
          | CTE_I
          | CTE_F
          | CTE_CH
@@ -349,11 +349,6 @@ def p_r_funcName(p):
 def p_r_isMethod(p):
   'r_isMethod : '
   isMethod()
-
-def p_r_checkVar(p):
-  'r_checkVar : '
-  e = checkVar(var_name=p[-1])
-  if e: p_error(e)
 
 def p_r_seenMain(p):
   'r_seenMain : '
