@@ -58,7 +58,7 @@ main {
 
   a = Perro(5);
 
-  b = Perro(5);
+  a = b;
 
   cont = 0;
 

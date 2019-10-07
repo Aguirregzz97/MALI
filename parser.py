@@ -268,7 +268,7 @@ def p_block(p):
   add_to_tree('block', p)
 
 def p_main(p):
-  '''main : MAIN proc_block'''
+  '''main : MAIN r_seenMain proc_block'''
   add_to_tree('main', p)
 
 def p_empty(p):
@@ -350,6 +350,10 @@ def p_r_checkVar(p):
   'r_checkVar : '
   e = checkVar(var_name=p[-1])
   if e: p_error(e)
+
+def p_r_seenMain(p):
+  'r_seenMain : '
+  e = seenFunc(new_function='main')
 
 # Build parser.
 parser = yacc.yacc(start='program')

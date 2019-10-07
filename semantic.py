@@ -1,8 +1,8 @@
 # Semantic vars.
 
 current_class = 'global'
-current_function = 'global'
-current_access = 'public'
+current_function = None
+current_access = None
 current_type = None
 is_param = False
 current_x = None
@@ -43,7 +43,7 @@ def set_parent(class_name, parent):
 '''
 
 classes = {'global': new_class_dict()}
-classes['global']['global'] = new_func_dict()
+classes['global']['attributes'] = new_func_dict()
 types = {"int", "float", "char", "bool", "void"}
 
 # Semantic checks.
@@ -67,7 +67,7 @@ def classParent(class_parent):
 def finishClass():
   global current_class, current_function
   current_class = 'global'
-  current_function = 'global'
+  current_function = 'attributes'
 
 
 def seenFunc(new_function, recordType=False):
@@ -130,5 +130,6 @@ def callParent(parent):
 
 def checkVar(var_name):
   if var_name not in classes[current_class][current_function] and (
-      var_name not in classes[current_class][current_function]['params']):
-    return f"Unrecognized variables {var_name}"
+      var_name not in classes[current_class][current_function]['params']) and (
+      var_name not in classes[current_class]['attributes']):
+    return f"Unrecognized variable {var_name}"
