@@ -3,9 +3,11 @@
 import ply.yacc as yacc
 from scanner import tokens
 from semantic import *
+import sys
 
 import pprint
 pp = pprint.PrettyPrinter()
+error = False
 
 def add_to_tree(name, p):
   p[0] = tuple([name, *list(filter(None, p[1:]))])
@@ -22,6 +24,8 @@ def p_program(p):
              | main'''
   add_to_tree('program', p)
   #pp.pprint(p[0])
+  if error:
+      sys.exit(-1)
 
 def p_classes(p):
   '''classes : class classes
@@ -277,6 +281,8 @@ def p_empty(p):
 
 def p_error(p):
   print("Error! ", p)
+  global error
+  error = True
 
 # Semantic rules
 
