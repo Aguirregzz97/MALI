@@ -91,8 +91,8 @@ def p_var(p):
 def p_var_aux(p):
   '''var_aux : ID r_varName COMMA var_aux
              | ID r_varName
-             | ID r_varName arr_index r_seenIndex COMMA var_aux
-             | ID r_varName arr_index r_seenIndex'''
+             | ID r_varName arr_index COMMA var_aux
+             | ID r_varName arr_index'''
   add_to_tree('var_aux', p)
 
 def p_type(p):
@@ -127,8 +127,8 @@ def p_param(p):
 def p_params(p):
   '''params : type ID r_varName COMMA params
             | type ID r_varName
-            | type ID r_varName arr_index r_seenIndex COMMA params
-            | type ID r_varName arr_index r_seenIndex'''
+            | type ID r_varName arr_index COMMA params
+            | type ID r_varName arr_index'''
   add_to_tree('params', p)
 
 def p_statements(p):
@@ -262,8 +262,8 @@ def p_arraccess(p):
   add_to_tree('arraccess', p)
 
 def p_arr_index(p):
-  '''arr_index : LEFT_SB expression r_seenX RIGHT_SB
-               | LEFT_SB expression r_seenX RIGHT_SB LEFT_SB expression r_seenY RIGHT_SB'''
+  '''arr_index : LEFT_SB expression RIGHT_SB
+               | LEFT_SB expression RIGHT_SB LEFT_SB expression RIGHT_SB'''
   add_to_tree('arr_index', p)
 
 def p_block(p):
@@ -318,16 +318,6 @@ def p_r_varName(p):
   'r_varName : '
   e = varName(var_name=p[-1])
   if e: p_error(e)
-
-def p_r_seenX(p):
-  'r_seenX : '
-  #r_seenX(x=p[-1])
-
-def p_r_seenY(p):
-  'r_seenY : '
-
-def p_r_seenIndex(p):
-  'r_seenIndex : '
 
 def p_r_seenInit(p):
   'r_seenInit : '
