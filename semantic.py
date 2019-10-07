@@ -1,7 +1,7 @@
 # Semantic vars.
 
 current_class = 'global'
-current_function = None
+current_function = 'attributes'
 current_access = None
 current_type = None
 is_param = False
@@ -17,9 +17,10 @@ def new_var_dict(type=None, access=None):
 
 
 def new_func_dict(type=None, access=None, params=False):
-  func_dict = {'params': {}}
+  func_dict = {}
   if type: func_dict['type'] = type
   if access: func_dict['access'] = access
+  if params: func_dict['params'] = {}
   return func_dict
 
 
@@ -70,7 +71,7 @@ def finishClass():
   current_function = 'attributes'
 
 
-def seenFunc(new_function, recordType=False):
+def seenFunc(new_function, recordType=False, recordParams=False):
   if new_function in classes[current_class]:
     return f"Redeclared function {new_function}"
   else:
@@ -78,9 +79,10 @@ def seenFunc(new_function, recordType=False):
     current_function = new_function
     if recordType:
       classes[current_class][current_function] = new_func_dict(
-          type=current_type)
+          type=current_type, params=recordParams)
     else:
-      classes[current_class][current_function] = new_func_dict()
+      classes[current_class][current_function] = new_func_dict(
+          params=recordParams)
 
 
 def seenAccess(new_access):
@@ -89,8 +91,8 @@ def seenAccess(new_access):
 
 
 def seenType(new_type):
-  if (new_type not in types and (
-        new_type not in classes)) or (
+  if new_type not in types and (
+        new_type not in classes) or (
         new_type == 'global'):
     return f"{new_type} is not a class nor data type"
   else:
@@ -99,8 +101,11 @@ def seenType(new_type):
 
 
 def exists_variable(var_name):
-  return var_name in classes[current_class][current_function]['params'] or (
-      var_name in classes[current_class][current_function])
+  if 'params' in classes[current_class][current_function]: 
+    return var_name in classes[current_class][current_function]['params'] or (
+        var_name in classes[current_class][current_function])
+  else:
+    return var_name in classes[current_class][current_function]
 
 
 def varName(var_name):
@@ -108,6 +113,7 @@ def varName(var_name):
     return f"Redeclared variable: {var_name}"
   else:
     if is_param:
+      print(var_name)
       classes[current_class][current_function]['params'][var_name] = (
           new_var_dict(type=current_type))
     elif current_class != 'global':
@@ -128,12 +134,17 @@ def callParent(parent):
     return f"{parent} is not {current_class}'s parent"
 
 
-def seenMethod():
+def isMethod():
   classes[current_class][current_function]['access'] = current_access
 
 
 def checkVar(var_name):
-  if var_name not in classes[current_class][current_function] and (
-      var_name not in classes[current_class][current_function]['params']) and (
-      var_name not in classes[current_class]['attributes']):
-    return f"Unrecognized variable {var_name}"
+  if 'params' in classes[current_class][current_function]: 
+    if var_name not in classes[current_class][current_function] and (
+        var_name not in classes[current_class][current_function]['params']) and (
+        var_name not in classes[current_class]['attributes']):
+      return f"Unrecognized variable {var_name}"
+  else:
+    if var_name not in classes[current_class][current_function] and (
+        var_name not in classes[current_class]['attributes']):
+      return f"Unrecognized variable {var_name}"
