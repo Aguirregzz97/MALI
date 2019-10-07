@@ -16,7 +16,7 @@ def new_var_dict(type=None, access=None):
   return var_dict
 
 
-def new_func_dict(type=None, access=None):
+def new_func_dict(type=None, access=None, params=False):
   func_dict = {'params': {}}
   if type: func_dict['type'] = type
   if access: func_dict['access'] = access
@@ -75,7 +75,6 @@ def seenFunc(new_function, recordType=False):
     return f"Redeclared function {new_function}"
   else:
     global current_function
-    print(new_function)
     current_function = new_function
     if recordType:
       classes[current_class][current_function] = new_func_dict(
@@ -90,8 +89,8 @@ def seenAccess(new_access):
 
 
 def seenType(new_type):
-  if new_type not in types and (
-        new_type not in classes) or (
+  if (new_type not in types and (
+        new_type not in classes)) or (
         new_type == 'global'):
     return f"{new_type} is not a class nor data type"
   else:
@@ -105,7 +104,6 @@ def exists_variable(var_name):
 
 
 def varName(var_name):
-  print(classes[current_class])
   if exists_variable(var_name):
     return f"Redeclared variable: {var_name}"
   else:
@@ -126,5 +124,11 @@ def setParam(val):
 
 
 def callParent(parent):
-  if parent is not classes[current_class]['parent']:
-    return f"Parent {parent} is not {current_class} parent"
+  if parent not in classes[current_class]['parent']:
+    return f"{parent} is not {current_class}'s parent"
+
+
+def checkVar(var_name):
+  if var_name not in classes[current_class][current_function] and (
+      var_name not in classes[current_class][current_function]['params']):
+    return f"Unrecognized variables {var_name}"

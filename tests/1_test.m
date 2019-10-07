@@ -58,6 +58,8 @@ main {
 
   a = Perro(5);
 
+  b = Perro(5);
+
   cont = 0;
 
   a.Ladrar;

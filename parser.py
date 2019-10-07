@@ -243,7 +243,7 @@ def p_sign(p):
   add_to_tree('sign', p)
 
 def p_cte(p):
-  '''cte : ID
+  '''cte : ID r_checkVar
          | CTE_I
          | CTE_F
          | CTE_CH
@@ -297,7 +297,7 @@ def p_r_finishClass(p):
 def p_r_seenAttr(p):
   'r_seenAttr : '
   e = seenFunc(new_function='attributes')
-  if e: print(e)
+  if e: p_error(e)
 
 def p_r_seenAccess(p):
   'r_seenAccess : '
@@ -311,6 +311,7 @@ def p_r_seenType(p):
 def p_r_varName(p):
   'r_varName : '
   e = varName(var_name=p[-1])
+  if e: p_error(e)
 
 def p_r_seenX(p):
   'r_seenX : '
@@ -325,7 +326,7 @@ def p_r_seenIndex(p):
 def p_r_seenInit(p):
   'r_seenInit : '
   e = seenFunc(new_function='init')
-  if e: print(e)
+  if e: p_error(e)
 
 def p_r_seenParam(p):
   'r_seenParam : '
@@ -338,14 +339,17 @@ def p_r_finishParam(p):
 def p_r_callParent(p):
   'r_callParent : '
   e = callParent(parent=p[-1])
-  if e: print(e)
-
+  if e: p_error(e)
 
 def p_r_funcName(p):
   'r_funcName : '
   e = seenFunc(new_function=p[-1], recordType=True)
-  if e: print(e)
+  if e: p_error(e)
 
+def p_r_checkVar(p):
+  'r_checkVar : '
+  e = checkVar(var_name=p[-1])
+  if e: p_error(e)
 
 # Build parser.
 parser = yacc.yacc(start='program')
