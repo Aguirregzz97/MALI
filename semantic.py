@@ -128,6 +128,10 @@ def callParent(parent):
     return f"{parent} is not {current_class}'s parent"
 
 
+def seenMethod():
+  classes[current_class][current_function]['access'] = current_access
+
+
 def checkVar(var_name):
   if var_name not in classes[current_class][current_function] and (
       var_name not in classes[current_class][current_function]['params']) and (

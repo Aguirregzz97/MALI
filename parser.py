@@ -61,8 +61,8 @@ def p_init_factor(p):
   add_to_tree('init_factor', p)
 
 def p_methods(p):
-  '''methods : access proc methods
-             | access proc'''
+  '''methods : access proc r_seenMethod methods
+             | access proc r_seenMethod'''
   add_to_tree('methods', p)
 
 def p_access(p):
@@ -345,6 +345,10 @@ def p_r_funcName(p):
   'r_funcName : '
   e = seenFunc(new_function=p[-1], recordType=True)
   if e: p_error(e)
+
+def p_r_seenMethod(p):
+  'r_seenMethod : '
+  seenMethod()
 
 def p_r_checkVar(p):
   'r_checkVar : '
