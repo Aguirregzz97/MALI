@@ -1,7 +1,7 @@
 # Semantic vars.
 
-current_class = 'global'
-current_function = 'attributes'
+current_class = '#global'
+current_function = '#attributes'
 current_access = None
 current_type = None
 is_param = False
@@ -10,28 +10,28 @@ current_y = None
 
 
 def new_var_dict(type=None, access=None):
-  var_dict = {'id': None}
-  if type: var_dict['type'] = type
-  if access: var_dict['access'] = access
+  var_dict = {'#id': None}
+  if type: var_dict['#type'] = type
+  if access: var_dict['#access'] = access
   return var_dict
 
 
 def new_func_dict(type=None, access=None, params=False):
   func_dict = {}
-  if type: func_dict['type'] = type
-  if access: func_dict['access'] = access
-  if params: func_dict['params'] = {}
+  if type: func_dict['#type'] = type
+  if access: func_dict['#access'] = access
+  if params: func_dict['#params'] = {}
   return func_dict
 
 
 def new_class_dict(parent=None):
   class_dict = {}
-  if parent: class_dict['parent'] = parent
+  if parent: class_dict['#parent'] = parent
   return class_dict
 
 
-classes = {'global': new_class_dict()}
-classes['global']['attributes'] = new_func_dict()
+classes = {'#global': new_class_dict()}
+classes['#global']['#attributes'] = new_func_dict()
 types = {"int", "float", "char", "bool", "void"}
 
 # Semantic checks.
@@ -49,13 +49,13 @@ def classParent(class_parent):
   if class_parent not in classes:
     return f"Undeclared class parent: {class_parent}"
   else:
-    classes[current_class]['parent'] = class_parent
+    classes[current_class]['#parent'] = class_parent
 
 
 def finishClass():
   global current_class, current_function
-  current_class = 'global'
-  current_function = 'attributes'
+  current_class = '#global'
+  current_function = '#attributes'
 
 
 def seenFunc(new_function, recordType=False, recordParams=False):
@@ -80,7 +80,7 @@ def seenAccess(new_access):
 def seenType(new_type):
   if new_type not in types and (
         new_type not in classes) or (
-        new_type == 'global'):
+        new_type == '#global'):
     return f"{new_type} is not a class nor data type"
   else:
     global current_type
@@ -101,9 +101,9 @@ def varName(var_name):
   else:
     if is_param:
       print(var_name)
-      classes[current_class][current_function]['params'][var_name] = (
+      classes[current_class][current_function]['#params'][var_name] = (
           new_var_dict(type=current_type))
-    elif current_class != 'global':
+    elif current_class != '#global':
       classes[current_class][current_function][var_name] = (
           new_var_dict(type=current_type, access=current_access))
     else:
@@ -117,12 +117,12 @@ def setParam(val):
 
 
 def callParent(parent):
-  if 'parent' not in classes[current_class]:
+  if '#parent' not in classes[current_class]:
     return f"{current_class} has no parent class but tries to extend \
         constructor"
-  elif parent not in classes[current_class]['parent']:
+  elif parent not in classes[current_class]['#parent']:
     return f"{parent} is not {current_class}'s parent"
 
 
 def isMethod():
-  classes[current_class][current_function]['access'] = current_access
+  classes[current_class][current_function]['#access'] = current_access
