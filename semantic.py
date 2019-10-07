@@ -16,11 +16,10 @@ def new_var_dict(type=None, access=None):
   return var_dict
 
 
-def new_func_dict(type=None, access=None, params=False):
-  func_dict = {}
+def new_func_dict(type=None, access=None):
+  func_dict = {'#params': {}}
   if type: func_dict['#type'] = type
   if access: func_dict['#access'] = access
-  if params: func_dict['#params'] = {}
   return func_dict
 
 
@@ -58,7 +57,7 @@ def finishClass():
   current_function = '#attributes'
 
 
-def seenFunc(new_function, recordType=False, recordParams=False):
+def seenFunc(new_function, recordType=False):
   if new_function in classes[current_class]:
     return f"Redeclared function {new_function}"
   else:
@@ -66,10 +65,9 @@ def seenFunc(new_function, recordType=False, recordParams=False):
     current_function = new_function
     if recordType:
       classes[current_class][current_function] = new_func_dict(
-          type=current_type, params=recordParams)
+          type=current_type)
     else:
-      classes[current_class][current_function] = new_func_dict(
-          params=recordParams)
+      classes[current_class][current_function] = new_func_dict()
 
 
 def seenAccess(new_access):
@@ -88,11 +86,8 @@ def seenType(new_type):
 
 
 def exists_variable(var_name):
-  if 'params' in classes[current_class][current_function]: 
-    return var_name in classes[current_class][current_function]['params'] or (
-        var_name in classes[current_class][current_function])
-  else:
-    return var_name in classes[current_class][current_function]
+  return var_name in classes[current_class][current_function]['#params'] or (
+      var_name in classes[current_class][current_function])
 
 
 def varName(var_name):
@@ -100,7 +95,6 @@ def varName(var_name):
     return f"Redeclared variable: {var_name}"
   else:
     if is_param:
-      print(var_name)
       classes[current_class][current_function]['#params'][var_name] = (
           new_var_dict(type=current_type))
     elif current_class != '#global':

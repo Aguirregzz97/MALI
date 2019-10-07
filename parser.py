@@ -325,7 +325,7 @@ def p_r_seenIndex(p):
 
 def p_r_seenInit(p):
   'r_seenInit : '
-  e = seenFunc(new_function='init', recordParams=True)
+  e = seenFunc(new_function='init')
   if e: p_error(e)
 
 def p_r_seenParam(p):
@@ -343,7 +343,7 @@ def p_r_callParent(p):
 
 def p_r_funcName(p):
   'r_funcName : '
-  e = seenFunc(new_function=p[-1], recordType=True, recordParams=True)
+  e = seenFunc(new_function=p[-1], recordType=True)
   if e: p_error(e)
 
 def p_r_isMethod(p):
@@ -352,7 +352,7 @@ def p_r_isMethod(p):
 
 def p_r_seenMain(p):
   'r_seenMain : '
-  e = seenFunc(new_function='main')
+  e = seenFunc(new_function='#main')
 
 # Build parser.
 parser = yacc.yacc(start='program')
