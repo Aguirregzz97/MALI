@@ -9,14 +9,17 @@ import pprint
 pp = pprint.PrettyPrinter()
 error = False
 
-
-inputStr = ''
+input_str = ''
 
 def add_to_tree(name, p):
   p[0] = tuple([name, *list(filter(None, p[1:]))])
 
-def error_prefix(line):
-  print(f'Error at {line}: ', end='')
+def find_column(lexpos):
+  line_start = input_str.rfind('\n', 0, lexpos) + 1
+  return (lexpos - line_start) + 1
+
+def error_prefix(line, lexpos):
+  print(f'Error at {line}:{find_column(lexpos)} - ', end='')
   global error
   error = True
 
@@ -288,24 +291,24 @@ def p_empty(p):
 
 # Syntax errors
 def p_error(p):
-  error_prefix(p.lineno)
+  error_prefix(p.lineno, p.lexpos)
   print(f'Unexpected token {p.value}')
 
-def syn_error(line, mssg):
-  error_prefix(line)
+def syn_error(line, lexpos, mssg):
+  error_prefix(line, lexpos)
   print(f'Error at {line}: {mssg}')
 
-# Semantic rules
+# Semantic rules.
 
 def p_r_seenClass(p):
   'r_seenClass : '
   e = s.seenClass(class_name=p[-1])
-  if e: sem_error(p.lineno(-1), e)
+  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_classParent(p):
   'r_classParent : '
   e = s.classParent(class_parent=p[-1])
-  if e: sem_error(p.lineno(-1), e)
+  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_finishClass(p):
   'r_finishClass : '
@@ -322,17 +325,17 @@ def p_r_seenAccess(p):
 def p_r_seenType(p):
   'r_seenType : '
   e = s.seenType(new_type=p[-1])
-  if e: sem_error(p.lineno(-1), e)
+  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_varName(p):
   'r_varName : '
   e = s.varName(var_name=p[-1])
-  if e: sem_error(p.lineno(-1), e)
+  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_seenInit(p):
   'r_seenInit : '
   e = s.seenFunc(new_function='init')
-  if e: sem_error(p.lineno(-1), e)
+  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_seenParam(p):
   'r_seenParam : '
@@ -345,12 +348,12 @@ def p_r_finishParam(p):
 def p_r_callParent(p):
   'r_callParent : '
   e = s.callParent(parent=p[-1])
-  if e: sem_error(p.lineno(-1), e)
+  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_funcName(p):
   'r_funcName : '
   e = s.seenFunc(new_function=p[-1], recordType=True)
-  if e: sem_error(p.lineno(-1), e)
+  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_isMethod(p):
   'r_isMethod : '
@@ -361,13 +364,14 @@ def p_r_seenMain(p):
   s.seenFunc(new_function='#main')
 
 # Semantic errors:
-def sem_error(line, mssg):
-  error_prefix(line)
+def sem_error(line, lexpos, mssg):
+  error_prefix(line, lexpos)
   print(mssg)
 
 
 parser = yacc.yacc(start='program')
 
 def parseString(s):
-  inputStr = s
+  global input_str
+  input_str = s
   parser.parse(s, tracking=True)

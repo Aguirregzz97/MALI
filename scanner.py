@@ -105,7 +105,7 @@ def t_CTE_F(t):
   return t
 
 def t_newline(t):
-  r'[\r\n]+'
+  r'[\n]+'
   t.lexer.lineno += len(t.value)
 
 def t_comment(t):

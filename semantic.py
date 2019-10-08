@@ -112,8 +112,8 @@ def setParam(val):
 
 def callParent(parent):
   if '#parent' not in classes[current_class]:
-    return f"{current_class} has no parent class but tries to extend \
-        {parent} in constructor"
+    return f'{current_class} has no parent class but tries to extend ' + (
+        f'{parent} in constructor')
   elif parent not in classes[current_class]['#parent']:
     return f"{parent} is not {current_class}'s parent"
 
