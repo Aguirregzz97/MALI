@@ -9,6 +9,7 @@ def parse(file):
 
 if __name__ == '__main__':
   os.chdir('testfiles')
+  
   for file_name in glob.glob('correct/*_test.m'):
     file = open(file_name, 'r')
     try:

@@ -1,7 +1,7 @@
 from parser import *
 import sys
 
-program_name = 'test'
+program_name = ''
 
 if __name__ == '__main__':
   if len(sys.argv) is not 2:
