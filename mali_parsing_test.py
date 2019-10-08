@@ -1,12 +1,13 @@
 import glob, os
-from parser import parser
+from parser import *
 
 
 if __name__ == '__main__':
-    os.chdir('tests')
-    for file_name in glob.glob('*_test.m'):
+    os.chdir('testfiles')
+    for file_name in glob.glob('correctos/*_test.m'):
         file = open(file_name, 'r')
         try:
             parser.parse(file.read())
+            print(f'Successfull {file_name}.')
         except SyntaxError:
-            print(f'Error in file {file_name}.')
+            print(f'Fail        {file_name}.')

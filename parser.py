@@ -302,7 +302,7 @@ def p_r_finishClass(p):
 
 def p_r_seenAttr(p):
   'r_seenAttr : '
-  e = seenFunc(new_function='attributes')
+  e = seenFunc(new_function='#attributes')
   if e: p_error(e)
 
 def p_r_seenAccess(p):

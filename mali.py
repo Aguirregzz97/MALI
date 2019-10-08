@@ -1,4 +1,3 @@
-# TODO: solo importar parser
 from parser import *
 import sys
 
@@ -11,4 +10,3 @@ if __name__ == '__main__':
     program_name = sys.argv[1]
     file = open(program_name, 'r')
     parser.parse(file.read())
-    # pp.pprint(classes)
