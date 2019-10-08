@@ -1,7 +1,6 @@
 import glob, os
 from parser import *
 
-
 if __name__ == '__main__':
     os.chdir('testfiles')
     for file_name in glob.glob('correctos/*_test.m'):

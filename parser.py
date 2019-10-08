@@ -2,7 +2,7 @@
 
 import ply.yacc as yacc
 from scanner import tokens
-from semantic import *
+import semantic as s
 import sys
 
 import pprint
@@ -24,6 +24,7 @@ def p_program(p):
              | main'''
   add_to_tree('program', p)
   #pp.pprint(p[0])
+  #pp.pprint(s.classes)
   if error:
       sys.exit(-1)
 
@@ -288,67 +289,67 @@ def p_error(p):
 
 def p_r_seenClass(p):
   'r_seenClass : '
-  e = seenClass(class_name=p[-1])
+  e = s.seenClass(class_name=p[-1])
   if e: p_error(e)
 
 def p_r_classParent(p):
   'r_classParent : '
-  e = classParent(class_parent=p[-1])
+  e = s.classParent(class_parent=p[-1])
   if e: p_error(e)
 
 def p_r_finishClass(p):
   'r_finishClass : '
-  finishClass()
+  s.finishClass()
 
 def p_r_seenAttr(p):
   'r_seenAttr : '
-  e = seenFunc(new_function='#attributes')
+  e = s.seenFunc(new_function='#attributes')
   if e: p_error(e)
 
 def p_r_seenAccess(p):
   'r_seenAccess : '
-  seenAccess(new_access=p[-1])
+  s.seenAccess(new_access=p[-1])
 
 def p_r_seenType(p):
   'r_seenType : '
-  e = seenType(new_type=p[-1])
+  e = s.seenType(new_type=p[-1])
   if e: p_error(e)
 
 def p_r_varName(p):
   'r_varName : '
-  e = varName(var_name=p[-1])
+  e = s.varName(var_name=p[-1])
   if e: p_error(e)
 
 def p_r_seenInit(p):
   'r_seenInit : '
-  e = seenFunc(new_function='init')
+  e = s.seenFunc(new_function='init')
   if e: p_error(e)
 
 def p_r_seenParam(p):
   'r_seenParam : '
-  setParam(True)
+  s.setParam(True)
 
 def p_r_finishParam(p):
   'r_finishParam : '
-  setParam(False)
+  s.setParam(False)
 
 def p_r_callParent(p):
   'r_callParent : '
-  e = callParent(parent=p[-1])
+  e = s.callParent(parent=p[-1])
   if e: p_error(e)
 
 def p_r_funcName(p):
   'r_funcName : '
-  e = seenFunc(new_function=p[-1], recordType=True)
+  e = s.seenFunc(new_function=p[-1], recordType=True)
   if e: p_error(e)
 
 def p_r_isMethod(p):
   'r_isMethod : '
-  isMethod()
+  s.isMethod()
 
 def p_r_seenMain(p):
   'r_seenMain : '
-  e = seenFunc(new_function='#main')
+  e = s.seenFunc(new_function='#main')
 
 # Build parser.
 parser = yacc.yacc(start='program')
