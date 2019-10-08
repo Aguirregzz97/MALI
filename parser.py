@@ -9,8 +9,16 @@ import pprint
 pp = pprint.PrettyPrinter()
 error = False
 
+
+inputStr = ''
+
 def add_to_tree(name, p):
   p[0] = tuple([name, *list(filter(None, p[1:]))])
+
+def error_prefix(line):
+  print(f'Error at {line}: ', end='')
+  global error
+  error = True
 
 # Syntax rules.
 
@@ -202,12 +210,10 @@ def p_expression(p):
                 | exp'''
   add_to_tree('expression', p)
 
-
 def p_exp(p):
   '''exp : xp OR xp
          | xp'''
   add_to_tree('exp', p)
-
 
 def p_xp(p):
   '''xp : x
@@ -280,22 +286,26 @@ def p_empty(p):
   '''empty :'''
   add_to_tree('empty', p)
 
+# Syntax errors
 def p_error(p):
-  print("Error! ", p)
-  global error
-  error = True
+  error_prefix(p.lineno)
+  print(f'Unexpected token {p.value}')
+
+def syn_error(line, mssg):
+  error_prefix(line)
+  print(f'Error at {line}: {mssg}')
 
 # Semantic rules
 
 def p_r_seenClass(p):
   'r_seenClass : '
   e = s.seenClass(class_name=p[-1])
-  if e: p_error(e)
+  if e: sem_error(p.lineno(-1), e)
 
 def p_r_classParent(p):
   'r_classParent : '
   e = s.classParent(class_parent=p[-1])
-  if e: p_error(e)
+  if e: sem_error(p.lineno(-1), e)
 
 def p_r_finishClass(p):
   'r_finishClass : '
@@ -303,8 +313,7 @@ def p_r_finishClass(p):
 
 def p_r_seenAttr(p):
   'r_seenAttr : '
-  e = s.seenFunc(new_function='#attributes')
-  if e: p_error(e)
+  s.seenFunc(new_function='#attributes')
 
 def p_r_seenAccess(p):
   'r_seenAccess : '
@@ -313,17 +322,17 @@ def p_r_seenAccess(p):
 def p_r_seenType(p):
   'r_seenType : '
   e = s.seenType(new_type=p[-1])
-  if e: p_error(e)
+  if e: sem_error(p.lineno(-1), e)
 
 def p_r_varName(p):
   'r_varName : '
   e = s.varName(var_name=p[-1])
-  if e: p_error(e)
+  if e: sem_error(p.lineno(-1), e)
 
 def p_r_seenInit(p):
   'r_seenInit : '
   e = s.seenFunc(new_function='init')
-  if e: p_error(e)
+  if e: sem_error(p.lineno(-1), e)
 
 def p_r_seenParam(p):
   'r_seenParam : '
@@ -336,12 +345,12 @@ def p_r_finishParam(p):
 def p_r_callParent(p):
   'r_callParent : '
   e = s.callParent(parent=p[-1])
-  if e: p_error(e)
+  if e: sem_error(p.lineno(-1), e)
 
 def p_r_funcName(p):
   'r_funcName : '
   e = s.seenFunc(new_function=p[-1], recordType=True)
-  if e: p_error(e)
+  if e: sem_error(p.lineno(-1), e)
 
 def p_r_isMethod(p):
   'r_isMethod : '
@@ -349,7 +358,16 @@ def p_r_isMethod(p):
 
 def p_r_seenMain(p):
   'r_seenMain : '
-  e = s.seenFunc(new_function='#main')
+  s.seenFunc(new_function='#main')
 
-# Build parser.
+# Semantic errors:
+def sem_error(line, mssg):
+  error_prefix(line)
+  print(mssg)
+
+
 parser = yacc.yacc(start='program')
+
+def parseString(s):
+  inputStr = s
+  parser.parse(s, tracking=True)
