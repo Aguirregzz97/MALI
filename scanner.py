@@ -92,6 +92,10 @@ def t_ID(t):
   r'[a-zA-Z_][a-zA-Z_0-9]*'
   # Check if matched id is a reserved keyword.
   t.type = reserved.get(t.value,'ID')
+  if t.type == 'TRUE':
+    t.value = 1
+  elif t.type == 'FALSE':
+    t.value = 0
   return t
 
 def t_CTE_I(t):
