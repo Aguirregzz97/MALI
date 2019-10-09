@@ -9,6 +9,8 @@ current_x = None
 current_y = None
 
 
+# Symbol table utils.
+
 def new_var_dict(type=None, access=None):
   var_dict = {'#id': None}
   if type: var_dict['#type'] = type
@@ -28,12 +30,12 @@ def new_class_dict(parent=None):
   if parent: class_dict['#parent'] = parent
   return class_dict
 
-
 classes = {'#global': new_class_dict()}
 classes['#global']['#attributes'] = new_func_dict()
 types = {"int", "float", "char", "bool", "void"}
 
-# Semantic checks.
+
+# Semantic checks and symbol table filling.
 
 def seenClass(class_name):
   if class_name in classes:

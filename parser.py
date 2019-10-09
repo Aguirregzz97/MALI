@@ -7,9 +7,29 @@ import sys
 
 import pprint
 pp = pprint.PrettyPrinter()
-error = False
 
 input_str = ''
+error = False
+
+
+# Parsing utilities.
+
+def recover_parser():
+  opened = 0
+  tokName = None
+  while True:
+    tok = parser.token()
+    if not tok: break
+    tokName = tok.type
+    if tokName == 'SC' and opened == 0:
+      break
+    elif tokName == 'LEFT_B':
+      opened += 1
+    elif tokName == 'RIGHT_B':
+      opened -= 1
+      if opened == 0: break
+  parser.restart()
+  return tokName
 
 def add_to_tree(name, p):
   p[0] = tuple([name, *list(filter(None, p[1:]))])
@@ -18,10 +38,20 @@ def find_column(lexpos):
   line_start = input_str.rfind('\n', 0, lexpos) + 1
   return (lexpos - line_start) + 1
 
+
+# Errors reporting.
+
 def error_prefix(line, lexpos):
   print(f'Error at {line}:{find_column(lexpos)} - ', end='')
   global error
   error = True
+
+def handle_error(line, lexpos, mssg):
+  #raise SyntaxError
+  error_prefix(line, lexpos)
+  print(mssg)
+  recover_parser()
+
 
 # Syntax rules.
 
@@ -36,7 +66,7 @@ def p_program(p):
   add_to_tree('program', p)
   #pp.pprint(p[0])
   #pp.pprint(s.classes)
-  if error:
+  if handle_error:
       sys.exit(-1)
 
 def p_classes(p):
@@ -285,30 +315,59 @@ def p_main(p):
   '''main : MAIN r_seenMain proc_block'''
   add_to_tree('main', p)
 
+# Rule used to create an cfg epsilon-like value.
 def p_empty(p):
   '''empty :'''
   add_to_tree('empty', p)
 
-# Syntax errors
+# Syntax error detection rules.
+
+def p_e_program_missing_main(p):
+  '''program : classes vars modules
+             | classes modules
+             | modules
+             | vars modules
+             | classes
+             | vars'''
+  handle_error(input_str.count('\n'), input_str.rfind('\n'), 'Missing main block.')
+
+def p_e_program_main_not_end(p):
+  '''program : classes vars modules main error
+             | classes modules main error
+             | modules main error
+             | vars modules main error
+             | classes main error
+             | vars main error
+             | main error'''
+  pos = len(p)-1
+  handle_error(p.lineno(pos), p.lexpos(pos), 'The code should end with the main block.')
+
+def p_e_program_disorder(p):
+  '''program : vars classes error
+             | modules classes error
+             | vars modules classes error
+             | modules vars error'''
+  handle_error(0, 0, 'Bad program structure, should be: classes -> global vars -> modules -> main')
+
+
+# Syntax error printing.
+
 def p_error(p):
   error_prefix(p.lineno, p.lexpos)
-  print(f'Unexpected token {p.value}')
+  print(f'Unexpected token {p.value}.')
 
-def syn_error(line, lexpos, mssg):
-  error_prefix(line, lexpos)
-  print(f'Error at {line}: {mssg}')
 
 # Semantic rules.
 
 def p_r_seenClass(p):
   'r_seenClass : '
   e = s.seenClass(class_name=p[-1])
-  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_classParent(p):
   'r_classParent : '
   e = s.classParent(class_parent=p[-1])
-  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_finishClass(p):
   'r_finishClass : '
@@ -325,17 +384,17 @@ def p_r_seenAccess(p):
 def p_r_seenType(p):
   'r_seenType : '
   e = s.seenType(new_type=p[-1])
-  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_varName(p):
   'r_varName : '
   e = s.varName(var_name=p[-1])
-  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_seenInit(p):
   'r_seenInit : '
   e = s.seenFunc(new_function='init')
-  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_seenParam(p):
   'r_seenParam : '
@@ -348,12 +407,12 @@ def p_r_finishParam(p):
 def p_r_callParent(p):
   'r_callParent : '
   e = s.callParent(parent=p[-1])
-  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_funcName(p):
   'r_funcName : '
   e = s.seenFunc(new_function=p[-1], recordType=True)
-  if e: sem_error(p.lineno(-1), p.lexpos(-1), e)
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_isMethod(p):
   'r_isMethod : '
@@ -361,17 +420,24 @@ def p_r_isMethod(p):
 
 def p_r_seenMain(p):
   'r_seenMain : '
-  s.seenFunc(new_function='#main')
-
-# Semantic errors:
-def sem_error(line, lexpos, mssg):
-  error_prefix(line, lexpos)
-  print(mssg)
+  e = s.seenFunc(new_function='#main')
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
+# Generate parser.
 parser = yacc.yacc(start='program')
+parser.defaulted_states = {}
+
+# Run parser.
+
+def set_input_str(s):
+  global input_str
+  input_str = s
 
 def parseString(s):
   global input_str
-  input_str = s
-  parser.parse(s, tracking=True)
+  set_input_str(s)
+  try:
+    parser.parse(s, tracking=True)
+  except:
+    pass
