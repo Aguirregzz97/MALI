@@ -146,5 +146,4 @@ sTable['char']['bool']['='] = sTable['bool']['char']['='] = 'char'
 
 sTable['int']['float'][''] = sTable['float']['int'][''] = 'float'
 
-
 pp.pprint(sTable)
