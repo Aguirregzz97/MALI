@@ -1,8 +1,8 @@
 # Parser implementation for MALI language.
 
 import ply.yacc as yacc
-from scanner import tokens
-import semantic as s
+from implementation.scanner import tokens
+import implementation.semantic as s
 import sys
 
 import pprint
