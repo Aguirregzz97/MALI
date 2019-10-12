@@ -133,9 +133,13 @@ def p_var(p):
 def p_var_aux(p):
   '''var_aux : ID r_varName COMMA var_aux
              | ID r_varName
-             | ID r_varName arr_index COMMA var_aux
-             | ID r_varName arr_index'''
+             | ID r_varName arr_dim COMMA var_aux
+             | ID r_varName arr_dim'''
   add_to_tree('var_aux', p)
+
+def p_arr_dim(p):
+  '''arr_dim : LEFT_SB CTE_I RIGHT_SB
+             | LEFT_SB CTE_I RIGHT_SB LEFT_SB CTE_I RIGHT_SB'''
 
 def p_type(p):
   '''type : INT r_seenType
