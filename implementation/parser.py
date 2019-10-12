@@ -39,7 +39,7 @@ def find_column(lexpos):
   return (lexpos - line_start) + 1
 
 
-# Errors reporting.
+# Errors reporting.params
 
 def error_prefix(line, lexpos):
   print(f'Error at {line}:{find_column(lexpos)} - ', end='')
@@ -102,7 +102,7 @@ def p_init(p):
 
 def p_init_factor(p):
   '''init_factor : proc_block
-                 | COLON ID r_callParent LEFT_P expression RIGHT_P \
+                 | COLON ID r_callParent param_pass \
                    proc_block '''
   add_to_tree('init_factor', p)
 
@@ -127,7 +127,7 @@ def p_vars_dec(p):
   add_to_tree('vars_dec', p)
 
 def p_var(p):
-  '''var : type var_aux SC'''
+  '''var : complex_type var_aux SC'''
   add_to_tree('var', p)
 
 def p_var_aux(p):
@@ -141,9 +141,12 @@ def p_type(p):
   '''type : INT r_seenType
           | FLOAT r_seenType
           | CHAR r_seenType
-          | BOOL r_seenType
-          | ID r_seenType '''
+          | BOOL r_seenType'''
   add_to_tree('type', p)
+
+def p_complex_type(p):
+  '''complex_type : type
+                  | ID r_seenType'''
 
 def p_1(p):
   '''modules : FUNCTION proc modules
@@ -167,10 +170,10 @@ def p_param(p):
   add_to_tree('param', p)
 
 def p_params(p):
-  '''params : type ID r_varName COMMA params
-            | type ID r_varName
-            | type ID r_varName arr_index COMMA params
-            | type ID r_varName arr_index'''
+  '''params : complex_type ID r_varName COMMA params
+            | complex_type ID r_varName
+            | complex_type ID r_varName arr_index COMMA params
+            | complex_type ID r_varName arr_index'''
   add_to_tree('params', p)
 
 def p_statements(p):
@@ -195,10 +198,19 @@ def p_assign(p):
   add_to_tree('assign', p)
 
 def p_call(p):
-  '''call : path LEFT_P expression RIGHT_P
-          | path LEFT_P RIGHT_P
+  '''call : path param_pass
           | path_aux '''
   add_to_tree('call', p)
+
+def p_param_pass(p):
+  '''param_pass : LEFT_P RIGHT_P
+                | LEFT_P param_pass_aux RIGHT_P'''
+  add_to_tree('param_pass', p)
+
+def p_param_pass_aux(p):
+  '''param_pass_aux : expression COMMA param_pass_aux
+                    | expression'''
+  add_to_tree('param_pass_aux', p)
 
 def p_path(p):
   '''path : ID DOT path
