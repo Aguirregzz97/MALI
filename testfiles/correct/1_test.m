@@ -54,6 +54,7 @@ main {
   var {
     Animal a;
     int x[5][10];
+    int z,y,w,b,c;
   }
 
   a = Perro(5);
@@ -61,6 +62,8 @@ main {
   a = b;
 
   cont = 0;
+
+  z = w * y + b * c;
 
   a.Ladrar;
 }

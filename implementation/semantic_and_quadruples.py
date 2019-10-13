@@ -1,4 +1,6 @@
-# Semantic vars.
+from implementation.utils.semantic_and_quadruples_utils import *
+
+# Semantic table filling.
 
 current_class = '#global'
 current_function = '#attributes'
@@ -8,34 +10,9 @@ is_param = False
 current_x = None
 current_y = None
 
-
-# Symbol table utils.
-
-def new_var_dict(type=None, access=None):
-  var_dict = {'#id': None}
-  if type: var_dict['#type'] = type
-  if access: var_dict['#access'] = access
-  return var_dict
-
-
-def new_func_dict(type=None, access=None):
-  func_dict = {'#params': {}}
-  if type: func_dict['#type'] = type
-  if access: func_dict['#access'] = access
-  return func_dict
-
-
-def new_class_dict(parent=None):
-  class_dict = {}
-  if parent: class_dict['#parent'] = parent
-  return class_dict
-
 classes = {'#global': new_class_dict()}
 classes['#global']['#attributes'] = new_func_dict()
-types = {"int", "float", "char", "bool", "void"}
-
-
-# Semantic checks and symbol table filling.
+possible_types = ("int", "float", "char", "bool", "void")
 
 def seenClass(class_name):
   if class_name in classes:
@@ -78,9 +55,8 @@ def seenAccess(new_access):
 
 
 def seenType(new_type):
-  if new_type not in types and (
-        new_type not in classes) or (
-        new_type == '#global'):
+  if new_type not in possible_types and (
+        new_type not in classes):
     return f"{new_type} is not a class nor data type"
   else:
     global current_type
@@ -122,3 +98,46 @@ def callParent(parent):
 
 def isMethod():
   classes[current_class][current_function]['#access'] = current_access
+
+
+# Intermediate code generation.
+
+operators = []
+types = []
+operands = []
+quadruples = []
+next_temp = 1
+
+def getOperand(rawOperand):
+  pass
+
+def seenOperand(operand):
+  global operands, types
+  if isinstance(operand, tuple):
+    operand = top(operand)
+  if operand in classes[current_class][current_function]:
+    opType = classes[current_class][current_function][operand]['#type']
+  else:
+    opType = type(operand)
+  operands.append(operand)
+  types.append(opType)
+
+def seenOperator(operator):
+  global operators
+  operators.append(str(operator))
+
+def seenSubRule(ops):
+  global operators, types, operands, quadruples, next_temp
+  operator = top(operators)
+  if operator in ops:
+    right_operand = operands.pop()
+    right_type = types.pop()
+    left_operand = operands.pop()
+    left_type = types.pop()
+    operator = operators.pop()
+    result_type = sCube[left_type][right_type][operator]
+    result = '#t' + str(next_temp)
+    quadruples.append([operator, left_operand, right_operand, result])
+    operands.append(result)
+    types.append(result_type)
+    next_temp += 1

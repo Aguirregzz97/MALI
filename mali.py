@@ -1,4 +1,4 @@
-from implementation.parser import parseString
+from implementation.parser import *
 import sys
 
 program_name = ''

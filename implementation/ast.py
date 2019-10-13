@@ -1,5 +1,5 @@
 import pydot
-#from mali import program_name
+
 program_name = 'test'
 i = 0
 

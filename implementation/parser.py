@@ -2,7 +2,8 @@
 
 import ply.yacc as yacc
 from implementation.scanner import tokens
-import implementation.semantic as s
+import implementation.semantic_and_quadruples as sq
+from implementation.utils.parser_utils import *
 import sys
 
 import pprint
@@ -10,48 +11,6 @@ pp = pprint.PrettyPrinter()
 
 input_str = ''
 error = False
-
-
-# Parsing utilities.
-
-def recover_parser():
-  opened = 0
-  tokName = None
-  while True:
-    tok = parser.token()
-    if not tok: break
-    tokName = tok.type
-    if tokName == 'SC' and opened == 0:
-      break
-    elif tokName == 'LEFT_B':
-      opened += 1
-    elif tokName == 'RIGHT_B':
-      opened -= 1
-      if opened == 0: break
-  parser.restart()
-  return tokName
-
-def add_to_tree(name, p):
-  p[0] = tuple([name, *list(filter(None, p[1:]))])
-
-def find_column(lexpos):
-  line_start = input_str.rfind('\n', 0, lexpos) + 1
-  return (lexpos - line_start) + 1
-
-
-# Errors reporting.params
-
-def error_prefix(line, lexpos):
-  print(f'Error at {line}:{find_column(lexpos)} - ', end='')
-  global error
-  error = True
-
-def handle_error(line, lexpos, mssg):
-  #raise SyntaxError
-  error_prefix(line, lexpos)
-  print(mssg)
-  recover_parser()
-
 
 # Syntax rules.
 
@@ -65,7 +24,8 @@ def p_program(p):
              | main'''
   add_to_tree('program', p)
   #pp.pprint(p[0])
-  #pp.pprint(s.classes)
+  #pp.pprint(sq.classes)
+  print(sq.quadruples)
   if handle_error:
       sys.exit(-1)
 
@@ -152,7 +112,7 @@ def p_complex_type(p):
   '''complex_type : type
                   | ID r_seenType'''
 
-def p_1(p):
+def p_modules(p):
   '''modules : FUNCTION proc modules
              | FUNCTION proc'''
   add_to_tree('modules', p)
@@ -254,36 +214,54 @@ def p_while(p):
   '''while : WHILE LEFT_P expression RIGHT_P block'''
   add_to_tree('while', p)
 
+def p_arraccess(p):
+  '''arraccess : ID arr_index'''
+  add_to_tree('arraccess', p)
+
+def p_arr_index(p):
+  '''arr_index : LEFT_SB expression RIGHT_SB
+               | LEFT_SB expression RIGHT_SB LEFT_SB expression RIGHT_SB'''
+  add_to_tree('arr_index', p)
+
+def p_block(p):
+  '''block : LEFT_B statements RIGHT_B
+           | LEFT_B RIGHT_B'''
+  add_to_tree('block', p)
+
+def p_main(p):
+  '''main : MAIN r_seenMain proc_block'''
+  add_to_tree('main', p)
+
 def p_expression(p):
-  '''expression : exp AND exp
-                | exp'''
+  '''expression : exp rs_seenExp AND rs_seenOperator expression
+                | exp rs_seenExp'''
   add_to_tree('expression', p)
 
 def p_exp(p):
-  '''exp : xp OR xp
-         | xp'''
+  '''exp : xp rs_seenXp OR rs_seenOperator exp
+         | xp rs_seenXp'''
   add_to_tree('exp', p)
 
 def p_xp(p):
-  '''xp : x
-        | x MORE_T x
-        | x LESS_T x
-        | x DIFFERENT x
-        | x ISEQUAL x
-        | x LESS_ET x
-        | x MORE_ET x'''
+  '''xp : x rs_seenX MORE_T rs_seenOperator xp
+        | x rs_seenX LESS_T rs_seenOperator xp
+        | x rs_seenX DIFFERENT rs_seenOperator xp
+        | x rs_seenX ISEQUAL rs_seenOperator xp
+        | x rs_seenX LESS_ET rs_seenOperator xp
+        | x rs_seenX MORE_ET rs_seenOperator xp
+        | x rs_seenX'''
   add_to_tree('xp', p)
 
 def p_x(p):
-  '''x : term PLUS x
-       | term MINUS x
-       | term'''
+  '''x : term rs_seenTerm PLUS rs_seenOperator x
+       | term rs_seenTerm MINUS rs_seenOperator x
+       | term rs_seenTerm'''
   add_to_tree('x', p)
 
 def p_term(p):
-  '''term : factor TIMES term
-          | factor DIV term
-          | factor'''
+  '''term : factor rs_seenFactor TIMES rs_seenOperator term
+          | factor rs_seenFactor DIV rs_seenOperator term
+          | factor rs_seenFactor'''
   add_to_tree('term', p)
 
 def p_factor(p):
@@ -303,38 +281,113 @@ def p_sign(p):
   add_to_tree('sign', p)
 
 def p_cte(p):
-  '''cte : ID
-         | CTE_I
-         | CTE_F
-         | CTE_CH
-         | TRUE
-         | FALSE
+  '''cte : ID rg_seenOperand
+         | CTE_I rg_seenOperand
+         | CTE_F rg_seenOperand
+         | CTE_CH rg_seenOperand
          | arraccess
          | call'''
   add_to_tree('cte', p)
-
-def p_arraccess(p):
-  '''arraccess : ID arr_index'''
-  add_to_tree('arraccess', p)
-
-def p_arr_index(p):
-  '''arr_index : LEFT_SB expression RIGHT_SB
-               | LEFT_SB expression RIGHT_SB LEFT_SB expression RIGHT_SB'''
-  add_to_tree('arr_index', p)
-
-def p_block(p):
-  '''block : LEFT_B statements RIGHT_B
-           | LEFT_B RIGHT_B'''
-  add_to_tree('block', p)
-
-def p_main(p):
-  '''main : MAIN r_seenMain proc_block'''
-  add_to_tree('main', p)
 
 # Rule used to create an cfg epsilon-like value.
 def p_empty(p):
   '''empty :'''
   add_to_tree('empty', p)
+
+# Semantic rules.
+
+def p_r_seenClass(p):
+  'r_seenClass : '
+  e = sq.seenClass(class_name=p[-1])
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_classParent(p):
+  'r_classParent : '
+  e = sq.classParent(class_parent=p[-1])
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_finishClass(p):
+  'r_finishClass : '
+  sq.finishClass()
+
+def p_r_seenAttr(p):
+  'r_seenAttr : '
+  sq.seenFunc(new_function='#attributes')
+
+def p_r_seenAccess(p):
+  'r_seenAccess : '
+  sq.seenAccess(new_access=p[-1])
+
+def p_r_seenType(p):
+  'r_seenType : '
+  e = sq.seenType(new_type=p[-1])
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_varName(p):
+  'r_varName : '
+  e = sq.varName(var_name=p[-1])
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_seenInit(p):
+  'r_seenInit : '
+  e = sq.seenFunc(new_function='init')
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_seenParam(p):
+  'r_seenParam : '
+  sq.setParam(True)
+
+def p_r_finishParam(p):
+  'r_finishParam : '
+  sq.setParam(False)
+
+def p_r_callParent(p):
+  'r_callParent : '
+  e = sq.callParent(parent=p[-1])
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_funcName(p):
+  'r_funcName : '
+  e = sq.seenFunc(new_function=p[-1], recordType=True)
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_isMethod(p):
+  'r_isMethod : '
+  sq.isMethod()
+
+def p_r_seenMain(p):
+  'r_seenMain : '
+  e = sq.seenFunc(new_function='#main')
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_rg_seenOperand(p):
+  'rg_seenOperand : '
+  sq.seenOperand(p[-1])
+
+def p_rs_seenOperator(p):
+  'rs_seenOperator : '
+  sq.seenOperator(p[-1])
+
+def p_rs_seenFactor(p):
+  'rs_seenFactor : '
+  sq.seenSubRule(['*', '/'])
+
+def p_rs_seenTerm(p):
+  'rs_seenTerm : '
+  sq.seenSubRule(['+', '-'])
+
+def p_rs_seenX(p):
+  'rs_seenX : '
+  sq.seenSubRule(['>', '<', '<>', '==', '<=', '>='])
+
+def p_rs_seenXp(p):
+  'rs_seenXp : '
+  sq.seenSubRule(['or'])
+
+def p_rs_seenExp(p):
+  'rs_seenExp : '
+  sq.seenSubRule(['and'])
+
 
 # Syntax error detection rules.
 
@@ -365,79 +418,16 @@ def p_e_program_disorder(p):
              | modules vars error'''
   handle_error(0, 0, 'Bad program structure, should be: classes -> global vars -> modules -> main')
 
-
 # Syntax error printing.
+
+def handle_error(line, lexpos, mssg):
+  error_prefix(line, lexpos, input_str)
+  print(mssg)
+  recover_parser(parser)
 
 def p_error(p):
   error_prefix(p.lineno, p.lexpos)
   print(f'Unexpected token {p.value}.')
-
-
-# Semantic rules.
-
-def p_r_seenClass(p):
-  'r_seenClass : '
-  e = s.seenClass(class_name=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
-
-def p_r_classParent(p):
-  'r_classParent : '
-  e = s.classParent(class_parent=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
-
-def p_r_finishClass(p):
-  'r_finishClass : '
-  s.finishClass()
-
-def p_r_seenAttr(p):
-  'r_seenAttr : '
-  s.seenFunc(new_function='#attributes')
-
-def p_r_seenAccess(p):
-  'r_seenAccess : '
-  s.seenAccess(new_access=p[-1])
-
-def p_r_seenType(p):
-  'r_seenType : '
-  e = s.seenType(new_type=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
-
-def p_r_varName(p):
-  'r_varName : '
-  e = s.varName(var_name=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
-
-def p_r_seenInit(p):
-  'r_seenInit : '
-  e = s.seenFunc(new_function='init')
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
-
-def p_r_seenParam(p):
-  'r_seenParam : '
-  s.setParam(True)
-
-def p_r_finishParam(p):
-  'r_finishParam : '
-  s.setParam(False)
-
-def p_r_callParent(p):
-  'r_callParent : '
-  e = s.callParent(parent=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
-
-def p_r_funcName(p):
-  'r_funcName : '
-  e = s.seenFunc(new_function=p[-1], recordType=True)
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
-
-def p_r_isMethod(p):
-  'r_isMethod : '
-  s.isMethod()
-
-def p_r_seenMain(p):
-  'r_seenMain : '
-  e = s.seenFunc(new_function='#main')
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 # Generate parser.
@@ -453,7 +443,4 @@ def set_input_str(s):
 def parseString(s):
   global input_str
   set_input_str(s)
-  try:
-    parser.parse(s, tracking=True)
-  except:
-    pass
+  parser.parse(s, tracking=True)
