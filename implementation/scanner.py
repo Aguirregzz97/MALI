@@ -1,6 +1,7 @@
 # Scanner implementation for MALI language.
 
 import ply.lex as lex
+import math
 
 # Language's reserved keywords.
 reserved = {
@@ -98,14 +99,13 @@ def t_ID(t):
     t.value = 0
   return t
 
-def t_CTE_I(t):
-  r'[-+]?[0-9]+'
-  t.value = int(t.value)
-  return t
-
 def t_CTE_F(t):
-  r'[-+]?[0-9]+(\.[0-9]+)?'
-  t.value = float(t.value)
+  r'[+-]?([0-9]*[.])?[0-9]+'
+  if int(math.floor(float(t.value))) == float(t.value):
+    t.value = int(t.value)
+    t.type = 'CTE_I'
+  else:
+    t.value = float(t.value)
   return t
 
 def t_newline(t):
