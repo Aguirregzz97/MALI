@@ -24,20 +24,20 @@ def new_class_dict(parent='#global'):
 # Intermediate code generation utils
 
 class available:
-  instances = {}
+  nextT = 1
+  avail = deque([])
 
-  def next(self, instance):
-    if instance not in self.instances:
-      self.instances[instance] = {'next' : 1, 'avail': deque([])}
-    if len(self.instances[instance]['avail']) == 0:
-      nextTemp = '#t' + str(self.instances[instance]['next'])
-      self.instances[instance]['next'] += 1
+  def next(self):
+
+    if len(self.avail) == 0:
+      nextTemp = 't' + str(self.nextT)
+      self.nextT += 1
     else:
-      nextTemp = '#t' + str(self.instances[instance]['avail'].popleft())
+      nextTemp = 't' + str(self.avail.popleft())
     return nextTemp
 
-  def free(self, instance, temp):
-    self.instances[instance]['avail'].append(temp[2:])
+  def free(self, temp):
+    self.avail.append(temp[1:])
 
 
 
@@ -86,17 +86,17 @@ sCube['char']['char']['/'] = 'char'
 sCube['char']['char']['='] = 'char'
 
 sCube['bool']['bool']['and'] = 'bool'
-sCube['bool']['bool']['or'] = 'bool' 
-sCube['bool']['bool']['>'] = 'bool' 
-sCube['bool']['bool']['<'] = 'bool' 
-sCube['bool']['bool']['<>'] = 'bool'  
-sCube['bool']['bool']['=='] = 'bool' 
+sCube['bool']['bool']['or'] = 'bool'
+sCube['bool']['bool']['>'] = 'bool'
+sCube['bool']['bool']['<'] = 'bool'
+sCube['bool']['bool']['<>'] = 'bool'
+sCube['bool']['bool']['=='] = 'bool'
 sCube['bool']['bool']['>='] = 'bool'
-sCube['bool']['bool']['<='] = 'bool' 
+sCube['bool']['bool']['<='] = 'bool'
 sCube['bool']['bool']['+'] = 'int'
 sCube['bool']['bool']['-'] = 'int'
-sCube['bool']['bool']['*'] = 'int' 
-sCube['bool']['bool']['/'] = 'int' 
+sCube['bool']['bool']['*'] = 'int'
+sCube['bool']['bool']['/'] = 'int'
 sCube['bool']['bool']['='] = 'bool'
 
 sCube['int']['float']['and'] = sCube['float']['int']['and'] = 'bool'

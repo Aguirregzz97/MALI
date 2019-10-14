@@ -24,7 +24,7 @@ def p_program(p):
              | main'''
   add_to_tree('program', p)
   #pp.pprint(p[0])
-  #pp.pprint(sq.classes)
+  pp.pprint(sq.classes)
   pp.pprint(sq.quadruples)
   if handle_error:
       sys.exit(-1)
@@ -403,7 +403,8 @@ def p_e_program_missing_main(p):
              | vars modules
              | classes
              | vars'''
-  handle_error(input_str.count('\n'), input_str.rfind('\n'), 'Missing main block.')
+  handle_error(input_str.count('\n'), input_str.rfind('\n'),
+               'Missing main block.')
 
 def p_e_program_main_not_end(p):
   '''program : classes vars modules main error
@@ -414,14 +415,16 @@ def p_e_program_main_not_end(p):
              | vars main error
              | main error'''
   pos = len(p)-1
-  handle_error(p.lineno(pos), p.lexpos(pos), 'The code should end with the main block.')
+  handle_error(p.lineno(pos), p.lexpos(pos),
+               'The code should end with the main block.')
 
 def p_e_program_disorder(p):
   '''program : vars classes error
              | modules classes error
              | vars modules classes error
              | modules vars error'''
-  handle_error(0, 0, 'Bad program structure, should be: classes -> global vars -> modules -> main')
+  handle_error(0, 0, 'Bad program structure, should be: classes -> ' +
+               'global vars -> modules -> main')
 
 # Syntax error printing.
 

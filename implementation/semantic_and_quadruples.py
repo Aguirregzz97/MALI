@@ -7,7 +7,7 @@ import re
 
 current_class = '#global'
 current_function = '#attributes'
-current_instance = '#global'
+current_instance = ''
 current_access = None
 current_type = None
 is_param = False
@@ -112,6 +112,7 @@ operands = []
 quadruples = []
 avail = available()
 
+
 # Assigns the type on type_or_error. If the variable does not exist,
 # assigns error message to type_or_error. Returns boolean wether the
 # operand is constant or not.
@@ -134,8 +135,8 @@ def getType(raw_operand, type_or_error):
       type_or_error.val = (
           classes[current_class][current_function][raw_operand]['#type'])
       return False
-  #return type_or_error
-  # TODO: VERIFICAR QUE ESTE DECLARADO EN SCOPE Y QUE ESTE ASIGNADO
+  # TODO: VERIFICAR QUE ESTE DECLARADO EN SCOPE Y QUE ESTE ASIGNADO/INICIADO
+
 
 def seenOperand(raw_operand):
   global operands, types
@@ -146,17 +147,19 @@ def seenOperand(raw_operand):
   if isConstant:
     operands.append(raw_operand)
   else:
-    operands.append((current_instance, raw_operand))
+    operands.append(f'{current_instance}{raw_operand}')
   types.append(type_or_error.val)
+
 
 def seenOperator(operator):
   global operators
   operators.append(str(operator))
 
+
 def freeIfTemp(operand):
-  if type(operand) is not tuple : return
-  if re.match(r"\#[t].*", operand[1]):
-    avail.free(operand[0], operand[1])
+  if re.match(r"[t].*", str(operand)):
+    avail.free(operand)
+
 
 def generateQuadruple(operator):
   global operators, types, operands, quadruples, avail
@@ -166,21 +169,24 @@ def generateQuadruple(operator):
   left_type = types.pop()
   operator = operators.pop()
   result_type = sCube[left_type][right_type][operator]
-  result = (current_instance, avail.next(current_instance))
+  result = avail.next()
   quadruples.append([operator, left_operand, right_operand, result])
   operands.append(result)
   types.append(result_type)
   freeIfTemp(left_operand)
   freeIfTemp(right_operand)
-  
+
+
 def seenSubRule(ops):
   operator = top(operators)
   if operator in ops:
     generateQuadruple(operator)
 
+
 def popFakeBottom():
   global operators
   operators.pop()
+
 
 def assignment(result):
   global operators, types, operands, quadruples
@@ -193,4 +199,3 @@ def assignment(result):
   quadruples.append(['=', left_operand, None, result])
   operands.append(result)
   types.append(result_type_or_error.val)
-
