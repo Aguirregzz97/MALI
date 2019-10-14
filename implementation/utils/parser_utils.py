@@ -26,6 +26,6 @@ def find_column(lexpos, input_str):
   return (lexpos - line_start) + 1
 
 def error_prefix(line, lexpos, input_str):
-  print(f'Error at {line}:{find_column(lexpos)} - ', end='')
+  print(f'Error at {line}:{find_column(lexpos, input_str)} - ', end='')
   global error
   error = True

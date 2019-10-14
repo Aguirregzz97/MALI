@@ -63,7 +63,7 @@ main {
 
   cont = 0;
 
-  z = w * y + b * c;
+  z = w * y + b * c + 100 * (7.8 + 'a');
 
   a.Ladrar;
 }

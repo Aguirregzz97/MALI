@@ -1,9 +1,13 @@
 from implementation.utils.semantic_and_quadruples_utils import *
+from implementation.utils.generic_utils import *
+from collections import defaultdict
+import re
 
 # Semantic table filling.
 
 current_class = '#global'
 current_function = '#attributes'
+current_instance = '#global'
 current_access = None
 current_type = None
 is_param = False
@@ -89,10 +93,10 @@ def setParam(val):
 
 
 def callParent(parent):
-  if '#parent' not in classes[current_class]:
+  if not classes[current_class]['#parent']:
     return f'{current_class} has no parent class but tries to extend ' + (
         f'{parent} in constructor')
-  elif parent not in classes[current_class]['#parent']:
+  elif parent != classes[current_class]['#parent']:
     return f"{parent} is not {current_class}'s parent"
 
 
@@ -106,38 +110,87 @@ operators = []
 types = []
 operands = []
 quadruples = []
-next_temp = 1
+avail = available()
 
-def getOperand(rawOperand):
-  pass
+# Assigns the type on type_or_error. If the variable does not exist,
+# assigns error message to type_or_error. Returns boolean wether the
+# operand is constant or not.
+def getType(raw_operand, type_or_error):
+  t = type(raw_operand)
+  if t == int:
+    type_or_error.val = 'int'
+    return True
+  elif t == float:
+    type_or_error.val = 'float'
+    return True
+  elif t == bool:
+    type_or_error.val = 'bool'
+    return True
+  elif t == str:
+    if re.match(r"\'.\'", raw_operand):
+      type_or_error.val = 'char'
+      return True
+    elif raw_operand in classes[current_class][current_function]:
+      type_or_error.val = (
+          classes[current_class][current_function][raw_operand]['#type'])
+      return False
+  #return type_or_error
+  # TODO: VERIFICAR QUE ESTE DECLARADO EN SCOPE Y QUE ESTE ASIGNADO
 
-def seenOperand(operand):
+def seenOperand(raw_operand):
   global operands, types
-  if isinstance(operand, tuple):
-    operand = top(operand)
-  if operand in classes[current_class][current_function]:
-    opType = classes[current_class][current_function][operand]['#type']
+  type_or_error = val_or_error()
+  isConstant = getType(raw_operand, type_or_error)
+  if type_or_error.error:
+    return type_or_error.error
+  if isConstant:
+    operands.append(raw_operand)
   else:
-    opType = type(operand)
-  operands.append(operand)
-  types.append(opType)
+    operands.append((current_instance, raw_operand))
+  types.append(type_or_error.val)
 
 def seenOperator(operator):
   global operators
   operators.append(str(operator))
 
+def freeIfTemp(operand):
+  if type(operand) is not tuple : return
+  if re.match(r"\#[t].*", operand[1]):
+    avail.free(operand[0], operand[1])
+
+def generateQuadruple(operator):
+  global operators, types, operands, quadruples, avail
+  right_operand = operands.pop()
+  right_type = types.pop()
+  left_operand = operands.pop()
+  left_type = types.pop()
+  operator = operators.pop()
+  result_type = sCube[left_type][right_type][operator]
+  result = (current_instance, avail.next(current_instance))
+  quadruples.append([operator, left_operand, right_operand, result])
+  operands.append(result)
+  types.append(result_type)
+  freeIfTemp(left_operand)
+  freeIfTemp(right_operand)
+  
 def seenSubRule(ops):
-  global operators, types, operands, quadruples, next_temp
   operator = top(operators)
   if operator in ops:
-    right_operand = operands.pop()
-    right_type = types.pop()
-    left_operand = operands.pop()
-    left_type = types.pop()
-    operator = operators.pop()
-    result_type = sCube[left_type][right_type][operator]
-    result = '#t' + str(next_temp)
-    quadruples.append([operator, left_operand, right_operand, result])
-    operands.append(result)
-    types.append(result_type)
-    next_temp += 1
+    generateQuadruple(operator)
+
+def popFakeBottom():
+  global operators
+  operators.pop()
+
+def assignment(result):
+  global operators, types, operands, quadruples
+  left_operand = operands.pop()
+  left_type = types.pop()
+  result_type_or_error = val_or_error()
+  getType(result, result_type_or_error)
+  if result_type_or_error.error:
+    return type_or_error.error
+  quadruples.append(['=', left_operand, None, result])
+  operands.append(result)
+  types.append(result_type_or_error.val)
+

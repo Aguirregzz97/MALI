@@ -25,7 +25,7 @@ def p_program(p):
   add_to_tree('program', p)
   #pp.pprint(p[0])
   #pp.pprint(sq.classes)
-  print(sq.quadruples)
+  pp.pprint(sq.quadruples)
   if handle_error:
       sys.exit(-1)
 
@@ -159,6 +159,7 @@ def p_assign(p):
             | ID arr_index EQUAL READ
             | ID EQUAL expression
             | ID EQUAL READ'''
+  sq.assignment(p[1])
   add_to_tree('assign', p)
 
 def p_call(p):
@@ -265,7 +266,7 @@ def p_term(p):
   add_to_tree('term', p)
 
 def p_factor(p):
-  '''factor : not LEFT_P expression RIGHT_P
+  '''factor : not LEFT_P rs_seenOperator expression RIGHT_P rs_popFakeBottom
             | not sign cte'''
   add_to_tree('factor', p)
 
@@ -281,10 +282,10 @@ def p_sign(p):
   add_to_tree('sign', p)
 
 def p_cte(p):
-  '''cte : ID rg_seenOperand
-         | CTE_I rg_seenOperand
-         | CTE_F rg_seenOperand
-         | CTE_CH rg_seenOperand
+  '''cte : ID rs_seenOperand
+         | CTE_I rs_seenOperand
+         | CTE_F rs_seenOperand
+         | CTE_CH rs_seenOperand
          | arraccess
          | call'''
   add_to_tree('cte', p)
@@ -360,8 +361,8 @@ def p_r_seenMain(p):
   e = sq.seenFunc(new_function='#main')
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
-def p_rg_seenOperand(p):
-  'rg_seenOperand : '
+def p_rs_seenOperand(p):
+  'rs_seenOperand : '
   sq.seenOperand(p[-1])
 
 def p_rs_seenOperator(p):
@@ -387,6 +388,10 @@ def p_rs_seenXp(p):
 def p_rs_seenExp(p):
   'rs_seenExp : '
   sq.seenSubRule(['and'])
+
+def p_rs_popFakeBottom(p):
+  'rs_popFakeBottom : '
+  sq.popFakeBottom()
 
 
 # Syntax error detection rules.
@@ -426,7 +431,7 @@ def handle_error(line, lexpos, mssg):
   recover_parser(parser)
 
 def p_error(p):
-  error_prefix(p.lineno, p.lexpos)
+  error_prefix(p.lineno, p.lexpos, input_str)
   print(f'Unexpected token {p.value}.')
 
 

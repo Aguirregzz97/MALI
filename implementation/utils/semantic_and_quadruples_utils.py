@@ -1,9 +1,9 @@
-from collections import defaultdict
+from collections import defaultdict, deque
 
 # Symbol table utils.
 
 def new_var_dict(type=None, access=None):
-  var_dict = {'#id': None}
+  var_dict = {'#assigned' : False}
   if type: var_dict['#type'] = type
   if access: var_dict['#access'] = access
   return var_dict
@@ -16,20 +16,32 @@ def new_func_dict(type=None, access=None):
   return func_dict
 
 
-def new_class_dict(parent=None):
-  class_dict = {}
-  if parent: class_dict['#parent'] = parent
+def new_class_dict(parent='#global'):
+  class_dict = {'#parent': parent}
   return class_dict
 
 
 # Intermediate code generation utils
 
-def top(l):
-  if len(l) > 0:
-    return l[-1]
-  return None
+class available:
+  instances = {}
 
-sCube = defaultdict(lambda : defaultdict(dict))
+  def next(self, instance):
+    if instance not in self.instances:
+      self.instances[instance] = {'next' : 1, 'avail': deque([])}
+    if len(self.instances[instance]['avail']) == 0:
+      nextTemp = '#t' + str(self.instances[instance]['next'])
+      self.instances[instance]['next'] += 1
+    else:
+      nextTemp = '#t' + str(self.instances[instance]['avail'].popleft())
+    return nextTemp
+
+  def free(self, instance, temp):
+    self.instances[instance]['avail'].append(temp[2:])
+
+
+
+sCube = defaultdict(lambda : defaultdict(lambda : defaultdict(dict)))
 
 sCube['int']['int']['and'] = 'bool'
 sCube['int']['int']['or'] = 'bool'
@@ -85,7 +97,7 @@ sCube['bool']['bool']['+'] = 'int'
 sCube['bool']['bool']['-'] = 'int'
 sCube['bool']['bool']['*'] = 'int' 
 sCube['bool']['bool']['/'] = 'int' 
-sCube['bool']['bool']['='] = 'int'
+sCube['bool']['bool']['='] = 'bool'
 
 sCube['int']['float']['and'] = sCube['float']['int']['and'] = 'bool'
 sCube['int']['float']['or'] = sCube['float']['int']['or'] = 'bool'
@@ -99,7 +111,8 @@ sCube['int']['float']['+'] = sCube['float']['int']['+'] = 'float'
 sCube['int']['float']['-'] = sCube['float']['int']['-'] = 'float'
 sCube['int']['float']['*'] = sCube['float']['int']['*'] = 'float'
 sCube['int']['float']['/'] = sCube['float']['int']['/'] = 'float'
-sCube['int']['float']['='] = sCube['float']['int']['='] = 'float'
+sCube['int']['float']['='] = 'int'
+sCube['float']['int']['='] = 'float'
 
 sCube['int']['char']['and'] = sCube['char']['int']['and'] = 'char'
 sCube['int']['char']['or'] = sCube['char']['int']['or'] = 'char'
@@ -113,7 +126,8 @@ sCube['int']['char']['+'] = sCube['char']['int']['+'] = 'char'
 sCube['int']['char']['-'] = sCube['char']['int']['-'] = 'char'
 sCube['int']['char']['*'] = sCube['char']['int']['*'] = 'char'
 sCube['int']['char']['/'] = sCube['char']['int']['/'] = 'char'
-sCube['int']['char']['='] = sCube['char']['int']['='] = 'char'
+sCube['int']['char']['='] = 'int'
+sCube['char']['int']['='] = 'char'
 
 sCube['int']['bool']['and'] = sCube['bool']['int']['and'] = 'bool'
 sCube['int']['bool']['or'] = sCube['bool']['int']['or'] = 'bool'
@@ -127,7 +141,8 @@ sCube['int']['bool']['+'] = sCube['bool']['int']['+'] = 'int'
 sCube['int']['bool']['-'] = sCube['bool']['int']['-'] = 'int'
 sCube['int']['bool']['*'] = sCube['bool']['int']['*'] = 'int'
 sCube['int']['bool']['/'] = sCube['bool']['int']['/'] = 'int'
-sCube['int']['bool']['='] = sCube['bool']['int']['='] = 'int'
+sCube['int']['bool']['='] = 'int'
+sCube['bool']['int']['='] = 'bool'
 
 sCube['float']['char']['and'] = sCube['char']['float']['and'] = 'bool'
 sCube['float']['char']['or'] = sCube['char']['float']['or'] = 'bool'
@@ -141,7 +156,8 @@ sCube['float']['char']['+'] = sCube['char']['float']['+'] = 'float'
 sCube['float']['char']['-'] = sCube['char']['float']['-'] = 'float'
 sCube['float']['char']['*'] = sCube['char']['float']['*'] = 'float'
 sCube['float']['char']['/'] = sCube['char']['float']['/'] = 'float'
-sCube['float']['char']['='] = sCube['char']['float']['='] = 'float'
+sCube['float']['char']['='] = 'float'
+sCube['char']['float']['='] = 'char'
 
 sCube['float']['bool']['and'] = sCube['bool']['float']['and'] = 'bool'
 sCube['float']['bool']['or'] = sCube['bool']['float']['or'] = 'bool'
@@ -155,7 +171,8 @@ sCube['float']['bool']['+'] = sCube['bool']['float']['+'] = 'float'
 sCube['float']['bool']['-'] = sCube['bool']['float']['-'] = 'float'
 sCube['float']['bool']['*'] = sCube['bool']['float']['*'] = 'float'
 sCube['float']['bool']['/'] = sCube['bool']['float']['/'] = 'float'
-sCube['float']['bool']['='] = sCube['bool']['float']['='] = 'float'
+sCube['float']['bool']['='] = 'float'
+sCube['bool']['float']['='] = 'bool'
 
 sCube['char']['bool']['and'] = sCube['bool']['char']['and'] = 'bool'
 sCube['char']['bool']['or'] = sCube['bool']['char']['or'] = 'bool'
@@ -169,6 +186,5 @@ sCube['char']['bool']['+'] = sCube['bool']['char']['+'] = 'char'
 sCube['char']['bool']['-'] = sCube['bool']['char']['-'] = 'char'
 sCube['char']['bool']['*'] = sCube['bool']['char']['*'] = 'char'
 sCube['char']['bool']['/'] = sCube['bool']['char']['/'] = 'char'
-sCube['char']['bool']['='] = sCube['bool']['char']['='] = 'char'
-
-sCube['int']['float'][''] = sCube['float']['int'][''] = 'float'
+sCube['char']['bool']['='] = 'char'
+sCube['bool']['char']['='] = 'bool'
