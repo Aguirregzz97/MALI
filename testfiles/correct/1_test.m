@@ -20,6 +20,8 @@ class Perro extends Animal {
     public char nombre, raza;
   }
 
+  # El e dentro de Animal es una expresion que se agrega a los cuadruplos pero que no se
+  # saca porque aun no programamos la llamada a funcion
   init(int e, char n, char r) : Animal(e) {
     nombre = n;
     raza = r;
@@ -30,6 +32,7 @@ class Perro extends Animal {
       int z;
     }
     write "Woof Woof";
+    write edad;
   }
 }
 
@@ -42,7 +45,7 @@ func void printAnimal(Animal a) {
     int x, y;
   }
 
-  write a.nombre;
+  #write a.nombre;
 }
 
 func void printAlgo() {
@@ -63,7 +66,21 @@ main {
 
   cont = 0;
 
+  w = read;
+
   z = w * y + b * c + 100 * (7.8 + 'a');
 
-  a.Ladrar;
+  if (y > b) {
+    write "True";
+  } elif (y < b) {
+    write "False";
+  } elif (c < b) {
+    write "False2";
+  } else {
+    write "Neither";
+  };
+
+  a = b + c;
+
+  #a.Ladrar;
 }

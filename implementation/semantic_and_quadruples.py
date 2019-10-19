@@ -110,7 +110,44 @@ operators = []
 types = []
 operands = []
 quadruples = []
+jumps = []
+qCount = 0
 avail = available()
+
+
+def generateQuadruple(a, b, c, d):
+  global quadruples, qCount
+  quadruples.append([a,b,c,d])
+  qCount += 1
+
+
+def findOperatorAndType(raw_operand, type_or_error, markAssigned=False):
+  def search(prefix, checkAccess=False):
+    nonlocal type_or_error
+    prefix = prefix.get(raw_operand, None)
+    if prefix:
+      if markAssigned:
+        prefix['#assigned'] = True
+      if not prefix['#assigned']:
+        type_or_error.error = f'Variable {raw_operand} not yet assigned'
+      elif checkAccess and prefix.get('#access', 'public') == 'private':
+        type_or_error.error = f'Variable {raw_operand} has private access'
+      else:
+        type_or_error.val = prefix['#type']
+        return True
+    return False
+
+  if not search(classes[current_class][current_function]['#params']):
+    if not search(classes[current_class][current_function]):
+      if not search(classes[current_class]['#attributes']):
+        curr_class = current_class
+        while True:
+          curr_class = classes[curr_class]['#parent']
+          if search(classes[curr_class]['#attributes'], True) or (
+              curr_class == '#global'):
+            break
+          else:
+            type_or_error.error = f'Variable {raw_operand} not in scope.'
 
 
 # Assigns the type on type_or_error. If the variable does not exist,
@@ -131,16 +168,16 @@ def getType(raw_operand, type_or_error):
     if re.match(r"\'.\'", raw_operand):
       type_or_error.val = 'char'
       return True
-    elif raw_operand in classes[current_class][current_function]:
-      type_or_error.val = (
-          classes[current_class][current_function][raw_operand]['#type'])
+    else:
+      findOperatorAndType(raw_operand, type_or_error)
       return False
-  # TODO: VERIFICAR QUE ESTE DECLARADO EN SCOPE Y QUE ESTE ASIGNADO/INICIADO
 
 
 def seenOperand(raw_operand):
   global operands, types
   type_or_error = val_or_error()
+  if type_or_error.error:
+    return type_or_error.error
   isConstant = getType(raw_operand, type_or_error)
   if type_or_error.error:
     return type_or_error.error
@@ -161,26 +198,22 @@ def freeIfTemp(operand):
     avail.free(operand)
 
 
-def generateQuadruple(operator):
-  global operators, types, operands, quadruples, avail
-  right_operand = operands.pop()
-  right_type = types.pop()
-  left_operand = operands.pop()
-  left_type = types.pop()
-  operator = operators.pop()
-  result_type = sCube[left_type][right_type][operator]
-  result = avail.next()
-  quadruples.append([operator, left_operand, right_operand, result])
-  operands.append(result)
-  types.append(result_type)
-  freeIfTemp(left_operand)
-  freeIfTemp(right_operand)
-
-
 def seenSubRule(ops):
+  global operators, types, operands, avail
   operator = top(operators)
   if operator in ops:
-    generateQuadruple(operator)
+    right_operand = operands.pop()
+    right_type = types.pop()
+    left_operand = operands.pop()
+    left_type = types.pop()
+    operator = operators.pop()
+    result_type = sCube[left_type][right_type][operator]
+    result = avail.next()
+    generateQuadruple(operator, left_operand, right_operand, result)
+    operands.append(result)
+    types.append(result_type)
+    freeIfTemp(left_operand)
+    freeIfTemp(right_operand)
 
 
 def popFakeBottom():
@@ -188,14 +221,51 @@ def popFakeBottom():
   operators.pop()
 
 
-def assignment(result):
-  global operators, types, operands, quadruples
+def doAssign(result):
+  global operators, types, operands
   left_operand = operands.pop()
   left_type = types.pop()
   result_type_or_error = val_or_error()
-  getType(result, result_type_or_error)
-  if result_type_or_error.error:
-    return type_or_error.error
-  quadruples.append(['=', left_operand, None, result])
-  operands.append(result)
+  result_type_or_error = val_or_error()
+  findOperatorAndType(result, result_type_or_error)
+  if result_type_or_error.error: return result_type_or_error.error
+  generateQuadruple('=', left_operand, None, result)
   types.append(result_type_or_error.val)
+
+
+def doWrite(str):
+  if str:
+    generateQuadruple('write', None, None, str)
+  else:
+    word = operands.pop()
+    type = types.pop()
+    word_type_or_error = val_or_error()
+    findOperatorAndType(word, word_type_or_error)
+    if word_type_or_error.error: return word_type_or_error.error
+    generateQuadruple('write', None, None, word)
+
+
+def doRead():
+  global operands
+  operands.append('#read')
+
+
+def seenIfCondition():
+  exp_type = types.pop()
+  if exp_type != 'bool':
+    return 'Evaluated expression is not boolean'
+  result = operands.pop()
+  generateQuadruple('GotoF', result, None, None)
+  jumps.append(qCount-1)
+
+
+def seenElse():
+  generateQuadruple('Goto', None, None, None)
+  false = jumps.pop()
+  jumps.append(qCount-1)
+  quadruples[false][3] = qCount
+
+
+def seenEndIf():
+  end = jumps.pop()
+  quadruples[end][3] = qCount

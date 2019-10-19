@@ -24,8 +24,14 @@ def p_program(p):
              | main'''
   add_to_tree('program', p)
   #pp.pprint(p[0])
-  pp.pprint(sq.classes)
-  pp.pprint(sq.quadruples)
+  #pp.pprint(sq.classes)
+
+  qCount = 0
+  for quadruple in sq.quadruples:
+    print(qCount, quadruple)
+    qCount += 1
+  #print(sq.jumps, sq.operands)
+
   if handle_error:
       sys.exit(-1)
 
@@ -156,10 +162,10 @@ def p_statement(p):
 
 def p_assign(p):
   '''assign : ID arr_index EQUAL expression
-            | ID arr_index EQUAL READ
+            | ID arr_index EQUAL READ rs_doRead
             | ID EQUAL expression
-            | ID EQUAL READ'''
-  sq.assignment(p[1])
+            | ID EQUAL READ rs_doRead'''
+  sq.doAssign(p[1])
   add_to_tree('assign', p)
 
 def p_call(p):
@@ -195,10 +201,10 @@ def p_write(p):
   add_to_tree('write', p)
 
 def p_words(p):
-  '''words : CTE_STR COMMA words
-           | CTE_STR
-           | expression COMMA words
-           | expression'''
+  '''words : CTE_STR rs_doWriteStr COMMA words
+           | CTE_STR rs_doWriteStr
+           | expression rs_doWrite COMMA words
+           | expression rs_doWrite'''
   add_to_tree('words', p)
 
 def p_if(p):
@@ -206,9 +212,11 @@ def p_if(p):
   add_to_tree('if', p)
 
 def p_condition(p):
-  '''condition : LEFT_P expression RIGHT_P block ELIF condition
-               | LEFT_P expression RIGHT_P block ELSE block
-               | LEFT_P expression RIGHT_P block'''
+  '''condition : LEFT_P expression RIGHT_P rs_seenIfCond block ELIF \
+                 rs_seenElse condition rs_seenEndIf
+               | LEFT_P expression RIGHT_P rs_seenIfCond block ELSE \
+                 rs_seenElse block rs_seenEndIf
+               | LEFT_P expression RIGHT_P rs_seenIfCond block rs_seenEndIf'''
   add_to_tree('condition', p)
 
 def p_while(p):
@@ -363,7 +371,8 @@ def p_r_seenMain(p):
 
 def p_rs_seenOperand(p):
   'rs_seenOperand : '
-  sq.seenOperand(p[-1])
+  e = sq.seenOperand(p[-1])
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_rs_seenOperator(p):
   'rs_seenOperator : '
@@ -392,6 +401,31 @@ def p_rs_seenExp(p):
 def p_rs_popFakeBottom(p):
   'rs_popFakeBottom : '
   sq.popFakeBottom()
+
+def p_rs_doWriteStr(p):
+  'rs_doWriteStr : '
+  sq.doWrite(p[-1])
+
+def p_rs_doWrite(p):
+  'rs_doWrite : '
+  sq.doWrite(None)
+
+def p_rs_doRead(p):
+  'rs_doRead : '
+  sq.doRead()
+
+def p_rs_seenIfCond(p):
+  'rs_seenIfCond : '
+  e = sq.seenIfCondition()
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_rs_seenElse(p):
+  'rs_seenElse : '
+  sq.seenElse()
+
+def p_rs_seenEndIf(p):
+  'rs_seenEndIf : '
+  sq.seenEndIf()
 
 
 # Syntax error detection rules.

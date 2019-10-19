@@ -3,7 +3,7 @@ from collections import defaultdict, deque
 # Symbol table utils.
 
 def new_var_dict(type=None, access=None):
-  var_dict = {'#assigned' : False}
+  var_dict = {'#assigned' : True}
   if type: var_dict['#type'] = type
   if access: var_dict['#access'] = access
   return var_dict
