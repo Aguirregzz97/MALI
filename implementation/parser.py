@@ -32,8 +32,8 @@ def p_program(p):
     qCount += 1
   #print(sq.jumps, sq.operands)
 
-  if handle_error:
-      sys.exit(-1)
+  if error:
+    sys.exit(-1)
 
 def p_classes(p):
   '''classes : class classes

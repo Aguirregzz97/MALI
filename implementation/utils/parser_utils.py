@@ -1,4 +1,3 @@
-
 # Parsing utilities.
 
 def recover_parser(parser):
