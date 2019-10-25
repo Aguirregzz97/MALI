@@ -24,7 +24,7 @@ def p_program(p):
              | main'''
   add_to_tree('program', p)
   #pp.pprint(p[0])
-  #pp.pprint(sq.classes)
+  pp.pprint(sq.classes)
 
   qCount = 0
   for quadruple in sq.quadruples:
