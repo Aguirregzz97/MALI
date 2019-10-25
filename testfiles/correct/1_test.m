@@ -80,6 +80,11 @@ main {
     write "Neither";
   };
 
+  while(cont < 5) {
+    write '1';
+    cont = cont + 1;
+  };
+
   a = b + c;
 
   #a.Ladrar;

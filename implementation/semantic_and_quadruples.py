@@ -250,7 +250,7 @@ def doRead():
   operands.append('#read')
 
 
-def seenIfCondition():
+def seenCondition():
   exp_type = types.pop()
   if exp_type != 'bool':
     return 'Evaluated expression is not boolean'
@@ -269,3 +269,12 @@ def seenElse():
 def seenEndIf():
   end = jumps.pop()
   quadruples[end][3] = qCount
+
+def seenWhile():
+  jumps.append(qCount)
+
+def seenEndWhile():
+  end = jumps.pop()
+  quadruples[end][3] = qCount
+  ret = jumps.pop()
+  generateQuadruple('Goto', None, None, ret)

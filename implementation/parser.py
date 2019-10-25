@@ -212,15 +212,15 @@ def p_if(p):
   add_to_tree('if', p)
 
 def p_condition(p):
-  '''condition : LEFT_P expression RIGHT_P rs_seenIfCond block ELIF \
+  '''condition : LEFT_P expression RIGHT_P rs_seenCond block ELIF \
                  rs_seenElse condition rs_seenEndIf
-               | LEFT_P expression RIGHT_P rs_seenIfCond block ELSE \
+               | LEFT_P expression RIGHT_P rs_seenCond block ELSE \
                  rs_seenElse block rs_seenEndIf
-               | LEFT_P expression RIGHT_P rs_seenIfCond block rs_seenEndIf'''
+               | LEFT_P expression RIGHT_P rs_seenCond block rs_seenEndIf'''
   add_to_tree('condition', p)
 
 def p_while(p):
-  '''while : WHILE LEFT_P expression RIGHT_P block'''
+  '''while : WHILE rs_seenWhile LEFT_P expression RIGHT_P rs_seenCond block rs_seenEndWhile'''
   add_to_tree('while', p)
 
 def p_arraccess(p):
@@ -414,9 +414,9 @@ def p_rs_doRead(p):
   'rs_doRead : '
   sq.doRead()
 
-def p_rs_seenIfCond(p):
-  'rs_seenIfCond : '
-  e = sq.seenIfCondition()
+def p_rs_seenCond(p):
+  'rs_seenCond : '
+  e = sq.seenCondition()
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_rs_seenElse(p):
@@ -426,6 +426,14 @@ def p_rs_seenElse(p):
 def p_rs_seenEndIf(p):
   'rs_seenEndIf : '
   sq.seenEndIf()
+
+def p_rs_seenWhile(p):
+  'rs_seenWhile : '
+  sq.seenWhile()
+
+def p_rs_seenEndWhile(p):
+  'rs_seenEndWhile : '
+  sq.seenEndWhile()
 
 
 # Syntax error detection rules.
