@@ -5,9 +5,11 @@ import re
 
 # Semantic table filling.
 
+classes = {'#global': new_class_dict()}
+possible_types = ("int", "float", "char", "bool", "void")
+
 current_class = '#global'
 current_function = '#attributes'
-current_instance = ''
 current_access = None
 current_type = None
 is_param = False
@@ -15,13 +17,6 @@ current_x = None
 current_y = None
 param_counter = 0
 var_counter = 0
-
-classes = {'#global': new_class_dict()}
-possible_types = ("int", "float", "char", "bool", "void")
-
-
-def getClass(class_name):
-  return classes[class_name]
 
 def seenClass(class_name):
   if class_name in classes:
@@ -46,7 +41,7 @@ def finishClass():
 
 
 def seenFunc(new_function):
-  if new_function in classes[current_class]:
+  if new_function in classes[current_class]['#funcs']:
     return f"Redeclared function {new_function}"
   else:
     global current_function
@@ -193,7 +188,7 @@ def seenOperand(raw_operand):
   if isConstant:
     operands.append(raw_operand)
   else:
-    operands.append(f'{current_instance}{raw_operand}')
+    operands.append(raw_operand)
   types.append(type_or_error.val)
 
 
