@@ -68,7 +68,9 @@ main {
     int z,y,w,b,c;
   }
 
-  a = Perro(5);
+  #a = Perro;
+
+  #a.init();
 
   a = b;
 

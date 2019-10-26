@@ -2,22 +2,33 @@ from collections import defaultdict, deque
 
 # Symbol table utils.
 
-def new_var_dict(type=None, access=None):
-  var_dict = {'#assigned' : True}
-  if type: var_dict['#type'] = type
+def new_var_dict(type, access=None):
+  var_dict = {
+    '#assigned' : True,
+    '#type': type
+  }
   if access: var_dict['#access'] = access
   return var_dict
 
 
 def new_func_dict(type=None, access=None):
-  func_dict = {'#param_counter': 0, '#var_counter': 0}
+  func_dict = {
+    '#param_counter': 0,
+    '#var_counter': 0,
+    '#vars': {}
+  }
   if type: func_dict['#type'] = type
   if access: func_dict['#access'] = access
   return func_dict
 
 
 def new_class_dict(parent='#global'):
-  class_dict = {'#parent': parent}
+  class_dict = {
+    '#parent': parent,
+    '#funcs': {
+      '#attributes': new_func_dict()
+    }
+  }
   return class_dict
 
 

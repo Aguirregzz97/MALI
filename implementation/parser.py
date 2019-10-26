@@ -6,7 +6,7 @@ import implementation.semantic_and_quadruples as sq
 from implementation.utils.parser_utils import *
 import sys
 
-import pprint
+import pprint, json
 pp = pprint.PrettyPrinter()
 
 input_str = ''
@@ -24,6 +24,7 @@ def p_program(p):
              | main'''
   add_to_tree('program', p)
   #pp.pprint(p[0])
+  #print(json.dumps(sq.classes, indent=4))
   pp.pprint(sq.classes)
 
   qCount = 0
@@ -63,7 +64,7 @@ def p_attr_dec(p):
   add_to_tree('attr_dec', p)
 
 def p_init(p):
-  '''init : INIT r_seenInit LEFT_P param RIGHT_P init_factor'''
+  '''init : INIT r_seenInit LEFT_P param RIGHT_P init_factor r_finishFunc'''
   add_to_tree('init', p)
 
 def p_init_factor(p):
@@ -163,9 +164,9 @@ def p_statement(p):
 
 def p_assign(p):
   '''assign : ID arr_index EQUAL expression
-            | ID arr_index EQUAL READ rs_doRead
+            | ID arr_index EQUAL READ r_doRead
             | ID EQUAL expression
-            | ID EQUAL READ rs_doRead'''
+            | ID EQUAL READ r_doRead'''
   sq.doAssign(p[1])
   add_to_tree('assign', p)
 
@@ -186,7 +187,7 @@ def p_param_pass_aux(p):
 
 def p_path(p):
   '''path : ID DOT path
-          | ID'''
+          | ID r_seenCall'''
   add_to_tree('path', p)
 
 def p_path_aux(p):
@@ -202,10 +203,10 @@ def p_write(p):
   add_to_tree('write', p)
 
 def p_words(p):
-  '''words : CTE_STR rs_doWriteStr COMMA words
-           | CTE_STR rs_doWriteStr
-           | expression rs_doWrite COMMA words
-           | expression rs_doWrite'''
+  '''words : CTE_STR r_doWriteStr COMMA words
+           | CTE_STR r_doWriteStr
+           | expression r_doWrite COMMA words
+           | expression r_doWrite'''
   add_to_tree('words', p)
 
 def p_if(p):
@@ -213,15 +214,16 @@ def p_if(p):
   add_to_tree('if', p)
 
 def p_condition(p):
-  '''condition : LEFT_P expression RIGHT_P rs_seenCond block ELIF \
-                 rs_seenElse condition rs_seenEndIf
-               | LEFT_P expression RIGHT_P rs_seenCond block ELSE \
-                 rs_seenElse block rs_seenEndIf
-               | LEFT_P expression RIGHT_P rs_seenCond block rs_seenEndIf'''
+  '''condition : LEFT_P expression RIGHT_P r_seenCond block ELIF \
+                 r_seenElse condition r_seenEndIf
+               | LEFT_P expression RIGHT_P r_seenCond block ELSE \
+                 r_seenElse block r_seenEndIf
+               | LEFT_P expression RIGHT_P r_seenCond block r_seenEndIf'''
   add_to_tree('condition', p)
 
 def p_while(p):
-  '''while : WHILE rs_seenWhile LEFT_P expression RIGHT_P rs_seenCond block rs_seenEndWhile'''
+  '''while : WHILE r_seenWhile LEFT_P expression RIGHT_P r_seenCond block \
+             r_seenEndWhile'''
   add_to_tree('while', p)
 
 def p_arraccess(p):
@@ -243,39 +245,39 @@ def p_main(p):
   add_to_tree('main', p)
 
 def p_expression(p):
-  '''expression : exp rs_seenExp AND rs_seenOperator expression
-                | exp rs_seenExp'''
+  '''expression : exp r_seenExp AND r_seenOperator expression
+                | exp r_seenExp'''
   add_to_tree('expression', p)
 
 def p_exp(p):
-  '''exp : xp rs_seenXp OR rs_seenOperator exp
-         | xp rs_seenXp'''
+  '''exp : xp r_seenXp OR r_seenOperator exp
+         | xp r_seenXp'''
   add_to_tree('exp', p)
 
 def p_xp(p):
-  '''xp : x rs_seenX MORE_T rs_seenOperator xp
-        | x rs_seenX LESS_T rs_seenOperator xp
-        | x rs_seenX DIFFERENT rs_seenOperator xp
-        | x rs_seenX ISEQUAL rs_seenOperator xp
-        | x rs_seenX LESS_ET rs_seenOperator xp
-        | x rs_seenX MORE_ET rs_seenOperator xp
-        | x rs_seenX'''
+  '''xp : x r_seenX MORE_T r_seenOperator xp
+        | x r_seenX LESS_T r_seenOperator xp
+        | x r_seenX DIFFERENT r_seenOperator xp
+        | x r_seenX ISEQUAL r_seenOperator xp
+        | x r_seenX LESS_ET r_seenOperator xp
+        | x r_seenX MORE_ET r_seenOperator xp
+        | x r_seenX'''
   add_to_tree('xp', p)
 
 def p_x(p):
-  '''x : term rs_seenTerm PLUS rs_seenOperator x
-       | term rs_seenTerm MINUS rs_seenOperator x
-       | term rs_seenTerm'''
+  '''x : term r_seenTerm PLUS r_seenOperator x
+       | term r_seenTerm MINUS r_seenOperator x
+       | term r_seenTerm'''
   add_to_tree('x', p)
 
 def p_term(p):
-  '''term : factor rs_seenFactor TIMES rs_seenOperator term
-          | factor rs_seenFactor DIV rs_seenOperator term
-          | factor rs_seenFactor'''
+  '''term : factor r_seenFactor TIMES r_seenOperator term
+          | factor r_seenFactor DIV r_seenOperator term
+          | factor r_seenFactor'''
   add_to_tree('term', p)
 
 def p_factor(p):
-  '''factor : not LEFT_P rs_seenOperator expression RIGHT_P rs_popFakeBottom
+  '''factor : not LEFT_P r_seenOperator expression RIGHT_P r_popFakeBottom
             | not sign cte'''
   add_to_tree('factor', p)
 
@@ -291,10 +293,10 @@ def p_sign(p):
   add_to_tree('sign', p)
 
 def p_cte(p):
-  '''cte : ID rs_seenOperand
-         | CTE_I rs_seenOperand
-         | CTE_F rs_seenOperand
-         | CTE_CH rs_seenOperand
+  '''cte : ID r_seenOperand
+         | CTE_I r_seenOperand
+         | CTE_F r_seenOperand
+         | CTE_CH r_seenOperand
          | arraccess
          | call'''
   add_to_tree('cte', p)
@@ -340,6 +342,7 @@ def p_r_varName(p):
 
 def p_r_seenInit(p):
   'r_seenInit : '
+  sq.setVoid()
   e = sq.seenFunc(new_function='init')
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
@@ -358,7 +361,7 @@ def p_r_callParent(p):
 
 def p_r_funcName(p):
   'r_funcName : '
-  e = sq.seenFunc(new_function=p[-1], recordType=True)
+  e = sq.seenFunc(new_function=p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_isMethod(p):
@@ -367,74 +370,75 @@ def p_r_isMethod(p):
 
 def p_r_seenMain(p):
   'r_seenMain : '
+  sq.setVoid()
   sq.seenMain()
   e = sq.seenFunc(new_function='#main')
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_seenOperand(p):
-  'rs_seenOperand : '
+  'r_seenOperand : '
   e = sq.seenOperand(p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_seenOperator(p):
-  'rs_seenOperator : '
+  'r_seenOperator : '
   sq.seenOperator(p[-1])
 
 def p_r_seenFactor(p):
-  'rs_seenFactor : '
+  'r_seenFactor : '
   sq.seenSubRule(['*', '/'])
 
 def p_r_seenTerm(p):
-  'rs_seenTerm : '
+  'r_seenTerm : '
   sq.seenSubRule(['+', '-'])
 
 def p_r_seenX(p):
-  'rs_seenX : '
+  'r_seenX : '
   sq.seenSubRule(['>', '<', '<>', '==', '<=', '>='])
 
 def p_r_seenXp(p):
-  'rs_seenXp : '
+  'r_seenXp : '
   sq.seenSubRule(['or'])
 
 def p_r_seenExp(p):
-  'rs_seenExp : '
+  'r_seenExp : '
   sq.seenSubRule(['and'])
 
 def p_r_popFakeBottom(p):
-  'rs_popFakeBottom : '
+  'r_popFakeBottom : '
   sq.popFakeBottom()
 
 def p_r_doWriteStr(p):
-  'rs_doWriteStr : '
+  'r_doWriteStr : '
   sq.doWrite(p[-1])
 
 def p_r_doWrite(p):
-  'rs_doWrite : '
+  'r_doWrite : '
   sq.doWrite(None)
 
 def p_r_doRead(p):
-  'rs_doRead : '
+  'r_doRead : '
   sq.doRead()
 
 def p_r_seenCond(p):
-  'rs_seenCond : '
+  'r_seenCond : '
   e = sq.seenCondition()
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_seenElse(p):
-  'rs_seenElse : '
+  'r_seenElse : '
   sq.seenElse()
 
 def p_r_seenEndIf(p):
-  'rs_seenEndIf : '
+  'r_seenEndIf : '
   sq.seenEndIf()
 
 def p_r_seenWhile(p):
-  'rs_seenWhile : '
+  'r_seenWhile : '
   sq.seenWhile()
 
 def p_r_seenEndWhile(p):
-  'rs_seenEndWhile : '
+  'r_seenEndWhile : '
   sq.seenEndWhile()
 
 def p_r_endVars(p):
@@ -457,6 +461,10 @@ def p_r_seenReturn(p):
   'r_seenReturn : '
   sq.seenReturn()
 
+def p_r_seenCall(p):
+  'r_seenCall : '
+  e = sq.seenCall(p[-1])
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 # Syntax error detection rules.
 
@@ -508,11 +516,7 @@ parser.defaulted_states = {}
 
 # Run parser.
 
-def set_input_str(s):
-  global input_str
-  input_str = s
-
 def parseString(s):
   global input_str
-  set_input_str(s)
+  input_str = s
   parser.parse(s, tracking=True)

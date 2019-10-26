@@ -17,8 +17,11 @@ param_counter = 0
 var_counter = 0
 
 classes = {'#global': new_class_dict()}
-classes['#global']['#attributes'] = new_func_dict()
 possible_types = ("int", "float", "char", "bool", "void")
+
+
+def getClass(class_name):
+  return classes[class_name]
 
 def seenClass(class_name):
   if class_name in classes:
@@ -42,17 +45,14 @@ def finishClass():
   current_function = '#attributes'
 
 
-def seenFunc(new_function, recordType=False):
+def seenFunc(new_function):
   if new_function in classes[current_class]:
     return f"Redeclared function {new_function}"
   else:
     global current_function
     current_function = new_function
-    if recordType:
-      classes[current_class][current_function] = new_func_dict(
-          type=current_type)
-    else:
-      classes[current_class][current_function] = new_func_dict()
+    classes[current_class]['#funcs'][current_function] = new_func_dict(
+        type=current_type)
 
 
 def seenAccess(new_access):
@@ -70,7 +70,7 @@ def seenType(new_type):
 
 
 def exists_variable(var_name):
-  return var_name in classes[current_class][current_function]
+  return var_name in classes[current_class]['#funcs'][current_function]
 
 
 def varName(var_name):
@@ -84,10 +84,10 @@ def varName(var_name):
       global var_counter
       var_counter += 1
     if current_class != '#global':
-      classes[current_class][current_function][var_name] = (
+      classes[current_class]['#funcs'][current_function]['#vars'][var_name] = (
           new_var_dict(type=current_type, access=current_access))
     else:
-      classes[current_class][current_function][var_name] = (
+      classes[current_class]['#funcs'][current_function]['#vars'][var_name] = (
           new_var_dict(type=current_type))
 
 
@@ -96,7 +96,8 @@ def setParam(val):
   if val:
     param_counter = 0
   else:
-    classes[current_class][current_function]['#param_counter'] = param_counter
+    classes[current_class]['#funcs'][current_function]['#param_counter'] = (
+        param_counter)
   global is_param
   is_param = val
 
@@ -110,7 +111,7 @@ def callParent(parent):
 
 
 def isMethod():
-  classes[current_class][current_function]['#access'] = current_access
+  classes[current_class]['#funcs'][current_function]['#access'] = current_access
 
 
 # Intermediate code generation.
@@ -137,7 +138,7 @@ def findOperatorAndType(raw_operand, type_or_error, markAssigned=False):
     if prefix:
       if markAssigned:
         prefix['#assigned'] = True
-      if not prefix['#assigned']:
+      elif not prefix['#assigned']:
         type_or_error.error = f'Variable {raw_operand} not yet assigned'
       elif checkAccess and prefix.get('#access', 'public') == 'private':
         type_or_error.error = f'Variable {raw_operand} has private access'
@@ -146,12 +147,12 @@ def findOperatorAndType(raw_operand, type_or_error, markAssigned=False):
         return True
     return False
 
-  if not search(classes[current_class][current_function]):
-    if not search(classes[current_class]['#attributes']):
+  if not search(classes[current_class]['#funcs'][current_function]['#vars']):
+    if not search(classes[current_class]['#funcs']['#attributes']['#vars']):
       curr_class = current_class
       while True:
         curr_class = classes[curr_class]['#parent']
-        if search(classes[curr_class]['#attributes'], True) or (
+        if search(classes[curr_class]['#funcs']['#attributes']['#vars'], True) or (
             curr_class == '#global'):
           break
         else:
@@ -289,11 +290,15 @@ def seenEndWhile():
 
 def endVars():
   global var_counter
-  classes[current_class][current_function]['#var_counter'] = var_counter
+  classes[current_class]['#funcs'][current_function]['#var_counter'] = var_counter
   var_counter = 0
 
 def startFunc():
-  classes[current_class][current_function]['#start'] = qCount
+  classes[current_class]['#funcs'][current_function]['#start'] = qCount
+
+def setVoid():
+  global current_type
+  current_type = 'void'
 
 def seenMain():
   quadruples[0][3] = qCount
@@ -303,9 +308,10 @@ def finishFunc(is_main=False):
     generateQuadruple('END', None, None, None)
   else:
     generateQuadruple('ENDPROC', None, None, None)
+  classes[current_class]['#funcs'][current_function]['#end'] = qCount-1
 
 def seenReturn():
-  function_type = classes[current_class][current_function]['#type']
+  function_type = classes[current_class]['#funcs'][current_function]['#type']
   if function_type == 'void':
     return 'Void function cannot return a value'
   return_val = operands.pop()
@@ -313,4 +319,15 @@ def seenReturn():
   if function_type != return_type:
     return f'Cannot return type {return_type} as {function_type}'
   generateQuadruple('RETURN', return_val, None, None)
-  generateQuadruple('ENDPROC', None, None, None)
+  generateQuadruple('GotoEnd', None, None, None)
+
+
+def seenCall(func_name):
+  if func_name in classes[current_class]['#funcs']:
+    return
+  while True:
+    curr_class = classes[current_class]['#parent']
+    if func_name in classes[curr_class]['#funcs']:
+      return
+    if curr_class == '#global': break;
+  return f'{func_name} not defined for {current_class}'
