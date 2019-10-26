@@ -116,6 +116,7 @@ types = []
 operands = []
 quadruples = [['Goto', None, None, None]]
 jumps = []
+returnsCount = 0
 qCount = 1
 avail = available()
 
@@ -147,8 +148,8 @@ def findOperatorAndType(raw_operand, type_or_error, markAssigned=False):
       curr_class = current_class
       while True:
         curr_class = classes[curr_class]['#parent']
-        if search(classes[curr_class]['#funcs']['#attributes']['#vars'], True) or (
-            curr_class == '#global'):
+        if (search(classes[curr_class]['#funcs']['#attributes']['#vars'], True)
+            or curr_class == '#global'):
           break
         else:
           type_or_error.error = f'Variable {raw_operand} not in scope.'
@@ -274,8 +275,10 @@ def seenEndIf():
   end = jumps.pop()
   quadruples[end][3] = qCount
 
+
 def seenWhile():
   jumps.append(qCount)
+
 
 def seenEndWhile():
   end = jumps.pop()
@@ -283,29 +286,39 @@ def seenEndWhile():
   ret = jumps.pop()
   generateQuadruple('Goto', None, None, ret)
 
+
 def endVars():
   global var_counter
   classes[current_class]['#funcs'][current_function]['#var_counter'] = var_counter
   var_counter = 0
 
+
 def startFunc():
   classes[current_class]['#funcs'][current_function]['#start'] = qCount
+
 
 def setVoid():
   global current_type
   current_type = 'void'
 
+
 def seenMain():
   quadruples[0][3] = qCount
 
+
 def finishFunc(is_main=False):
+  global returnsCount
+  while returnsCount:
+    quadruples[jumps.pop()][3] = qCount
+    returnsCount -= 1
   if is_main:
     generateQuadruple('END', None, None, None)
   else:
     generateQuadruple('ENDPROC', None, None, None)
-  classes[current_class]['#funcs'][current_function]['#end'] = qCount-1
+
 
 def seenReturn():
+  global returnsCount
   function_type = classes[current_class]['#funcs'][current_function]['#type']
   if function_type == 'void':
     return 'Void function cannot return a value'
@@ -314,7 +327,9 @@ def seenReturn():
   if function_type != return_type:
     return f'Cannot return type {return_type} as {function_type}'
   generateQuadruple('RETURN', return_val, None, None)
-  generateQuadruple('GotoEnd', None, None, None)
+  jumps.append(qCount)
+  returnsCount += 1
+  generateQuadruple('Goto', None, None, None)
 
 
 def seenCall(func_name):
