@@ -13,6 +13,8 @@ current_type = None
 is_param = False
 current_x = None
 current_y = None
+param_counter = 0
+var_counter = 0
 
 classes = {'#global': new_class_dict()}
 classes['#global']['#attributes'] = new_func_dict()
@@ -68,8 +70,7 @@ def seenType(new_type):
 
 
 def exists_variable(var_name):
-  return var_name in classes[current_class][current_function]['#params'] or (
-      var_name in classes[current_class][current_function])
+  return var_name in classes[current_class][current_function]
 
 
 def varName(var_name):
@@ -77,9 +78,12 @@ def varName(var_name):
     return f"Redeclared variable: {var_name}"
   else:
     if is_param:
-      classes[current_class][current_function]['#params'][var_name] = (
-          new_var_dict(type=current_type))
-    elif current_class != '#global':
+      global param_counter
+      param_counter += 1
+    else:
+      global var_counter
+      var_counter += 1
+    if current_class != '#global':
       classes[current_class][current_function][var_name] = (
           new_var_dict(type=current_type, access=current_access))
     else:
@@ -88,6 +92,11 @@ def varName(var_name):
 
 
 def setParam(val):
+  global param_counter
+  if val:
+    param_counter = 0
+  else:
+    classes[current_class][current_function]['#param_counter'] = param_counter
   global is_param
   is_param = val
 
@@ -109,9 +118,9 @@ def isMethod():
 operators = []
 types = []
 operands = []
-quadruples = []
+quadruples = [['Goto', None, None, None]]
 jumps = []
-qCount = 0
+qCount = 1
 avail = available()
 
 
@@ -137,17 +146,16 @@ def findOperatorAndType(raw_operand, type_or_error, markAssigned=False):
         return True
     return False
 
-  if not search(classes[current_class][current_function]['#params']):
-    if not search(classes[current_class][current_function]):
-      if not search(classes[current_class]['#attributes']):
-        curr_class = current_class
-        while True:
-          curr_class = classes[curr_class]['#parent']
-          if search(classes[curr_class]['#attributes'], True) or (
-              curr_class == '#global'):
-            break
-          else:
-            type_or_error.error = f'Variable {raw_operand} not in scope.'
+  if not search(classes[current_class][current_function]):
+    if not search(classes[current_class]['#attributes']):
+      curr_class = current_class
+      while True:
+        curr_class = classes[curr_class]['#parent']
+        if search(classes[curr_class]['#attributes'], True) or (
+            curr_class == '#global'):
+          break
+        else:
+          type_or_error.error = f'Variable {raw_operand} not in scope.'
 
 
 # Assigns the type on type_or_error. If the variable does not exist,
@@ -278,3 +286,31 @@ def seenEndWhile():
   quadruples[end][3] = qCount
   ret = jumps.pop()
   generateQuadruple('Goto', None, None, ret)
+
+def endVars():
+  global var_counter
+  classes[current_class][current_function]['#var_counter'] = var_counter
+  var_counter = 0
+
+def startFunc():
+  classes[current_class][current_function]['#start'] = qCount
+
+def seenMain():
+  quadruples[0][3] = qCount
+
+def finishFunc(is_main=False):
+  if is_main:
+    generateQuadruple('END', None, None, None)
+  else:
+    generateQuadruple('ENDPROC', None, None, None)
+
+def seenReturn():
+  function_type = classes[current_class][current_function]['#type']
+  if function_type == 'void':
+    return 'Void function cannot return a value'
+  return_val = operands.pop()
+  return_type = types.pop()
+  if function_type != return_type:
+    return f'Cannot return type {return_type} as {function_type}'
+  generateQuadruple('RETURN', return_val, None, None)
+  generateQuadruple('ENDPROC', None, None, None)

@@ -10,7 +10,7 @@ def new_var_dict(type=None, access=None):
 
 
 def new_func_dict(type=None, access=None):
-  func_dict = {'#params': {}}
+  func_dict = {'#param_counter': 0, '#var_counter': 0}
   if type: func_dict['#type'] = type
   if access: func_dict['#access'] = access
   return func_dict

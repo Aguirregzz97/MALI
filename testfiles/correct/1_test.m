@@ -40,9 +40,9 @@ var {
   int cont;
 }
 
-func void printAnimal(Animal a) {
+func void printAnimal(Animal a3) {
   var {
-    int x, y;
+    int x1, y2;
   }
 
   #write a.nombre;
@@ -51,6 +51,14 @@ func void printAnimal(Animal a) {
 func void printAlgo() {
 
   write "Algo";
+}
+
+func int calculateA(int a){
+  if (a < 5){
+    return a * 5;
+  } elif (a == 5) {
+    return a + 5;
+  };
 }
 
 main {

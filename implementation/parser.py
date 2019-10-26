@@ -54,7 +54,7 @@ def p_classblock(p):
   add_to_tree('classblock', p)
 
 def p_attributes(p):
-  '''attributes : ATTR r_seenAttr LEFT_B attr_dec RIGHT_B'''
+  '''attributes : ATTR r_seenAttr LEFT_B attr_dec RIGHT_B r_endVars'''
   add_to_tree('attributes', p)
 
 def p_attr_dec(p):
@@ -67,9 +67,9 @@ def p_init(p):
   add_to_tree('init', p)
 
 def p_init_factor(p):
-  '''init_factor : proc_block
+  '''init_factor : r_startFunc proc_block
                  | COLON ID r_callParent param_pass \
-                   proc_block '''
+                   r_startFunc proc_block '''
   add_to_tree('init_factor', p)
 
 def p_methods(p):
@@ -84,7 +84,7 @@ def p_access(p):
   add_to_tree('access', p)
 
 def p_vars(p):
-  '''vars : VAR LEFT_B vars_dec RIGHT_B'''
+  '''vars : VAR LEFT_B vars_dec RIGHT_B r_endVars'''
   add_to_tree('vars', p)
 
 def p_vars_dec(p):
@@ -124,8 +124,9 @@ def p_modules(p):
   add_to_tree('modules', p)
 
 def p_proc(p):
-  '''proc : type ID r_funcName LEFT_P param RIGHT_P proc_block
-          | VOID r_seenType ID r_funcName LEFT_P param RIGHT_P proc_block'''
+  '''proc : type ID r_funcName LEFT_P param RIGHT_P r_startFunc proc_block r_finishFunc
+          | VOID r_seenType ID r_funcName LEFT_P param RIGHT_P r_startFunc \
+            proc_block r_finishFunc'''
   add_to_tree('proc', p)
 
 def p_proc_block(p):
@@ -136,7 +137,7 @@ def p_proc_block(p):
 
 def p_param(p):
   '''param : r_seenParam params r_finishParam
-           | empty'''
+           | r_seenParam r_finishParam'''
   add_to_tree('param', p)
 
 def p_params(p):
@@ -193,7 +194,7 @@ def p_path_aux(p):
   add_to_tree('path_aux', p)
 
 def p_return(p):
-  '''return : RETURN expression'''
+  '''return : RETURN expression r_seenReturn'''
   add_to_tree('return', p)
 
 def p_write(p):
@@ -238,7 +239,7 @@ def p_block(p):
   add_to_tree('block', p)
 
 def p_main(p):
-  '''main : MAIN r_seenMain proc_block'''
+  '''main : MAIN r_seenMain proc_block r_finishMain'''
   add_to_tree('main', p)
 
 def p_expression(p):
@@ -366,74 +367,95 @@ def p_r_isMethod(p):
 
 def p_r_seenMain(p):
   'r_seenMain : '
+  sq.seenMain()
   e = sq.seenFunc(new_function='#main')
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
-def p_rs_seenOperand(p):
+def p_r_seenOperand(p):
   'rs_seenOperand : '
   e = sq.seenOperand(p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
-def p_rs_seenOperator(p):
+def p_r_seenOperator(p):
   'rs_seenOperator : '
   sq.seenOperator(p[-1])
 
-def p_rs_seenFactor(p):
+def p_r_seenFactor(p):
   'rs_seenFactor : '
   sq.seenSubRule(['*', '/'])
 
-def p_rs_seenTerm(p):
+def p_r_seenTerm(p):
   'rs_seenTerm : '
   sq.seenSubRule(['+', '-'])
 
-def p_rs_seenX(p):
+def p_r_seenX(p):
   'rs_seenX : '
   sq.seenSubRule(['>', '<', '<>', '==', '<=', '>='])
 
-def p_rs_seenXp(p):
+def p_r_seenXp(p):
   'rs_seenXp : '
   sq.seenSubRule(['or'])
 
-def p_rs_seenExp(p):
+def p_r_seenExp(p):
   'rs_seenExp : '
   sq.seenSubRule(['and'])
 
-def p_rs_popFakeBottom(p):
+def p_r_popFakeBottom(p):
   'rs_popFakeBottom : '
   sq.popFakeBottom()
 
-def p_rs_doWriteStr(p):
+def p_r_doWriteStr(p):
   'rs_doWriteStr : '
   sq.doWrite(p[-1])
 
-def p_rs_doWrite(p):
+def p_r_doWrite(p):
   'rs_doWrite : '
   sq.doWrite(None)
 
-def p_rs_doRead(p):
+def p_r_doRead(p):
   'rs_doRead : '
   sq.doRead()
 
-def p_rs_seenCond(p):
+def p_r_seenCond(p):
   'rs_seenCond : '
   e = sq.seenCondition()
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
-def p_rs_seenElse(p):
+def p_r_seenElse(p):
   'rs_seenElse : '
   sq.seenElse()
 
-def p_rs_seenEndIf(p):
+def p_r_seenEndIf(p):
   'rs_seenEndIf : '
   sq.seenEndIf()
 
-def p_rs_seenWhile(p):
+def p_r_seenWhile(p):
   'rs_seenWhile : '
   sq.seenWhile()
 
-def p_rs_seenEndWhile(p):
+def p_r_seenEndWhile(p):
   'rs_seenEndWhile : '
   sq.seenEndWhile()
+
+def p_r_endVars(p):
+  'r_endVars : '
+  sq.endVars()
+
+def p_r_startFunc(p):
+  'r_startFunc : '
+  sq.startFunc()
+
+def p_r_finishFunc(p):
+  'r_finishFunc : '
+  sq.finishFunc()
+
+def p_r_finishMain(p):
+  'r_finishMain : '
+  sq.finishFunc(is_main=True)
+
+def p_r_seenReturn(p):
+  'r_seenReturn : '
+  sq.seenReturn()
 
 
 # Syntax error detection rules.
