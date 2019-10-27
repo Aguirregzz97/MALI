@@ -39,13 +39,16 @@ class available:
   nextT = 1
   avail = deque([])
 
+  def __init__(self, prefix):
+    self._prefix = prefix
+
   def next(self):
 
     if len(self.avail) == 0:
-      nextTemp = 't' + str(self.nextT)
+      nextTemp = self._prefix + str(self.nextT)
       self.nextT += 1
     else:
-      nextTemp = 't' + str(self.avail.popleft())
+      nextTemp = self._prefix + str(self.avail.popleft())
     return nextTemp
 
   def free(self, temp):

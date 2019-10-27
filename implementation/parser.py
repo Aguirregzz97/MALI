@@ -114,6 +114,8 @@ def p_type(p):
           | CHAR r_seenType
           | BOOL r_seenType'''
   add_to_tree('type', p)
+  e = sq.seenType(new_type=p[1])
+  if e: handle_error(p.lineno(1), p.lexpos(1), e)
 
 def p_complex_type(p):
   '''complex_type : type
@@ -125,7 +127,8 @@ def p_modules(p):
   add_to_tree('modules', p)
 
 def p_proc(p):
-  '''proc : type ID r_funcName LEFT_P param RIGHT_P r_startFunc proc_block r_finishFunc
+  '''proc : type ID r_funcName LEFT_P param RIGHT_P r_startFunc proc_block \
+            r_finishFunc
           | VOID r_seenType ID r_funcName LEFT_P param RIGHT_P r_startFunc \
             proc_block r_finishFunc'''
   add_to_tree('proc', p)
@@ -181,7 +184,8 @@ def p_param_pass(p):
   add_to_tree('param_pass', p)
 
 def p_param_pass_aux(p):
-  '''param_pass_aux : expression r_passParam COMMA r_nextParamPass param_pass_aux
+  '''param_pass_aux : expression r_passParam COMMA r_nextParamPass \
+                      param_pass_aux
                     | expression r_passParam '''
   add_to_tree('param_pass_aux', p)
 

@@ -103,7 +103,7 @@ quadruples = [['Goto', None, None, None]]
 jumps = []
 returns_count = 0
 q_count = 1
-avail = available()
+temp_avail = available('#t')
 calling_class = '#global'
 calling_function = None
 param_count = 0
@@ -187,14 +187,9 @@ def seenOperator(operator):
   global operators
   operators.append(str(operator))
 
-'''
-def freeIfTemp(operand):
-  if re.match(r"[t].*", str(operand)):
-    avail.free(operand)
-'''
 
 def seenSubRule(ops):
-  global operators, types, operands, avail
+  global operators, types, operands, temp_avail
   operator = top(operators)
   if operator in ops:
     right_operand = operands.pop()
@@ -203,12 +198,10 @@ def seenSubRule(ops):
     left_type = types.pop()
     operator = operators.pop()
     result_type = sCube[left_type][right_type][operator]
-    result = avail.next()
+    result = temp_avail.next()
     generateQuadruple(operator, left_operand, right_operand, result)
     operands.append(result)
     types.append(result_type)
-    #freeIfTemp(left_operand)
-    #freeIfTemp(right_operand)
 
 
 def popFakeBottom():
