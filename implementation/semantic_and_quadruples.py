@@ -5,7 +5,7 @@ import re
 
 # Semantic table filling.
 
-classes = {'#global': new_class_dict()}
+classes = {'#global': new_class_dict(parent=None)}
 possible_types = ("int", "float", "char", "bool", "void")
 
 current_class = '#global'
@@ -15,8 +15,7 @@ current_type = None
 is_param = False
 current_x = None
 current_y = None
-param_counter = 0
-var_counter = 0
+
 
 def seenClass(class_name):
   if class_name in classes:
@@ -41,6 +40,8 @@ def finishClass():
 
 
 def seenFunc(new_function):
+  global func_size
+  func_size = 0
   if new_function in classes[current_class]['#funcs']:
     return f"Redeclared function {new_function}"
   else:
@@ -64,45 +65,33 @@ def seenType(new_type):
     current_type = new_type
 
 
-def exists_variable(var_name):
-  return var_name in classes[current_class]['#funcs'][current_function]
-
-
 def varName(var_name):
-  if exists_variable(var_name):
+  if var_name in classes[current_class]['#funcs'][current_function]:
     return f"Redeclared variable: {var_name}"
   else:
     if is_param:
-      global param_counter
-      param_counter += 1
+      global param_count
+      param_count += 1
     else:
-      global var_counter
-      var_counter += 1
-    if current_class != '#global':
+      global var_count
+      var_count += 1
+    if current_class == '#global':
+      classes[current_class]['#funcs'][current_function]['#vars'][var_name] = (
+          new_var_dict(type=current_type, access='public'))
+    else:
       classes[current_class]['#funcs'][current_function]['#vars'][var_name] = (
           new_var_dict(type=current_type, access=current_access))
-    else:
-      classes[current_class]['#funcs'][current_function]['#vars'][var_name] = (
-          new_var_dict(type=current_type))
 
 
 def setParam(val):
-  global param_counter
+  global param_count
   if val:
-    param_counter = 0
+    param_count = 0
   else:
-    classes[current_class]['#funcs'][current_function]['#param_counter'] = (
-        param_counter)
+    classes[current_class]['#funcs'][current_function]['#param_count'] = (
+        param_count)
   global is_param
   is_param = val
-
-
-def callParent(parent):
-  if not classes[current_class]['#parent']:
-    return f'{current_class} has no parent class but tries to extend ' + (
-        f'{parent} in constructor')
-  elif parent != classes[current_class]['#parent']:
-    return f"{parent} is not {current_class}'s parent"
 
 
 def isMethod():
@@ -116,15 +105,19 @@ types = []
 operands = []
 quadruples = [['Goto', None, None, None]]
 jumps = []
-returnsCount = 0
-qCount = 1
+returns_count = 0
+q_count = 1
 avail = available()
+calling_class = '#global'
+calling_function = None
+param_count = 0
+var_count = 0
 
 
 def generateQuadruple(a, b, c, d):
-  global quadruples, qCount
+  global quadruples, q_count
   quadruples.append([a,b,c,d])
-  qCount += 1
+  q_count += 1
 
 
 def findOperatorAndType(raw_operand, type_or_error, markAssigned=False):
@@ -135,7 +128,7 @@ def findOperatorAndType(raw_operand, type_or_error, markAssigned=False):
       if markAssigned:
         prefix['#assigned'] = True
       elif not prefix['#assigned']:
-        type_or_error.error = f'Variable {raw_operand} not yet assigned'
+        type_or_error.error = f'Variable {raw_operand} used before assignment'
       elif checkAccess and prefix.get('#access', 'public') == 'private':
         type_or_error.error = f'Variable {raw_operand} has private access'
       else:
@@ -143,16 +136,17 @@ def findOperatorAndType(raw_operand, type_or_error, markAssigned=False):
         return True
     return False
 
-  if not search(classes[current_class]['#funcs'][current_function]['#vars']):
-    if not search(classes[current_class]['#funcs']['#attributes']['#vars']):
-      curr_class = current_class
-      while True:
-        curr_class = classes[curr_class]['#parent']
-        if (search(classes[curr_class]['#funcs']['#attributes']['#vars'], True)
-            or curr_class == '#global'):
-          break
-        else:
-          type_or_error.error = f'Variable {raw_operand} not in scope.'
+  if search(classes[current_class]['#funcs'][current_function]['#vars']):
+    return
+  if search(classes[current_class]['#funcs']['#attributes']['#vars']):
+    return
+  curr_class = classes[current_class]['#parent']
+  while curr_class:
+    if search(classes[curr_class]['#funcs']['#attributes']['#vars'], True):
+      return
+    curr_class = classes[curr_class]['#parent']
+
+  type_or_error.error = f'Variable {raw_operand} not in scope.'
 
 
 # Assigns the type on type_or_error. If the variable does not exist,
@@ -245,7 +239,7 @@ def doWrite(str):
     word = operands.pop()
     type = types.pop()
     word_type_or_error = val_or_error()
-    findOperatorAndType(word, word_type_or_error)
+    getType(word, word_type_or_error)
     if word_type_or_error.error: return word_type_or_error.error
     generateQuadruple('write', None, None, word)
 
@@ -261,40 +255,40 @@ def seenCondition():
     return 'Evaluated expression is not boolean'
   result = operands.pop()
   generateQuadruple('GotoF', result, None, None)
-  jumps.append(qCount-1)
+  jumps.append(q_count-1)
 
 
 def seenElse():
   generateQuadruple('Goto', None, None, None)
   false = jumps.pop()
-  jumps.append(qCount-1)
-  quadruples[false][3] = qCount
+  jumps.append(q_count-1)
+  quadruples[false][3] = q_count
 
 
 def seenEndIf():
   end = jumps.pop()
-  quadruples[end][3] = qCount
+  quadruples[end][3] = q_count
 
 
 def seenWhile():
-  jumps.append(qCount)
+  jumps.append(q_count)
 
 
 def seenEndWhile():
   end = jumps.pop()
-  quadruples[end][3] = qCount
+  quadruples[end][3] = q_count
   ret = jumps.pop()
   generateQuadruple('Goto', None, None, ret)
 
 
 def endVars():
-  global var_counter
-  classes[current_class]['#funcs'][current_function]['#var_counter'] = var_counter
-  var_counter = 0
+  global var_count
+  classes[current_class]['#funcs'][current_function]['#var_count'] = var_count
+  var_count = 0
 
 
 def startFunc():
-  classes[current_class]['#funcs'][current_function]['#start'] = qCount
+  classes[current_class]['#funcs'][current_function]['#start'] = q_count
 
 
 def setVoid():
@@ -303,14 +297,14 @@ def setVoid():
 
 
 def seenMain():
-  quadruples[0][3] = qCount
+  quadruples[0][3] = q_count
 
 
 def finishFunc(is_main=False):
-  global returnsCount
-  while returnsCount:
-    quadruples[jumps.pop()][3] = qCount
-    returnsCount -= 1
+  global returns_count
+  while returns_count:
+    quadruples[jumps.pop()][3] = q_count
+    returns_count -= 1
   if is_main:
     generateQuadruple('END', None, None, None)
   else:
@@ -318,7 +312,7 @@ def finishFunc(is_main=False):
 
 
 def seenReturn():
-  global returnsCount
+  global returns_count
   function_type = classes[current_class]['#funcs'][current_function]['#type']
   if function_type == 'void':
     return 'Void function cannot return a value'
@@ -327,17 +321,60 @@ def seenReturn():
   if function_type != return_type:
     return f'Cannot return type {return_type} as {function_type}'
   generateQuadruple('RETURN', return_val, None, None)
-  jumps.append(qCount)
-  returnsCount += 1
+  jumps.append(q_count)
+  returns_count += 1
   generateQuadruple('Goto', None, None, None)
 
+def callParent(parent):
+  global calling_class, calling_function
+  if not classes[current_class]['#parent']:
+    return f'{current_class} has no parent class but tries to extend ' + (
+        f'{parent} in constructor')
+  elif parent != classes[current_class]['#parent']:
+    return f"{parent} is not {current_class}'s parent"
+  calling_class = parent
+  calling_function = 'init'
 
 def seenCall(func_name):
+  print(func_name)
+  global calling_class, calling_function
+  calling_function = func_name
   if func_name in classes[current_class]['#funcs']:
+    calling_class = current_class
     return
-  while True:
-    curr_class = classes[current_class]['#parent']
+  curr_class = classes[current_class]['#parent']
+  while curr_class:
     if func_name in classes[curr_class]['#funcs']:
+      calling_class = current_class
       return
-    if curr_class == '#global': break;
+    curr_class = classes[curr_class]['#parent']
   return f'{func_name} not defined for {current_class}'
+
+
+def startParams():
+  global param_count
+  param_count = 0
+  function = classes[calling_class]['#funcs'][calling_function]
+  size = function['#param_count'] + function['#var_count']
+  generateQuadruple('ERA', calling_function, size, None)
+
+def passParam():
+  param = list(classes[calling_class]['#funcs'][calling_function]['#vars'].values())[param_count]
+  print(param)
+  param_type = param['#type']
+  argument = operands.pop()
+  arg_type = types.pop()
+  if param_type != arg_type:
+    return f'{calling_function} expecting type {param_type} for parameter {param_count+1}'
+  generateQuadruple('param', argument, None, 'param'+str(param_count))
+
+def nextPassParam():
+  global param_count
+  param_count += 1
+
+def doneParamPass():
+  expected = classes[calling_class]['#funcs'][calling_function]['#var_count']
+  if param_count+1 != expected:
+    return f'{calling_function} expects {expected} parameters, but {param_count+1} were given'
+  ret = classes[calling_class]['#funcs'][calling_function]['#start']
+  generateQuadruple('GOSUB', calling_function, None, ret)

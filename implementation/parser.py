@@ -176,13 +176,13 @@ def p_call(p):
   add_to_tree('call', p)
 
 def p_param_pass(p):
-  '''param_pass : LEFT_P RIGHT_P
-                | LEFT_P param_pass_aux RIGHT_P'''
+  '''param_pass : LEFT_P r_startParams RIGHT_P r_doneParamPass
+                | LEFT_P r_startParams param_pass_aux RIGHT_P r_doneParamPass'''
   add_to_tree('param_pass', p)
 
 def p_param_pass_aux(p):
-  '''param_pass_aux : expression COMMA param_pass_aux
-                    | expression'''
+  '''param_pass_aux : expression r_passParam COMMA r_nextParamPass param_pass_aux
+                    | expression r_passParam '''
   add_to_tree('param_pass_aux', p)
 
 def p_path(p):
@@ -464,6 +464,24 @@ def p_r_seenReturn(p):
 def p_r_seenCall(p):
   'r_seenCall : '
   e = sq.seenCall(p[-1])
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_startParams(p):
+  'r_startParams : '
+  sq.startParams()
+
+def p_r_passParam(p):
+  'r_passParam : '
+  e = sq.passParam()
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_nextPassParam(p):
+  'r_nextParamPass : '
+  sq.r_nextParamPass()
+
+def p_r_doneParamPass(p):
+  'r_doneParamPass : '
+  e = sq.doneParamPass()
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 # Syntax error detection rules.

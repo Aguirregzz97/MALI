@@ -13,8 +13,8 @@ def new_var_dict(type, access=None):
 
 def new_func_dict(type=None, access=None):
   func_dict = {
-    '#param_counter': 0,
-    '#var_counter': 0,
+    '#param_count': 0,
+    '#var_count': 0,
     '#vars': {}
   }
   if type: func_dict['#type'] = type

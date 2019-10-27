@@ -91,7 +91,7 @@ main {
   };
 
   while(cont < 5) {
-    write '1';
+    write '1', '2', '3';
     cont = cont + 1;
   };
 
