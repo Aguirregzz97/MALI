@@ -324,7 +324,7 @@ def p_r_finishClass(p):
 
 def p_r_seenAttr(p):
   'r_seenAttr : '
-  sq.seenFunc(new_function='#attributes')
+  sq.seenFunc(func_name='#attributes')
 
 def p_r_seenAccess(p):
   'r_seenAccess : '
@@ -343,7 +343,7 @@ def p_r_varName(p):
 def p_r_seenInit(p):
   'r_seenInit : '
   sq.setVoid()
-  e = sq.seenFunc(new_function='init')
+  e = sq.seenFunc(func_name='init')
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_seenParam(p):
@@ -361,7 +361,7 @@ def p_r_callParent(p):
 
 def p_r_funcName(p):
   'r_funcName : '
-  e = sq.seenFunc(new_function=p[-1])
+  e = sq.seenFunc(func_name=p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_isMethod(p):
@@ -372,7 +372,7 @@ def p_r_seenMain(p):
   'r_seenMain : '
   sq.setVoid()
   sq.seenMain()
-  e = sq.seenFunc(new_function='#main')
+  e = sq.seenFunc(func_name='#main')
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_seenOperand(p):

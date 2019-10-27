@@ -22,8 +22,9 @@ def new_func_dict(type=None, access=None):
   return func_dict
 
 
-def new_class_dict(parent='#global'):
+def new_class_dict(name, parent='#global'):
   class_dict = {
+    '#name': name,
     '#parent': parent,
     '#funcs': {
       '#attributes': new_func_dict()

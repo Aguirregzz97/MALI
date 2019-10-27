@@ -5,11 +5,11 @@ import re
 
 # Semantic table filling.
 
-classes = {'#global': new_class_dict(parent=None)}
+classes = {'#global': new_class_dict(name='#global', parent=None)}
 possible_types = ("int", "float", "char", "bool", "void")
 
-current_class = '#global'
-current_function = '#attributes'
+current_class = classes['#global']
+current_function = current_class['#funcs']['#attributes']
 current_access = None
 current_type = None
 is_param = False
@@ -22,33 +22,32 @@ def seenClass(class_name):
     return f"Repeated class name: {class_name}"
   else:
     global current_class
-    current_class = class_name
-    classes[class_name] = new_class_dict()
+    classes[class_name] = new_class_dict(class_name)
+    current_class = classes[class_name]
 
 
 def classParent(class_parent):
   if class_parent not in classes:
     return f"Undeclared class parent: {class_parent}"
   else:
-    classes[current_class]['#parent'] = class_parent
+    current_class['#parent'] = class_parent
 
 
 def finishClass():
   global current_class, current_function
-  current_class = '#global'
-  current_function = '#attributes'
+  current_class = classes['#global']
+  current_function = current_class['#funcs']['#attributes']
 
 
-def seenFunc(new_function):
+def seenFunc(func_name):
   global func_size
   func_size = 0
-  if new_function in classes[current_class]['#funcs']:
-    return f"Redeclared function {new_function}"
+  if func_name in current_class['#funcs']:
+    return f"Redeclared function {func_name}"
   else:
     global current_function
-    current_function = new_function
-    classes[current_class]['#funcs'][current_function] = new_func_dict(
-        type=current_type)
+    current_class['#funcs'][func_name] = new_func_dict(type=current_type)
+    current_function = current_class['#funcs'][func_name]
 
 
 def seenAccess(new_access):
@@ -66,7 +65,7 @@ def seenType(new_type):
 
 
 def varName(var_name):
-  if var_name in classes[current_class]['#funcs'][current_function]:
+  if var_name in current_function['#vars']:
     return f"Redeclared variable: {var_name}"
   else:
     if is_param:
@@ -75,27 +74,24 @@ def varName(var_name):
     else:
       global var_count
       var_count += 1
-    if current_class == '#global':
-      classes[current_class]['#funcs'][current_function]['#vars'][var_name] = (
-          new_var_dict(type=current_type, access='public'))
+    if current_class['#name'] == '#global':
+      current_function['#vars'][var_name] = new_var_dict(current_type)
     else:
-      classes[current_class]['#funcs'][current_function]['#vars'][var_name] = (
-          new_var_dict(type=current_type, access=current_access))
+      current_function['#vars'][var_name] = (
+          new_var_dict(current_type, current_access))
 
 
 def setParam(val):
-  global param_count
+  global param_count, is_param
   if val:
     param_count = 0
   else:
-    classes[current_class]['#funcs'][current_function]['#param_count'] = (
-        param_count)
-  global is_param
+    current_function['#param_count'] = param_count
   is_param = val
 
 
 def isMethod():
-  classes[current_class]['#funcs'][current_function]['#access'] = current_access
+  current_function['#access'] = current_access
 
 
 # Intermediate code generation.
@@ -136,11 +132,11 @@ def findOperatorAndType(raw_operand, type_or_error, markAssigned=False):
         return True
     return False
 
-  if search(classes[current_class]['#funcs'][current_function]['#vars']):
+  if search(current_function['#vars']):
     return
-  if search(classes[current_class]['#funcs']['#attributes']['#vars']):
+  if search(current_class['#funcs']['#attributes']['#vars']):
     return
-  curr_class = classes[current_class]['#parent']
+  curr_class = current_class['#parent']
   while curr_class:
     if search(classes[curr_class]['#funcs']['#attributes']['#vars'], True):
       return
@@ -283,12 +279,12 @@ def seenEndWhile():
 
 def endVars():
   global var_count
-  classes[current_class]['#funcs'][current_function]['#var_count'] = var_count
+  current_function['#var_count'] = var_count
   var_count = 0
 
 
 def startFunc():
-  classes[current_class]['#funcs'][current_function]['#start'] = q_count
+  current_function['#start'] = q_count
 
 
 def setVoid():
@@ -313,7 +309,7 @@ def finishFunc(is_main=False):
 
 def seenReturn():
   global returns_count
-  function_type = classes[current_class]['#funcs'][current_function]['#type']
+  function_type = current_function['#type']
   if function_type == 'void':
     return 'Void function cannot return a value'
   return_val = operands.pop()
@@ -327,10 +323,10 @@ def seenReturn():
 
 def callParent(parent):
   global calling_class, calling_function
-  if not classes[current_class]['#parent']:
+  if not current_class['#parent']:
     return f'{current_class} has no parent class but tries to extend ' + (
         f'{parent} in constructor')
-  elif parent != classes[current_class]['#parent']:
+  elif parent != current_class['#parent']:
     return f"{parent} is not {current_class}'s parent"
   calling_class = parent
   calling_function = 'init'
@@ -339,10 +335,10 @@ def seenCall(func_name):
   print(func_name)
   global calling_class, calling_function
   calling_function = func_name
-  if func_name in classes[current_class]['#funcs']:
+  if func_name in current_class['#funcs']:
     calling_class = current_class
     return
-  curr_class = classes[current_class]['#parent']
+  curr_class = current_class['#parent']
   while curr_class:
     if func_name in classes[curr_class]['#funcs']:
       calling_class = current_class
