@@ -46,7 +46,7 @@ def seenFunc(func_name):
     return f"Redeclared function {func_name}"
   else:
     global current_function
-    current_class['#funcs'][func_name] = new_func_dict(type=current_type)
+    current_class['#funcs'][func_name] = new_func_dict(func_name, current_type)
     current_function = current_class['#funcs'][func_name]
 
 
@@ -187,11 +187,11 @@ def seenOperator(operator):
   global operators
   operators.append(str(operator))
 
-
+'''
 def freeIfTemp(operand):
   if re.match(r"[t].*", str(operand)):
     avail.free(operand)
-
+'''
 
 def seenSubRule(ops):
   global operators, types, operands, avail
@@ -207,8 +207,8 @@ def seenSubRule(ops):
     generateQuadruple(operator, left_operand, right_operand, result)
     operands.append(result)
     types.append(result_type)
-    freeIfTemp(left_operand)
-    freeIfTemp(right_operand)
+    #freeIfTemp(left_operand)
+    #freeIfTemp(right_operand)
 
 
 def popFakeBottom():
@@ -321,56 +321,61 @@ def seenReturn():
   returns_count += 1
   generateQuadruple('Goto', None, None, None)
 
+
 def callParent(parent):
   global calling_class, calling_function
   if not current_class['#parent']:
-    return f'{current_class} has no parent class but tries to extend ' + (
-        f'{parent} in constructor')
+    return (f"{current_class['#name']} has no parent class but tries "
+        + f'to extend {parent} in constructor')
   elif parent != current_class['#parent']:
-    return f"{parent} is not {current_class}'s parent"
-  calling_class = parent
-  calling_function = 'init'
+    return f"{parent} is not {current_class['#name']}'s parent"
+  calling_class = classes[parent]
+  calling_function = calling_class['#funcs']['init']
+
 
 def seenCall(func_name):
-  print(func_name)
   global calling_class, calling_function
-  calling_function = func_name
   if func_name in current_class['#funcs']:
     calling_class = current_class
+    calling_function = calling_class['#funcs'][func_name]
     return
   curr_class = current_class['#parent']
   while curr_class:
     if func_name in classes[curr_class]['#funcs']:
-      calling_class = current_class
+      calling_class = classes[curr_class]
+      calling_function = calling_class['#funcs'][func_name]
       return
     curr_class = classes[curr_class]['#parent']
-  return f'{func_name} not defined for {current_class}'
+  return f"{func_name} not defined for {current_class['#name']}"
 
 
 def startParams():
   global param_count
   param_count = 0
-  function = classes[calling_class]['#funcs'][calling_function]
-  size = function['#param_count'] + function['#var_count']
-  generateQuadruple('ERA', calling_function, size, None)
+  size = calling_function['#param_count'] + calling_function['#var_count']
+  generateQuadruple('ERA', calling_function['#name'], size, None)
+
 
 def passParam():
-  param = list(classes[calling_class]['#funcs'][calling_function]['#vars'].values())[param_count]
-  print(param)
+  param = list(calling_function['#vars'].values())[param_count]
   param_type = param['#type']
   argument = operands.pop()
   arg_type = types.pop()
   if param_type != arg_type:
-    return f'{calling_function} expecting type {param_type} for parameter {param_count+1}'
+    return (f"{calling_function['#name']} expecting type {param_type} "
+        + f'for parameter {param_count+1}')
   generateQuadruple('param', argument, None, 'param'+str(param_count))
+
 
 def nextPassParam():
   global param_count
   param_count += 1
 
+
 def doneParamPass():
-  expected = classes[calling_class]['#funcs'][calling_function]['#var_count']
+  expected = calling_function['#var_count']
   if param_count+1 != expected:
-    return f'{calling_function} expects {expected} parameters, but {param_count+1} were given'
-  ret = classes[calling_class]['#funcs'][calling_function]['#start']
-  generateQuadruple('GOSUB', calling_function, None, ret)
+    return (f'{calling_function} expects {expected} parameters, but ' +
+        f'{param_count+1} were given')
+  generateQuadruple('GOSUB', calling_function['#name'], None,
+                    calling_function['#start'])

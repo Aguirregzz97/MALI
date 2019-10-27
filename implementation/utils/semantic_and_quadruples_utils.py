@@ -11,14 +11,14 @@ def new_var_dict(type, access=None):
   return var_dict
 
 
-def new_func_dict(type=None, access=None):
+def new_func_dict(name, type):
   func_dict = {
+    '#name': name,
+    '#type': type,
     '#param_count': 0,
     '#var_count': 0,
     '#vars': {}
   }
-  if type: func_dict['#type'] = type
-  if access: func_dict['#access'] = access
   return func_dict
 
 
@@ -27,7 +27,7 @@ def new_class_dict(name, parent='#global'):
     '#name': name,
     '#parent': parent,
     '#funcs': {
-      '#attributes': new_func_dict()
+      '#attributes': new_func_dict('#global', 'void')
     }
   }
   return class_dict
