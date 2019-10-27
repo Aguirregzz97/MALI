@@ -36,23 +36,18 @@ def new_class_dict(name, parent='#global'):
 # Intermediate code generation utils
 
 class available:
-  nextT = 1
-  avail = deque([])
-
-  def __init__(self, prefix):
+  def __init__(self, prefix, begin):
     self._prefix = prefix
+    self._begin = begin
+    self._next = begin
 
   def next(self):
+    next = self._prefix + str(self._next)
+    self._next += 1
+    return next
 
-    if len(self.avail) == 0:
-      nextTemp = self._prefix + str(self.nextT)
-      self.nextT += 1
-    else:
-      nextTemp = self._prefix + str(self.avail.popleft())
-    return nextTemp
-
-  def free(self, temp):
-    self.avail.append(temp[1:])
+  def reset(self):
+    self._next = self._begin
 
 
 
