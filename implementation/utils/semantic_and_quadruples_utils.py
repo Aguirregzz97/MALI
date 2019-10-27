@@ -36,14 +36,17 @@ def new_class_dict(name, parent='#global'):
 # Intermediate code generation utils
 
 class available:
-  def __init__(self, prefix, begin):
+  def __init__(self, prefix, begin, limit):
     self._prefix = prefix
     self._begin = begin
     self._next = begin
+    self._limit = limit
 
   def next(self):
     next = self._prefix + str(self._next)
     self._next += 1
+    if self._next > self._limit:
+      return None
     return next
 
   def reset(self):
