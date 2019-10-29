@@ -481,7 +481,8 @@ def p_r_passParam(p):
 
 def p_r_nextPassParam(p):
   'r_nextParamPass : '
-  sq.r_nextParamPass()
+  e = sq.r_nextParamPass()
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 def p_r_doneParamPass(p):
   'r_doneParamPass : '

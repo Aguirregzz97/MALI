@@ -360,9 +360,18 @@ def passParam():
   generateQuadruple('param', argument, None, 'param'+str(param_count))
 
 
+def paramPassError():
+  expected = calling_function['#var_count']
+  return (f'{calling_function} expects {expected} parameters, but ' +
+        f'{param_count+1} were given')
+
+
 def nextPassParam():
   global param_count
   param_count += 1
+  if param_count+1 > calling_function['#var_count']:
+    return (f'{calling_function} expects {expected} parameters, but more' +
+        'were given')
 
 
 def doneParamPass():
