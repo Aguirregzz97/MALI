@@ -370,6 +370,7 @@ def nextPassParam():
   global param_count
   param_count += 1
   if param_count+1 > calling_function['#var_count']:
+    expected = calling_function['#var_count']
     return (f'{calling_function} expects {expected} parameters, but more' +
         'were given')
 
