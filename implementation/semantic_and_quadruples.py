@@ -3,7 +3,6 @@
 from implementation.utils.semantic_and_quadruples_utils import *
 from implementation.utils.generic_utils import *
 from implementation.utils.constants import *
-from collections import defaultdict
 import re
 
 # Semantic table filling.
@@ -119,7 +118,7 @@ var_count = 0
 
 
 def generate_quadruple(a, b, c, d):
-  global q_count
+  global q_count, quadruples, visual_quadruples
 
   operation = operations.get(a, f'NOT FOUND {a}')
   left_operand = address_or_else(b)
@@ -204,6 +203,7 @@ def register_operator(operator):
 
 
 def build_temp_operand(op_type):
+  global current_function
   address = current_function['#temp_avail'].next(op_type)
   current_function['#vars'][address] = new_var_dict(op_type, address)
   current_function['#var_count'] += 1
@@ -222,7 +222,7 @@ def solve_operation_or_continue(ops):
     left_operand = operands.pop()
     left_type = types.pop()
     operator = operators.pop()
-    result_type = sCube[left_type][right_type][operator]
+    result_type = semantic_cube[left_type][right_type][operator]
     if not result_type:
       return (f'Type mismatch: Invalid operation {operator} on given operands')
     temp = build_temp_operand(result_type)
@@ -244,7 +244,7 @@ def do_assign(result):
   populate_non_constant_operand(result_operand, True)
   if result_operand.get_error(): return result_operand.get_error()
   result_type = result_operand.get_type()
-  if not sCube[result_type][left_type]['=']:
+  if not semantic_cube[result_type][left_type]['=']:
     return (f'Type mismatch: expression cannot be assigned to {result}')
   generate_quadruple('=', left_operand, None, result_operand)
   types.append(result_type)
