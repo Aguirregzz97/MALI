@@ -380,7 +380,7 @@ def startParams():
   global param_count
   param_count = 0
   size = calling_function['#param_count'] + calling_function['#var_count']
-  generateQuadruple('era', calling_function['#name'], size, None)
+  generateQuadruple('era', calling_function['#name'], None, None)
 
 
 def passParam():

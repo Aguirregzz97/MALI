@@ -61,7 +61,6 @@ class Available:
       }
       type_begin += length + 1
 
-
   def next(self, type):
     if type not in self.__type:
       type = "class"
@@ -73,9 +72,6 @@ class Available:
     self.__type[type]['next'] += 1
 
     return next_val
-
-  def __str__(self):
-    return ""
 
 
 # Intermediate code generation utils
