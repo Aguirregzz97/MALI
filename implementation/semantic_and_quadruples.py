@@ -55,7 +55,7 @@ def seenAccess(new_access):
 
 
 def seenType(new_type):
-  if new_type not in possible_types and (
+  if new_type not in func_types and (
         new_type not in classes):
     return f"{new_type} is not a class nor data type"
   else:
@@ -102,7 +102,7 @@ quadruples = [['Goto', None, None, None]]
 jumps = []
 returns_count = 0
 q_count = 1
-temp_avail = Available(1, 1000)
+temp_avail = Available(13000, 16999, var_types)
 calling_class = '#global'
 calling_function = None
 param_count = 0
@@ -191,7 +191,12 @@ def seenSubRule(ops):
     left_type = types.pop()
     operator = operators.pop()
     result_type = sCube[left_type][right_type][operator]
-    result = temp_avail.next()
+
+    temp_operand = Operand()
+    temp_operand.set_type(result_type)
+    temp_operand.set_address(temp_avail.next(temp_operand))
+    result = temp_operand.get_address()
+
     generateQuadruple(operator, left_operand, right_operand, result)
     operands.append(result)
     types.append(result_type)

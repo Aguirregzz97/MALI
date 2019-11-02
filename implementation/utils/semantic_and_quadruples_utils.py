@@ -34,18 +34,64 @@ def new_class_dict(name, parent='#global'):
   }
   return class_dict
 
-possible_types = ("int", "float", "char", "bool", "void")
+
+var_types = ("int", "float", "char", "bool")
+func_types = ("int", "float", "char", "bool", "void")
+
+
+class Available:
+  def __init__(self, begin, limit, types):
+    self.__begin = begin
+    self.__limit = limit
+
+    self.__type = {}
+    type_begin = begin
+    length = int((limit-begin)/len(types))
+    for t in types:
+      self.__type[t] = {
+        'begin': type_begin, #TODO: este podria no ser necesario.
+        'next': type_begin,
+        'limit': (type_begin + length)
+      }
+      type_begin += length + 1
+
+
+  def next(self, operand):
+    t = operand.get_type()
+
+    if t not in self.__type:
+      raise Exception('Type not defined')
+
+    next_val = self.__type[t]['next']
+    if next_val > self.__type[t]['limit']:
+      return None
+
+    self.__type[t]['next'] += 1
+
+    return next_val
+
+  def print(self):
+    print(global_addr.__type['int'], global_addr.__type['float'])
+
+
+global_addr = Available(1000, 4999, var_types)
+
 
 # Intermediate code generation utils
 
 class Operand:
-  def __init__(self, raw):
+  def __init__(self, raw=None):
     self.__raw = raw
     self.__addr = None
     self.__type = None
     self.__err = None
 
-  def set_addres(self, addr):
+  def set_raw(sef, raw):
+    if (self.__raw):
+      raise Exception('raw can only be defined once')
+    self.__raw = raw
+
+  def set_address(self, addr):
     self.__addr = addr
 
   def set_type(self, type):
@@ -55,7 +101,7 @@ class Operand:
     self.__err = err
 
   def get_raw(self): return self.__raw
-  def get_addres(self): return self.__addr
+  def get_address(self): return self.__addr
   def get_type(self): return self.__type
   def get_error(self): return self.__err
 
@@ -132,7 +178,6 @@ operations = {
   'endproc': 25,
 }
 
-global_addr = Available(0, 999)
 
 sCube = defaultdict(lambda : defaultdict(lambda : defaultdict(dict)))
 
