@@ -170,7 +170,8 @@ def p_assign(p):
             | ID arr_index EQUAL READ r_doRead
             | ID EQUAL expression
             | ID EQUAL READ r_doRead'''
-  sq.doAssign(p[1])
+  e = sq.doAssign(p[1])
+  if e: handle_error(p.lineno(1), p.lexpos(1), e)
   add_to_tree('assign', p)
 
 def p_call(p):

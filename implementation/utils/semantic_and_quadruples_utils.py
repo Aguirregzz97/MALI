@@ -5,7 +5,8 @@ from implementation.utils.generic_utils import *
 
 def new_var_dict(type, access=None):
   var_dict = {
-    '#assigned' : True,
+    #TODO: hacer verdadero.
+    '#assigned': True,
     '#type': type
   }
   if access: var_dict['#access'] = access
@@ -37,12 +38,45 @@ possible_types = ("int", "float", "char", "bool", "void")
 
 # Intermediate code generation utils
 
-class operator:
-  def __init__(self, raw, addr, type, is_constant=False):
+class Operand:
+  def __init__(self, raw):
     self.__raw = raw
+    self.__addr = None
+    self.__type = None
+    self.__err = None
+
+  def set_addres(self, addr):
     self.__addr = addr
+
+  def set_type(self, type):
     self.__type = type
-    self.__is_constant = is_constant
+
+  def set_error(self, err):
+    self.__err = err
+
+  def get_raw(self): return self.__raw
+  def get_addres(self): return self.__addr
+  def get_type(self): return self.__type
+  def get_error(self): return self.__err
+
+
+def populateNonConstantOperandAux(operand, prefix, mark_assigned,
+                                  check_access=False):
+  raw_operand = operand.get_raw()
+  var = prefix.get(raw_operand, None)
+  if not var:
+    return False
+  if mark_assigned:
+    var['#assigned'] = True
+  if not var['#assigned']:
+    operand.set_error(f'Variable {raw_operand} used before assignment')
+  elif check_access and var.get('#access', 'public') == 'private':
+    operand.set_error(f'Variable {raw_operand} has private access')
+  else:
+    operand.set_type(var['#type'])
+    #operand.set_addess(var['#address'])
+    return True
+
 
 operations = {
   1: '+unary',
@@ -98,7 +132,7 @@ operations = {
   'endproc': 25,
 }
 
-global_addr = available(0, 999)
+global_addr = Available(0, 999)
 
 sCube = defaultdict(lambda : defaultdict(lambda : defaultdict(dict)))
 

@@ -3,11 +3,11 @@ def top(l):
     return l[-1]
   return None
 
-class val_or_error:
+class ValOrError:
   val = None
   error = None
 
-class available:
+class Available:
   def __init__(self, begin, limit):
     #self._prefix = prefix
     self.__begin = begin

@@ -102,7 +102,7 @@ quadruples = [['Goto', None, None, None]]
 jumps = []
 returns_count = 0
 q_count = 1
-temp_avail = available(1, 1000)
+temp_avail = Available(1, 1000)
 calling_class = '#global'
 calling_function = None
 param_count = 0
@@ -115,59 +115,52 @@ def generateQuadruple(a, b, c, d):
   q_count += 1
 
 
-def findOperandAndType(raw_operand, type_or_error, markAssigned=False):
-  def search(prefix, checkAccess=False):
-    nonlocal type_or_error
-    prefix = prefix.get(raw_operand, None)
-    if prefix:
-      if markAssigned:
-        prefix['#assigned'] = True
-      elif not prefix['#assigned']:
-        type_or_error.error = f'Variable {raw_operand} used before assignment'
-      elif checkAccess and prefix.get('#access', 'public') == 'private':
-        type_or_error.error = f'Variable {raw_operand} has private access'
-      else:
-        type_or_error.val = prefix['#type']
-        return True
-    return False
-
-  if search(current_function['#vars']):
+def populateNonConstantOperand(operand, mark_assigned=False):
+  if populateNonConstantOperandAux(operand, current_function['#vars'],
+                                   mark_assigned):
     return
-  if search(current_class['#funcs']['#attributes']['#vars']):
+  if populateNonConstantOperandAux(operand,
+      current_class['#funcs']['#attributes']['#vars'], mark_assigned):
     return
   curr_class = current_class['#parent']
   while curr_class:
-    if search(classes[curr_class]['#funcs']['#attributes']['#vars'], True):
+    if populateNonConstantOperandAux(operand,
+        classes[curr_class]['#funcs']['#attributes']['#vars'],
+        mark_assigned,
+        True):
       return
     curr_class = classes[curr_class]['#parent']
 
-  type_or_error.error = f'Variable {raw_operand} not in scope.'
+  if not operand.get_error():
+    operand.set_error(f'Variable {operand.get_raw()} not in scope.')
 
 
-# Assigns the type on type_or_error. If the variable does not exist,
-# assigns error message to type_or_error. Returns boolean wether the
-# operand is constant or not.
-def getType(raw_operand, type_or_error):
+def buildOperand(raw_operand):
   t = type(raw_operand)
+  operand = Operand(raw_operand)
   if t == int:
-    type_or_error.val = 'int'
-    return True
+    operand.set_type('int')
   elif t == float:
-    type_or_error.val = 'float'
-    return True
+    operand.set_type('float')
   elif t == bool:
-    type_or_error.val = 'bool'
-    return True
+    operand.set_type('bool')
   elif t == str:
     if re.match(r"\'.\'", raw_operand):
-      type_or_error.val = 'char'
-      return True
+      operand.set_type('char')
     else:
-      findOperandAndType(raw_operand, type_or_error)
-      return False
+      populateNonConstantOperand(operand)
+  return operand
 
 
 def seenOperand(raw_operand):
+  global operands, types
+  operand = buildOperand(raw_operand)
+  if operand.get_error(): return operand.get_error()
+  operands.append(operand.get_raw())
+  types.append(operand.get_type())
+
+
+  '''
   global operands, types
   type_or_error = val_or_error()
   if type_or_error.error:
@@ -180,6 +173,7 @@ def seenOperand(raw_operand):
   else:
     operands.append(raw_operand)
   types.append(type_or_error.val)
+  '''
 
 
 def seenOperator(operator):
@@ -212,12 +206,11 @@ def doAssign(result):
   global operators, types, operands
   left_operand = operands.pop()
   left_type = types.pop()
-  result_type_or_error = val_or_error()
-  result_type_or_error = val_or_error()
-  findOperandAndType(result, result_type_or_error)
-  if result_type_or_error.error: return result_type_or_error.error
+  operand = Operand(result)
+  populateNonConstantOperand(operand, True)
+  if operand.get_error(): return operand.get_error()
   generateQuadruple('=', left_operand, None, result)
-  types.append(result_type_or_error.val)
+  types.append(operand.get_type())
 
 
 def doWrite(str):
@@ -226,15 +219,15 @@ def doWrite(str):
   else:
     word = operands.pop()
     type = types.pop()
-    word_type_or_error = val_or_error()
-    getType(word, word_type_or_error)
-    if word_type_or_error.error: return word_type_or_error.error
+    operand = buildOperand(word)
+    if operand.get_error(): return operand.get_error()
     generateQuadruple('write', None, None, word)
 
 
 def doRead():
-  global operands
+  global operands, types
   operands.append('#read')
+  types.append('#dynamic')
 
 
 def seenCondition():
