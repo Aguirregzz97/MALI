@@ -102,33 +102,3 @@ class Operand:
   def get_address(self): return self.__addr
   def get_type(self): return self.__type
   def get_error(self): return self.__err
-
-
-def address_or_else(operand, is_visual=False):
-  if operand:
-    if isinstance(operand, Operand):
-      if is_visual:
-        return operand.get_raw()
-      else:
-        return operand.get_address()
-    else:
-      return operand
-  return None
-
-
-def populate_non_constant_operand_aux(operand, prefix, mark_assigned,
-                                      check_access=False):
-  raw_operand = operand.get_raw()
-  var = prefix.get(raw_operand, None)
-  if not var:
-    return False
-  if mark_assigned:
-    var['#assigned'] = True
-  if not var['#assigned']:
-    operand.set_error(f'Variable {raw_operand} used before assignment')
-  elif check_access and var.get('#access', 'public') == 'private':
-    operand.set_error(f'Variable {raw_operand} has private access')
-  else:
-    operand.set_type(var['#type'])
-    operand.set_address(var['#address'])
-    return True

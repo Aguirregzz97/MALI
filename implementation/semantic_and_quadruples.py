@@ -117,6 +117,18 @@ param_count = 0
 var_count = 0
 
 
+def address_or_else(operand, is_visual=False):
+  if operand:
+    if isinstance(operand, Operand):
+      if is_visual:
+        return operand.get_raw()
+      else:
+        return operand.get_address()
+    else:
+      return operand
+  return None
+
+
 def generate_quadruple(a, b, c, d):
   global q_count, quadruples, visual_quadruples
 
@@ -134,19 +146,39 @@ def generate_quadruple(a, b, c, d):
   visual_quadruples.append([a, v_left_operand, v_right_operand, v_result])
 
 
+def find_var_and_populate_operand(operand, prefix, mark_assigned,
+                                      check_access=False):
+  raw_operand = operand.get_raw()
+  var = prefix.get(raw_operand, None)
+  if not var:
+    return False
+  if mark_assigned:
+    var['#assigned'] = True
+  if not var['#assigned']:
+    operand.set_error(f'Variable {raw_operand} used before assignment')
+  elif check_access and var.get('#access', 'public') == 'private':
+    operand.set_error(f'Variable {raw_operand} has private access')
+  else:
+    operand.set_type(var['#type'])
+    operand.set_address(var['#address'])
+    return True
+
+
 def populate_non_constant_operand(operand, mark_assigned=False):
-  if populate_non_constant_operand_aux(operand, current_function['#vars'],
-                                       mark_assigned):
+  # Search for var in function's local vars.
+  function_vars = current_function['#vars']
+  if find_var_and_populate_operand(operand, function_vars, mark_assigned):
     return
-  if populate_non_constant_operand_aux(operand,
-      current_class['#funcs']['#attributes']['#vars'], mark_assigned):
+  # Search for var in the attributes from the class.
+  class_attributes = current_class['#funcs']['#attributes']['#vars']
+  if find_var_and_populate_operand(operand, class_attributes, mark_assigned):
     return
+  # Search for var in the attributes of inherited classes.
   curr_class = current_class['#parent']
   while curr_class:
-    if populate_non_constant_operand_aux(operand,
-        classes[curr_class]['#funcs']['#attributes']['#vars'],
-        mark_assigned,
-        True):
+    class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
+    if find_var_and_populate_operand(operand, class_attributes, mark_assigned,
+                                     True):
       return
     curr_class = classes[curr_class]['#parent']
 
