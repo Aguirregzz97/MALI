@@ -1,3 +1,5 @@
+# Semantic checks and quadruple generation for MALI language.
+
 from implementation.utils.semantic_and_quadruples_utils import *
 from implementation.utils.generic_utils import *
 from implementation.utils.constants import *

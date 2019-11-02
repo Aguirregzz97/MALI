@@ -1,3 +1,5 @@
+# Utils module for semantic checks and quadruples generation.
+
 from collections import defaultdict, deque
 from implementation.utils.generic_utils import *
 from implementation.utils.constants import *

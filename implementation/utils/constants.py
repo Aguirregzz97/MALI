@@ -1,3 +1,6 @@
+# Constants used for MALI language.
+
+# Memory addresses thresholds.
 VAR_LOWER_LIMIT = 11000
 VAR_UPPER_LIMIT = 15999
 TEMP_LOWER_LIMIT = 16000
