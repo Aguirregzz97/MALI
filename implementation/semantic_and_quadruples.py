@@ -6,7 +6,6 @@ import re
 # Semantic table filling.
 
 classes = {'#global': new_class_dict(name='#global', parent=None)}
-possible_types = ("int", "float", "char", "bool", "void")
 
 current_class = classes['#global']
 current_function = current_class['#funcs']['#attributes']
@@ -103,7 +102,7 @@ quadruples = [['Goto', None, None, None]]
 jumps = []
 returns_count = 0
 q_count = 1
-temp_avail = available('#t', 1, 1000)
+temp_avail = available(1, 1000)
 calling_class = '#global'
 calling_function = None
 param_count = 0
@@ -116,7 +115,7 @@ def generateQuadruple(a, b, c, d):
   q_count += 1
 
 
-def findOperatorAndType(raw_operand, type_or_error, markAssigned=False):
+def findOperandAndType(raw_operand, type_or_error, markAssigned=False):
   def search(prefix, checkAccess=False):
     nonlocal type_or_error
     prefix = prefix.get(raw_operand, None)
@@ -164,7 +163,7 @@ def getType(raw_operand, type_or_error):
       type_or_error.val = 'char'
       return True
     else:
-      findOperatorAndType(raw_operand, type_or_error)
+      findOperandAndType(raw_operand, type_or_error)
       return False
 
 
@@ -215,7 +214,7 @@ def doAssign(result):
   left_type = types.pop()
   result_type_or_error = val_or_error()
   result_type_or_error = val_or_error()
-  findOperatorAndType(result, result_type_or_error)
+  findOperandAndType(result, result_type_or_error)
   if result_type_or_error.error: return result_type_or_error.error
   generateQuadruple('=', left_operand, None, result)
   types.append(result_type_or_error.val)

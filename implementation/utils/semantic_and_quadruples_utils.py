@@ -1,4 +1,5 @@
 from collections import defaultdict, deque
+from implementation.utils.generic_utils import *
 
 # Symbol table utils.
 
@@ -32,27 +33,72 @@ def new_class_dict(name, parent='#global'):
   }
   return class_dict
 
+possible_types = ("int", "float", "char", "bool", "void")
 
 # Intermediate code generation utils
 
-class available:
-  def __init__(self, prefix, begin, limit):
-    self._prefix = prefix
-    self._begin = begin
-    self._next = begin
-    self._limit = limit
+class operator:
+  def __init__(self, raw, addr, type, is_constant=False):
+    self.__raw = raw
+    self.__addr = addr
+    self.__type = type
+    self.__is_constant = is_constant
 
-  def next(self):
-    next = self._prefix + str(self._next)
-    self._next += 1
-    if self._next > self._limit:
-      return None
-    return next
+operations = {
+  1: '+unary',
+  2: '-unary',
+  3: 'not',
+  4: '*',
+  5: '/',
+  6: '+',
+  7: '-',
+  8: '>',
+  9: '<',
+  10: '<>',
+  11: '==',
+  12: '<=',
+  13: '>=',
+  14: 'or',
+  15: 'and',
+  16: '=',
+  17: 'read',
+  18: 'write',
+  19: 'goto',
+  20: 'gotof',
+  21: 'gotosub',
+  22: 'param',
+  23: 'era',
+  24: 'return',
+  25: 'endproc',
 
-  def reset(self):
-    self._next = self._begin
+  '+unary': 1,
+  '-unary': 2,
+  'not': 3,
+  '*': 4,
+  '/': 5,
+  '+': 6,
+  '-': 7,
+  '>': 8,
+  '<': 9,
+  '<>': 10,
+  '==': 11,
+  '<=': 12,
+  '>=': 13,
+  'or': 14,
+  'and': 15,
+  '=': 16,
+  'read': 17,
+  'write': 18,
+  'goto': 19,
+  'gotof': 20,
+  'gotosub': 21,
+  'param': 22,
+  'era': 23,
+  'return': 24,
+  'endproc': 25,
+}
 
-
+global_addr = available(0, 999)
 
 sCube = defaultdict(lambda : defaultdict(lambda : defaultdict(dict)))
 
