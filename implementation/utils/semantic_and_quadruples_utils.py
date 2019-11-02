@@ -3,11 +3,12 @@ from implementation.utils.generic_utils import *
 
 # Symbol table utils.
 
-def new_var_dict(type, access=None):
+def new_var_dict(type, address, access=None):
   var_dict = {
     #TODO: hacer verdadero.
     '#assigned': True,
-    '#type': type
+    '#type': type,
+    '#address': address
   }
   if access: var_dict['#access'] = access
   return var_dict
@@ -19,6 +20,8 @@ def new_func_dict(name, type):
     '#type': type,
     '#param_count': 0,
     '#var_count': 0,
+    '#var_avail': Available(9000, 13999, var_types),
+    '#temp_avail': Available(14000, 17999, var_types),
     '#vars': {}
   }
   return func_dict
@@ -35,7 +38,7 @@ def new_class_dict(name, parent='#global'):
   return class_dict
 
 
-var_types = ("int", "float", "char", "bool")
+var_types = ("int", "float", "char", "bool", "class")
 func_types = ("int", "float", "char", "bool", "void")
 
 
@@ -56,17 +59,15 @@ class Available:
       type_begin += length + 1
 
 
-  def next(self, operand):
-    t = operand.get_type()
+  def next(self, type):
+    if type not in self.__type:
+      type = "class"
 
-    if t not in self.__type:
-      raise Exception('Type not defined')
-
-    next_val = self.__type[t]['next']
-    if next_val > self.__type[t]['limit']:
+    next_val = self.__type[type]['next']
+    if next_val > self.__type[type]['limit']:
       return None
 
-    self.__type[t]['next'] += 1
+    self.__type[type]['next'] += 1
 
     return next_val
 
@@ -74,7 +75,7 @@ class Available:
     print(global_addr.__type['int'], global_addr.__type['float'])
 
 
-global_addr = Available(1000, 4999, var_types)
+global_avail = Available(1000, 4999, var_types)
 
 
 # Intermediate code generation utils
@@ -86,7 +87,7 @@ class Operand:
     self.__type = None
     self.__err = None
 
-  def set_raw(sef, raw):
+  def set_raw(self, raw):
     if (self.__raw):
       raise Exception('raw can only be defined once')
     self.__raw = raw
@@ -120,7 +121,7 @@ def populateNonConstantOperandAux(operand, prefix, mark_assigned,
     operand.set_error(f'Variable {raw_operand} has private access')
   else:
     operand.set_type(var['#type'])
-    #operand.set_addess(var['#address'])
+    operand.set_address(var['#address'])
     return True
 
 
@@ -141,7 +142,7 @@ operations = {
   14: 'or',
   15: 'and',
   16: '=',
-  17: 'read',
+  17: 'dynamic',
   18: 'write',
   19: 'goto',
   20: 'gotof',
@@ -167,7 +168,7 @@ operations = {
   'or': 14,
   'and': 15,
   '=': 16,
-  'read': 17,
+  'dynamic': 17,
   'write': 18,
   'goto': 19,
   'gotof': 20,
@@ -179,7 +180,8 @@ operations = {
 }
 
 
-sCube = defaultdict(lambda : defaultdict(lambda : defaultdict(dict)))
+sCube = defaultdict(lambda : defaultdict(lambda : defaultdict(
+    lambda : defaultdict(None))))
 
 sCube['int']['int']['and'] = 'bool'
 sCube['int']['int']['or'] = 'bool'
@@ -194,6 +196,7 @@ sCube['int']['int']['-'] = 'int'
 sCube['int']['int']['*'] = 'int'
 sCube['int']['int']['/'] = 'int'
 sCube['int']['int']['='] = 'int'
+sCube['int']['dynamic']['='] = 'int'
 
 sCube['float']['float']['and'] = 'bool'
 sCube['float']['float']['or'] = 'bool'
@@ -208,6 +211,7 @@ sCube['float']['float']['-'] = 'float'
 sCube['float']['float']['*'] = 'float'
 sCube['float']['float']['/'] = 'float'
 sCube['float']['float']['='] = 'float'
+sCube['float']['dynamic']['='] = 'float'
 
 sCube['char']['char']['and'] = 'bool'
 sCube['char']['char']['or'] = 'bool'
@@ -222,6 +226,7 @@ sCube['char']['char']['-'] = 'char'
 sCube['char']['char']['*'] = 'char'
 sCube['char']['char']['/'] = 'char'
 sCube['char']['char']['='] = 'char'
+sCube['char']['dynamic']['='] = 'char'
 
 sCube['bool']['bool']['and'] = 'bool'
 sCube['bool']['bool']['or'] = 'bool'
@@ -236,6 +241,7 @@ sCube['bool']['bool']['-'] = 'int'
 sCube['bool']['bool']['*'] = 'int'
 sCube['bool']['bool']['/'] = 'int'
 sCube['bool']['bool']['='] = 'bool'
+sCube['bool']['dynamic']['='] = 'bool'
 
 sCube['int']['float']['and'] = sCube['float']['int']['and'] = 'bool'
 sCube['int']['float']['or'] = sCube['float']['int']['or'] = 'bool'
@@ -281,6 +287,7 @@ sCube['int']['bool']['*'] = sCube['bool']['int']['*'] = 'int'
 sCube['int']['bool']['/'] = sCube['bool']['int']['/'] = 'int'
 sCube['int']['bool']['='] = 'int'
 sCube['bool']['int']['='] = 'bool'
+sCube['float']['dynamic']['='] = 'float'
 
 sCube['float']['char']['and'] = sCube['char']['float']['and'] = 'bool'
 sCube['float']['char']['or'] = sCube['char']['float']['or'] = 'bool'
@@ -296,6 +303,7 @@ sCube['float']['char']['*'] = sCube['char']['float']['*'] = 'float'
 sCube['float']['char']['/'] = sCube['char']['float']['/'] = 'float'
 sCube['float']['char']['='] = 'float'
 sCube['char']['float']['='] = 'char'
+sCube['char']['dynamic']['='] = 'char'
 
 sCube['float']['bool']['and'] = sCube['bool']['float']['and'] = 'bool'
 sCube['float']['bool']['or'] = sCube['bool']['float']['or'] = 'bool'
@@ -311,6 +319,7 @@ sCube['float']['bool']['*'] = sCube['bool']['float']['*'] = 'float'
 sCube['float']['bool']['/'] = sCube['bool']['float']['/'] = 'float'
 sCube['float']['bool']['='] = 'float'
 sCube['bool']['float']['='] = 'bool'
+sCube['bool']['dynamic']['='] = 'bool'
 
 sCube['char']['bool']['and'] = sCube['bool']['char']['and'] = 'bool'
 sCube['char']['bool']['or'] = sCube['bool']['char']['or'] = 'bool'
@@ -326,3 +335,4 @@ sCube['char']['bool']['*'] = sCube['bool']['char']['*'] = 'char'
 sCube['char']['bool']['/'] = sCube['bool']['char']['/'] = 'char'
 sCube['char']['bool']['='] = 'char'
 sCube['bool']['char']['='] = 'bool'
+sCube['bool']['dynamic']['='] = 'bool'

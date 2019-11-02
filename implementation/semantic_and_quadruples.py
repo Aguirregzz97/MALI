@@ -73,11 +73,15 @@ def varName(var_name):
     else:
       global var_count
       var_count += 1
+    address = current_function['#var_avail'].next(current_type)
     if current_class['#name'] == '#global':
-      current_function['#vars'][var_name] = new_var_dict(current_type)
+      current_function['#vars'][var_name] = new_var_dict(current_type, address)
+    elif current_function['#name'] == '#attributes':
+      current_function['#vars'][var_name] = (
+          new_var_dict(current_type, address-4000, current_access))
     else:
       current_function['#vars'][var_name] = (
-          new_var_dict(current_type, current_access))
+          new_var_dict(current_type, address, current_access))
 
 
 def setParam(val):
@@ -160,22 +164,6 @@ def seenOperand(raw_operand):
   types.append(operand.get_type())
 
 
-  '''
-  global operands, types
-  type_or_error = val_or_error()
-  if type_or_error.error:
-    return type_or_error.error
-  isConstant = getType(raw_operand, type_or_error)
-  if type_or_error.error:
-    return type_or_error.error
-  if isConstant:
-    operands.append(raw_operand)
-  else:
-    operands.append(raw_operand)
-  types.append(type_or_error.val)
-  '''
-
-
 def seenOperator(operator):
   global operators
   operators.append(str(operator))
@@ -191,12 +179,10 @@ def seenSubRule(ops):
     left_type = types.pop()
     operator = operators.pop()
     result_type = sCube[left_type][right_type][operator]
-
-    temp_operand = Operand()
-    temp_operand.set_type(result_type)
-    temp_operand.set_address(temp_avail.next(temp_operand))
-    result = temp_operand.get_address()
-
+    if not result_type:
+      return (f'Type mismatch: Invalid operation {operator} on operands ' +
+          f'{left_operand} and {right_operand}')
+    result = temp_avail.next(result_type)
     generateQuadruple(operator, left_operand, right_operand, result)
     operands.append(result)
     types.append(result_type)
@@ -214,8 +200,11 @@ def doAssign(result):
   operand = Operand(result)
   populateNonConstantOperand(operand, True)
   if operand.get_error(): return operand.get_error()
+  result_type = operand.get_type()
+  if not sCube[result_type][left_type]['=']:
+    return (f'Type mismatch: {left_operand} cannot be assigned to {result}')
   generateQuadruple('=', left_operand, None, result)
-  types.append(operand.get_type())
+  types.append(result_type)
 
 
 def doWrite(str):
@@ -231,8 +220,8 @@ def doWrite(str):
 
 def doRead():
   global operands, types
-  operands.append('#read')
-  types.append('#dynamic')
+  operands.append('read')
+  types.append('dynamic')
 
 
 def seenCondition():

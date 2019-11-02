@@ -72,8 +72,6 @@ main {
 
   #a.init();
 
-  a = b;
-
   cont = 0;
 
   w = read;
@@ -95,7 +93,7 @@ main {
     cont = cont + 1;
   };
 
-  a = b + c;
+  y = b + c;
 
   #a.Ladrar;
 }
