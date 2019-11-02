@@ -17,7 +17,7 @@ current_x = None
 current_y = None
 
 
-def seenClass(class_name):
+def seen_class(class_name):
   if class_name in classes:
     return f"Repeated class name: {class_name}"
   else:
@@ -27,21 +27,21 @@ def seenClass(class_name):
     current_function = current_class['#funcs']['#attributes']
 
 
-def classParent(class_parent):
+def class_parent(class_parent):
   if class_parent not in classes:
     return f"Undeclared class parent: {class_parent}"
   else:
     current_class['#parent'] = class_parent
 
 
-def finishClass():
+def finish_class():
   global current_class, current_function
   current_class = classes['#global']
   current_function = current_class['#funcs']['#attributes']
   current_access = '#public'
 
 
-def seenFunc(func_name):
+def seen_func(func_name):
   global func_size, current_function
   func_size = 0
   if func_name in current_class['#funcs']:
@@ -51,12 +51,12 @@ def seenFunc(func_name):
     current_function = current_class['#funcs'][func_name]
 
 
-def seenAccess(new_access):
+def seen_access(new_access):
   global current_access
   current_access = new_access
 
 
-def seenType(new_type):
+def seen_type(new_type):
   if new_type not in func_types and (
         new_type not in classes):
     return f"{new_type} is not a class nor data type"
@@ -65,7 +65,7 @@ def seenType(new_type):
     current_type = new_type
 
 
-def varName(var_name):
+def var_name(var_name):
   global param_count, var_count, current_access
   if var_name in current_function['#vars']:
     return f"Redeclared variable: {var_name}"
@@ -85,16 +85,16 @@ def varName(var_name):
           new_var_dict(current_type, address-adjust, current_access))
 
 
-def setParam(val):
+def set_param(params_ahead):
   global param_count, is_param
-  if val:
+  if params_ahead:
     param_count = 0
   else:
     current_function['#param_count'] = param_count
-  is_param = val
+  is_param = params_ahead
 
 
-def isMethod():
+def set_access():
   current_function['#access'] = current_access
 
 
@@ -115,49 +115,45 @@ param_count = 0
 var_count = 0
 
 
-def addressOrElse(operand):
+def address_or_else(operand, is_visual=False):
   if operand:
     if isinstance(operand, Operand):
-      return operand.get_address()
+      if is_visual:
+        return operand.get_raw()
+      else:
+        return operand.get_address()
     else:
       return operand
   return None
 
-def nameOrElse(operand):
-  if operand:
-    if isinstance(operand, Operand):
-      return operand.get_raw()
-    else:
-      return operand
-  return None
 
-def generateQuadruple(a, b, c, d):
-  global quadruples, q_count
+def generate_quadruple(a, b, c, d):
+  global q_count
 
   operation = operations.get(a, f'NOT FOUND {a}')
-  left_operand = addressOrElse(b)
-  right_operand = addressOrElse(c)
-  result = addressOrElse(d)
+  left_operand = address_or_else(b)
+  right_operand = address_or_else(c)
+  result = address_or_else(d)
 
   quadruples.append([operation, left_operand, right_operand, result])
   q_count += 1
 
-  v_left_operand = nameOrElse(b)
-  v_right_operand = nameOrElse(c)
-  v_result = nameOrElse(d)
+  v_left_operand = address_or_else(b, True)
+  v_right_operand = address_or_else(c, True)
+  v_result = address_or_else(d, True)
   visual_quadruples.append([a, v_left_operand, v_right_operand, v_result])
 
 
-def populateNonConstantOperand(operand, mark_assigned=False):
-  if populateNonConstantOperandAux(operand, current_function['#vars'],
-                                   mark_assigned):
+def populate_non_constant_operand(operand, mark_assigned=False):
+  if populate_non_constant_operand_aux(operand, current_function['#vars'],
+                                       mark_assigned):
     return
-  if populateNonConstantOperandAux(operand,
+  if populate_non_constant_operand_aux(operand,
       current_class['#funcs']['#attributes']['#vars'], mark_assigned):
     return
   curr_class = current_class['#parent']
   while curr_class:
-    if populateNonConstantOperandAux(operand,
+    if populate_non_constant_operand_aux(operand,
         classes[curr_class]['#funcs']['#attributes']['#vars'],
         mark_assigned,
         True):
@@ -168,7 +164,7 @@ def populateNonConstantOperand(operand, mark_assigned=False):
     operand.set_error(f'Variable {operand.get_raw()} not in scope.')
 
 
-def buildOperand(raw_operand):
+def build_operand(raw_operand):
   t = type(raw_operand)
   operand = Operand(raw_operand)
   if t == int:
@@ -185,24 +181,24 @@ def buildOperand(raw_operand):
       operand.set_type('char')
       operand.set_address(const_avail.next('char'))
     else:
-      populateNonConstantOperand(operand)
+      populate_non_constant_operand(operand)
   return operand
 
 
-def seenOperand(raw_operand):
+def register_operand(raw_operand):
   global operands, types
-  operand = buildOperand(raw_operand)
+  operand = build_operand(raw_operand)
   if operand.get_error(): return operand.get_error()
   operands.append(operand)
   types.append(operand.get_type())
 
 
-def seenOperator(operator):
+def register_operator(operator):
   global operators
   operators.append(str(operator))
 
 
-def buildTempOperand(op_type):
+def build_temp_operand(op_type):
   address = current_function['#temp_avail'].next(op_type)
   current_function['#vars'][address] = new_var_dict(type, address)
   current_function['#var_count'] += 1
@@ -212,7 +208,7 @@ def buildTempOperand(op_type):
   return operand
 
 
-def seenSubRule(ops):
+def solve_operation_or_continue(ops):
   global operators, types, operands
   operator = top(operators)
   if operator in ops:
@@ -224,46 +220,46 @@ def seenSubRule(ops):
     result_type = sCube[left_type][right_type][operator]
     if not result_type:
       return (f'Type mismatch: Invalid operation {operator} on given operands')
-    temp = buildTempOperand(result_type)
-    generateQuadruple(operator, left_operand, right_operand, temp)
+    temp = build_temp_operand(result_type)
+    generate_quadruple(operator, left_operand, right_operand, temp)
     operands.append(temp)
     types.append(result_type)
 
 
-def popFakeBottom():
+def pop_fake_bottom():
   global operators
   operators.pop()
 
 
-def doAssign(result):
+def do_assign(result):
   global operators, types, operands
   left_operand = operands.pop()
   left_type = types.pop()
   result_operand = Operand(result)
-  populateNonConstantOperand(result_operand, True)
+  populate_non_constant_operand(result_operand, True)
   if result_operand.get_error(): return result_operand.get_error()
   result_type = result_operand.get_type()
   if not sCube[result_type][left_type]['=']:
     return (f'Type mismatch: expression cannot be assigned to {result}')
-  generateQuadruple('=', left_operand, None, result_operand)
+  generate_quadruple('=', left_operand, None, result_operand)
   types.append(result_type)
 
 
-def doWrite(s):
+def do_write(s):
   if s:
     operand = Operand(s)
     operand.set_type('cte_string')
     operand.set_address(const_avail.next('cte_string'))
-    generateQuadruple('write', None, None, operand)
+    generate_quadruple('write', None, None, operand)
   else:
     word = operands.pop()
     type = types.pop()
-    operand = buildOperand(word)
+    operand = build_operand(word)
     if operand.get_error(): return operand.get_error()
-    generateQuadruple('write', None, None, word)
+    generate_quadruple('write', None, None, word)
 
 
-def doRead():
+def do_read():
   global operands, types
   operand = Operand('read')
   operand.set_address(operations['read'])
@@ -272,69 +268,69 @@ def doRead():
   types.append('dynamic')
 
 
-def seenCondition():
+def register_condition():
   exp_type = types.pop()
   if exp_type != 'bool':
     return 'Evaluated expression is not boolean'
   result = operands.pop()
-  generateQuadruple('gotof', result, None, None)
+  generate_quadruple('gotof', result, None, None)
   jumps.append(q_count-1)
 
 
-def seenElse():
-  generateQuadruple('goto', None, None, None)
+def register_else():
+  generate_quadruple('goto', None, None, None)
   false = jumps.pop()
   jumps.append(q_count-1)
   quadruples[false][3] = q_count
 
 
-def seenEndIf():
+def register_end_if():
   end = jumps.pop()
   quadruples[end][3] = q_count
 
 
-def seenWhile():
+def register_while():
   jumps.append(q_count)
 
 
-def seenEndWhile():
+def register_end_while():
   end = jumps.pop()
   quadruples[end][3] = q_count
   ret = jumps.pop()
-  generateQuadruple('goto', None, None, ret)
+  generate_quadruple('goto', None, None, ret)
 
 
-def endVars():
+def end_vars():
   global var_count
   current_function['#var_count'] = var_count
   var_count = 0
 
 
-def startFunc():
+def register_function_beginning():
   current_function['#start'] = q_count
 
 
-def setVoid():
+def set_current_type_void():
   global current_type
   current_type = 'void'
 
 
-def seenMain():
+def register_main_beginning():
   quadruples[0][3] = q_count
 
 
-def finishFunc(is_main=False):
+def register_func_end(is_main=False):
   global returns_count
   while returns_count:
     quadruples[jumps.pop()][3] = q_count
     returns_count -= 1
   if is_main:
-    generateQuadruple('end', None, None, None)
+    generate_quadruple('end', None, None, None)
   else:
-    generateQuadruple('endproc', None, None, None)
+    generate_quadruple('endproc', None, None, None)
 
 
-def seenReturn():
+def register_return():
   global returns_count
   function_type = current_function['#type']
   if function_type == 'void':
@@ -343,13 +339,13 @@ def seenReturn():
   return_type = types.pop()
   if function_type != return_type:
     return f'Cannot return type {return_type} as {function_type}'
-  generateQuadruple('return', return_val, None, None)
+  generate_quadruple('return', return_val, None, None)
   jumps.append(q_count)
   returns_count += 1
-  generateQuadruple('goto', None, None, None)
+  generate_quadruple('goto', None, None, None)
 
 
-def callParent(parent):
+def call_parent(parent):
   global calling_class, calling_function
   if not current_class['#parent']:
     return (f"{current_class['#name']} has no parent class but tries "
@@ -360,7 +356,7 @@ def callParent(parent):
   calling_function = calling_class['#funcs']['init']
 
 
-def seenCall(func_name):
+def seen_call(func_name):
   global calling_class, calling_function
   if func_name in current_class['#funcs']:
     calling_class = current_class
@@ -376,14 +372,14 @@ def seenCall(func_name):
   return f"{func_name} not defined for {current_class['#name']}"
 
 
-def startParams():
+def start_param_collection():
   global param_count
   param_count = 0
   size = calling_function['#param_count'] + calling_function['#var_count']
-  generateQuadruple('era', calling_function['#name'], None, None)
+  generate_quadruple('era', calling_function['#name'], None, None)
 
 
-def passParam():
+def pass_param():
   param = list(calling_function['#vars'].values())[param_count]
   param_type = param['#type']
   argument = operands.pop()
@@ -392,16 +388,10 @@ def passParam():
     return (f"{calling_function['#name']} expecting type {param_type} "
         + f'for parameter {param_count+1}')
   #TODO: en el ejemplo param se imprime enel cuadruplo como 'param#'
-  generateQuadruple('param', argument, None, param_count)
+  generate_quadruple('param', argument, None, param_count)
 
 
-def paramPassError():
-  expected = calling_function['#var_count']
-  return (f'{calling_function} expects {expected} parameters, but ' +
-        f'{param_count+1} were given')
-
-
-def nextPassParam():
+def prepare_upcoming_param():
   global param_count
   param_count += 1
   if param_count+1 > calling_function['#var_count']:
@@ -410,10 +400,10 @@ def nextPassParam():
         'were given')
 
 
-def doneParamPass():
+def done_param_pass():
   expected = calling_function['#var_count']
   if param_count+1 != expected:
     return (f'{calling_function} expects {expected} parameters, but ' +
         f'{param_count+1} were given')
-  generateQuadruple('gosub', calling_function['#name'], None,
+  generate_quadruple('gosub', calling_function['#name'], None,
                     calling_function['#start'])

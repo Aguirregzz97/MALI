@@ -103,8 +103,8 @@ class Operand:
   def get_error(self): return self.__err
 
 
-def populateNonConstantOperandAux(operand, prefix, mark_assigned,
-                                  check_access=False):
+def populate_non_constant_operand_aux(operand, prefix, mark_assigned,
+                                      check_access=False):
   raw_operand = operand.get_raw()
   var = prefix.get(raw_operand, None)
   if not var:

@@ -81,8 +81,8 @@ def p_init_factor(p):
 
 
 def p_methods(p):
-  '''methods : access proc r_isMethod methods
-             | access proc r_isMethod'''
+  '''methods : access proc r_set_access methods
+             | access proc r_set_access'''
   add_to_tree('methods', p)
 
 
@@ -128,7 +128,7 @@ def p_type(p):
           | CHAR r_seen_type
           | BOOL r_seen_type'''
   add_to_tree('type', p)
-  e = sq.seenType(new_type=p[1])
+  e = sq.seen_type(new_type=p[1])
   if e: handle_error(p.lineno(1), p.lexpos(1), e)
 
 
@@ -193,7 +193,7 @@ def p_assign(p):
             | ID arr_index EQUAL READ r_do_read
             | ID EQUAL expression
             | ID EQUAL READ r_do_read'''
-  e = sq.doAssign(p[1])
+  e = sq.do_assign(p[1])
   if e: handle_error(p.lineno(1), p.lexpos(1), e)
   add_to_tree('assign', p)
 
@@ -364,218 +364,218 @@ def p_empty(p):
 
 def p_r_seen_class(p):
   'r_seen_class : '
-  e = sq.seenClass(class_name=p[-1])
+  e = sq.seen_class(class_name=p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_class_parent(p):
   'r_class_parent : '
-  e = sq.classParent(class_parent=p[-1])
+  e = sq.class_parent(class_parent=p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_finish_class(p):
   'r_finish_class : '
-  sq.finishClass()
+  sq.finish_class()
 
 
 def p_r_seen_attribute(p):
   'r_seen_attribute : '
-  sq.seenFunc(func_name='#attributes')
+  sq.seen_func(func_name='#attributes')
 
 
 def p_r_seen_access(p):
   'r_seen_access : '
-  sq.seenAccess(new_access=p[-1])
+  sq.seen_access(new_access=p[-1])
 
 
 def p_r_seen_type(p):
   'r_seen_type : '
-  e = sq.seenType(new_type=p[-1])
+  e = sq.seen_type(new_type=p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_var_name(p):
   'r_var_name : '
-  e = sq.varName(var_name=p[-1])
+  e = sq.var_name(var_name=p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_init(p):
   'r_seen_init : '
-  sq.setVoid()
-  e = sq.seenFunc(func_name='init')
+  sq.set_current_type_void()
+  e = sq.seen_func(func_name='init')
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_param(p):
   'r_seen_param : '
-  sq.setParam(True)
+  sq.set_param(True)
 
 
 def p_r_finish_param(p):
   'r_finish_param : '
-  sq.setParam(False)
+  sq.set_param(False)
 
 
 def p_r_call_parent(p):
   'r_call_parent : '
-  e = sq.callParent(parent=p[-1])
+  e = sq.call_parent(parent=p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_funcName(p):
   'r_funcName : '
-  e = sq.seenFunc(func_name=p[-1])
+  e = sq.seen_func(func_name=p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
-def p_r_isMethod(p):
-  'r_isMethod : '
-  sq.isMethod()
+def p_r_set_access(p):
+  'r_set_access : '
+  sq.set_access()
 
 
 def p_r_seen_main(p):
   'r_seen_main : '
-  sq.setVoid()
-  sq.seenMain()
-  e = sq.seenFunc(func_name='#main')
+  sq.set_current_type_void()
+  sq.set_current_type_void()
+  e = sq.seen_func(func_name='#main')
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_operand(p):
   'r_seen_operand : '
-  e = sq.seenOperand(p[-1])
+  e = sq.register_operand(p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_operator(p):
   'r_seen_operator : '
-  sq.seenOperator(p[-1])
+  sq.register_operator(p[-1])
 
 
 def p_r_seen_factor(p):
   'r_seen_factor : '
-  sq.seenSubRule(['*', '/'])
+  sq.solve_operation_or_continue(['*', '/'])
 
 
 def p_r_seen_term(p):
   'r_seen_term : '
-  sq.seenSubRule(['+', '-'])
+  sq.solve_operation_or_continue(['+', '-'])
 
 
 def p_r_seenX(p):
   'r_seen_x : '
-  sq.seenSubRule(['>', '<', '<>', '==', '<=', '>='])
+  sq.solve_operation_or_continue(['>', '<', '<>', '==', '<=', '>='])
 
 
 def p_r_seen_xp(p):
   'r_seen_xp : '
-  sq.seenSubRule(['or'])
+  sq.solve_operation_or_continue(['or'])
 
 
 def p_r_seen_exp(p):
   'r_seen_exp : '
-  sq.seenSubRule(['and'])
+  sq.solve_operation_or_continue(['and'])
 
 
 def p_r_pop_fake_bottom(p):
   'r_pop_fake_bottom : '
-  sq.popFakeBottom()
+  sq.pop_fake_bottom()
 
 
 def p_r_do_write_str(p):
   'r_do_write_str : '
-  sq.doWrite(p[-1])
+  sq.do_write(p[-1])
 
 
 def p_r_do_write(p):
-  'r_doWrite : '
-  sq.doWrite(None)
+  'r_do_write : '
+  sq.do_write(None)
 
 
 def p_r_do_read(p):
   'r_do_read : '
-  sq.doRead()
+  sq.do_read()
 
 
 def p_r_seen_cond(p):
   'r_seen_cond : '
-  e = sq.seenCondition()
+  e = sq.register_condition()
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_else(p):
   'r_seen_else : '
-  sq.seenElse()
+  sq.register_else()
 
 
 def p_r_seen_end_if(p):
   'r_seen_end_if : '
-  sq.seenEndIf()
+  sq.register_end_if()
 
 
 def p_r_seen_while(p):
   'r_seen_while : '
-  sq.seenWhile()
+  sq.register_while()
 
 
 def p_r_seen_end_while(p):
   'r_seen_end_while : '
-  sq.seenEndWhile()
+  sq.register_end_while()
 
 
 def p_r_end_vars(p):
-  'r_endVars : '
-  sq.endVars()
+  'r_end_vars : '
+  sq.end_vars()
 
 
 def p_r_start_func(p):
   'r_start_func : '
-  sq.startFunc()
+  sq.register_function_beginning()
 
 
 def p_r_finish_func(p):
   'r_finish_func : '
-  sq.finishFunc()
+  sq.register_func_end()
 
 
 def p_r_finish_main(p):
   'r_finish_main : '
-  sq.finishFunc(is_main=True)
+  sq.register_func_end(is_main=True)
 
 
 def p_r_seen_return(p):
   'r_seen_return : '
-  sq.seenReturn()
+  sq.register_return()
 
 
 def p_r_seen_call(p):
   'r_seen_call : '
-  e = sq.seenCall(p[-1])
+  e = sq.seen_call(p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_start_params(p):
   'r_start_params : '
-  sq.startParams()
+  sq.start_param_collection()
 
 
 def p_r_pass_param(p):
   'r_pass_param : '
-  e = sq.passParam()
+  e = sq.pass_param()
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_next_param_pass(p):
   'r_next_param_pass : '
-  e = sq.r_next_param_pass()
+  e = sq.r_prepare_upcoming_param()
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_done_param_pass(p):
   'r_done_param_pass : '
-  e = sq.doneParamPass()
+  e = sq.done_param_pass()
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
