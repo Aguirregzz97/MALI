@@ -22,7 +22,7 @@ def new_func_dict(name, type):
     '#param_count': 0,
     '#var_count': 0,
     '#var_avail': Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types),
-    '#temp_avail': Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, var_types),
+    '#temp_avail': Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, temp_types),
     '#vars': {}
   }
   return func_dict
@@ -40,6 +40,8 @@ def new_class_dict(name, parent='#global'):
 
 
 var_types = ("int", "float", "char", "bool", "class")
+temp_types = ("int", "float", "char", "bool")
+const_types = ("int", "float", "char", "bool", "cte_string")
 func_types = ("int", "float", "char", "bool", "void")
 
 
@@ -140,15 +142,16 @@ operations = {
   14: 'or',
   15: 'and',
   16: '=',
-  17: 'dynamic',
+  17: 'read',
   18: 'write',
   19: 'goto',
   20: 'gotof',
-  21: 'gotosub',
+  21: 'gosub',
   22: 'param',
   23: 'era',
   24: 'return',
   25: 'endproc',
+  26: 'end',
 
   '+unary': 1,
   '-unary': 2,
@@ -166,15 +169,16 @@ operations = {
   'or': 14,
   'and': 15,
   '=': 16,
-  'dynamic': 17,
+  'read': 17,
   'write': 18,
   'goto': 19,
   'gotof': 20,
-  'gotosub': 21,
+  'gosub': 21,
   'param': 22,
   'era': 23,
   'return': 24,
   'endproc': 25,
+  'end': 26
 }
 
 

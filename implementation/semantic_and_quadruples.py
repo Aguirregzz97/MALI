@@ -103,21 +103,49 @@ def isMethod():
 operators = []
 types = []
 operands = []
-quadruples = [['Goto', None, None, None]]
+quadruples = [[operations['goto'], None, None, None]]
+visual_quadruples = [['goto', None, None, None]]
 jumps = []
 returns_count = 0
 q_count = 1
-temp_avail = Available(13000, 16999, var_types)
-calling_class = '#global'
+const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT, const_types)
+calling_class = None
 calling_function = None
 param_count = 0
 var_count = 0
 
 
+def addressOrElse(operand):
+  if operand:
+    if isinstance(operand, Operand):
+      return operand.get_address()
+    else:
+      return operand
+  return None
+
+def nameOrElse(operand):
+  if operand:
+    if isinstance(operand, Operand):
+      return operand.get_raw()
+    else:
+      return operand
+  return None
+
 def generateQuadruple(a, b, c, d):
   global quadruples, q_count
-  quadruples.append([a,b,c,d])
+
+  operation = operations.get(a, f'NOT FOUND {a}')
+  left_operand = addressOrElse(b)
+  right_operand = addressOrElse(c)
+  result = addressOrElse(d)
+
+  quadruples.append([operation, left_operand, right_operand, result])
   q_count += 1
+
+  v_left_operand = nameOrElse(b)
+  v_right_operand = nameOrElse(c)
+  v_result = nameOrElse(d)
+  visual_quadruples.append([a, v_left_operand, v_right_operand, v_result])
 
 
 def populateNonConstantOperand(operand, mark_assigned=False):
@@ -145,13 +173,17 @@ def buildOperand(raw_operand):
   operand = Operand(raw_operand)
   if t == int:
     operand.set_type('int')
+    operand.set_address(const_avail.next('int'))
   elif t == float:
     operand.set_type('float')
+    operand.set_address(const_avail.next('float'))
   elif t == bool:
     operand.set_type('bool')
+    operand.set_address(const_avail.next('bool'))
   elif t == str:
     if re.match(r"\'.\'", raw_operand):
       operand.set_type('char')
+      operand.set_address(const_avail.next('char'))
     else:
       populateNonConstantOperand(operand)
   return operand
@@ -161,7 +193,7 @@ def seenOperand(raw_operand):
   global operands, types
   operand = buildOperand(raw_operand)
   if operand.get_error(): return operand.get_error()
-  operands.append(operand.get_raw())
+  operands.append(operand)
   types.append(operand.get_type())
 
 
@@ -170,8 +202,18 @@ def seenOperator(operator):
   operators.append(str(operator))
 
 
+def buildTempOperand(op_type):
+  address = current_function['#temp_avail'].next(op_type)
+  current_function['#vars'][address] = new_var_dict(type, address)
+  current_function['#var_count'] += 1
+  operand = Operand()
+  operand.set_address(address)
+  operand.set_type(type)
+  return operand
+
+
 def seenSubRule(ops):
-  global operators, types, operands, temp_avail
+  global operators, types, operands
   operator = top(operators)
   if operator in ops:
     right_operand = operands.pop()
@@ -182,9 +224,9 @@ def seenSubRule(ops):
     result_type = sCube[left_type][right_type][operator]
     if not result_type:
       return (f'Type mismatch: Invalid operation {operator} on given operands')
-    result = temp_avail.next(result_type)
-    generateQuadruple(operator, left_operand, right_operand, result)
-    operands.append(result)
+    temp = buildTempOperand(result_type)
+    generateQuadruple(operator, left_operand, right_operand, temp)
+    operands.append(temp)
     types.append(result_type)
 
 
@@ -197,19 +239,22 @@ def doAssign(result):
   global operators, types, operands
   left_operand = operands.pop()
   left_type = types.pop()
-  operand = Operand(result)
-  populateNonConstantOperand(operand, True)
-  if operand.get_error(): return operand.get_error()
-  result_type = operand.get_type()
+  result_operand = Operand(result)
+  populateNonConstantOperand(result_operand, True)
+  if result_operand.get_error(): return result_operand.get_error()
+  result_type = result_operand.get_type()
   if not sCube[result_type][left_type]['=']:
     return (f'Type mismatch: expression cannot be assigned to {result}')
-  generateQuadruple('=', left_operand, None, result)
+  generateQuadruple('=', left_operand, None, result_operand)
   types.append(result_type)
 
 
-def doWrite(str):
-  if str:
-    generateQuadruple('write', None, None, str)
+def doWrite(s):
+  if s:
+    operand = Operand(s)
+    operand.set_type('cte_string')
+    operand.set_address(const_avail.next('cte_string'))
+    generateQuadruple('write', None, None, operand)
   else:
     word = operands.pop()
     type = types.pop()
@@ -220,7 +265,10 @@ def doWrite(str):
 
 def doRead():
   global operands, types
-  operands.append('read')
+  operand = Operand('read')
+  operand.set_address(operations['read'])
+  operand.set_type('dynamic')
+  operands.append(operand)
   types.append('dynamic')
 
 
@@ -229,12 +277,12 @@ def seenCondition():
   if exp_type != 'bool':
     return 'Evaluated expression is not boolean'
   result = operands.pop()
-  generateQuadruple('GotoF', result, None, None)
+  generateQuadruple('gotof', result, None, None)
   jumps.append(q_count-1)
 
 
 def seenElse():
-  generateQuadruple('Goto', None, None, None)
+  generateQuadruple('goto', None, None, None)
   false = jumps.pop()
   jumps.append(q_count-1)
   quadruples[false][3] = q_count
@@ -253,7 +301,7 @@ def seenEndWhile():
   end = jumps.pop()
   quadruples[end][3] = q_count
   ret = jumps.pop()
-  generateQuadruple('Goto', None, None, ret)
+  generateQuadruple('goto', None, None, ret)
 
 
 def endVars():
@@ -281,9 +329,9 @@ def finishFunc(is_main=False):
     quadruples[jumps.pop()][3] = q_count
     returns_count -= 1
   if is_main:
-    generateQuadruple('END', None, None, None)
+    generateQuadruple('end', None, None, None)
   else:
-    generateQuadruple('ENDPROC', None, None, None)
+    generateQuadruple('endproc', None, None, None)
 
 
 def seenReturn():
@@ -295,10 +343,10 @@ def seenReturn():
   return_type = types.pop()
   if function_type != return_type:
     return f'Cannot return type {return_type} as {function_type}'
-  generateQuadruple('RETURN', return_val, None, None)
+  generateQuadruple('return', return_val, None, None)
   jumps.append(q_count)
   returns_count += 1
-  generateQuadruple('Goto', None, None, None)
+  generateQuadruple('goto', None, None, None)
 
 
 def callParent(parent):
@@ -332,7 +380,7 @@ def startParams():
   global param_count
   param_count = 0
   size = calling_function['#param_count'] + calling_function['#var_count']
-  generateQuadruple('ERA', calling_function['#name'], size, None)
+  generateQuadruple('era', calling_function['#name'], size, None)
 
 
 def passParam():
@@ -343,7 +391,8 @@ def passParam():
   if param_type != arg_type:
     return (f"{calling_function['#name']} expecting type {param_type} "
         + f'for parameter {param_count+1}')
-  generateQuadruple('param', argument, None, 'param'+str(param_count))
+  #TODO: en el ejemplo param se imprime enel cuadruplo como 'param#'
+  generateQuadruple('param', argument, None, param_count)
 
 
 def paramPassError():
@@ -366,5 +415,5 @@ def doneParamPass():
   if param_count+1 != expected:
     return (f'{calling_function} expects {expected} parameters, but ' +
         f'{param_count+1} were given')
-  generateQuadruple('GOSUB', calling_function['#name'], None,
+  generateQuadruple('gosub', calling_function['#name'], None,
                     calling_function['#start'])

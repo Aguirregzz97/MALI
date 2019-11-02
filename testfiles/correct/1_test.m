@@ -95,5 +95,7 @@ main {
 
   y = b + c;
 
+  y = 535;
+
   #a.Ladrar;
 }
