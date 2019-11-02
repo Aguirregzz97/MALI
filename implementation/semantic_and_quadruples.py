@@ -1,5 +1,6 @@
 from implementation.utils.semantic_and_quadruples_utils import *
 from implementation.utils.generic_utils import *
+from implementation.utils.constants import *
 from collections import defaultdict
 import re
 
@@ -37,6 +38,7 @@ def finishClass():
   global current_class, current_function
   current_class = classes['#global']
   current_function = current_class['#funcs']['#attributes']
+  current_access = '#public'
 
 
 def seenFunc(func_name):
@@ -64,26 +66,23 @@ def seenType(new_type):
 
 
 def varName(var_name):
+  global param_count, var_count, current_access
   if var_name in current_function['#vars']:
     return f"Redeclared variable: {var_name}"
   else:
     if is_param:
-      global param_count
       param_count += 1
     else:
-      global var_count
       var_count += 1
-    print(current_class['#name'], current_function['#name'], var_name)
     address = current_function['#var_avail'].next(current_type)
-    if current_class['#name'] == '#global':
-      current_function['#vars'][var_name] = new_var_dict(current_type,
-                                                         address-8000)
-    elif current_function['#name'] == '#attributes':
-      current_function['#vars'][var_name] = (
-          new_var_dict(current_type, address-4000, current_access))
-    else:
-      current_function['#vars'][var_name] = (
-          new_var_dict(current_type, address, current_access))
+    adjust = 0
+    if current_function['#name'] == '#attributes':
+      adjust = INSTANCE_ADJUSTMENT
+      if current_class['#name'] == '#global':
+        adjust = GLOBAL_ADJUSTMENT
+
+    current_function['#vars'][var_name] = (
+          new_var_dict(current_type, address-adjust, current_access))
 
 
 def setParam(val):

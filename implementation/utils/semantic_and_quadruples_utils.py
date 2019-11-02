@@ -1,5 +1,6 @@
 from collections import defaultdict, deque
 from implementation.utils.generic_utils import *
+from implementation.utils.constants import *
 
 # Symbol table utils.
 
@@ -20,8 +21,8 @@ def new_func_dict(name, type):
     '#type': type,
     '#param_count': 0,
     '#var_count': 0,
-    '#var_avail': Available(9000, 13999, var_types),
-    '#temp_avail': Available(14000, 17999, var_types),
+    '#var_avail': Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types),
+    '#temp_avail': Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, var_types),
     '#vars': {}
   }
   return func_dict
@@ -73,10 +74,6 @@ class Available:
 
   def __str__(self):
     return ""
-
-
-
-global_avail = Available(1000, 4999, var_types)
 
 
 # Intermediate code generation utils
