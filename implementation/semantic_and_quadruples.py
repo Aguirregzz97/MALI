@@ -20,9 +20,10 @@ def seenClass(class_name):
   if class_name in classes:
     return f"Repeated class name: {class_name}"
   else:
-    global current_class
+    global current_class, current_function
     classes[class_name] = new_class_dict(class_name)
     current_class = classes[class_name]
+    current_function = current_class['#funcs']['#attributes']
 
 
 def classParent(class_parent):
@@ -39,12 +40,11 @@ def finishClass():
 
 
 def seenFunc(func_name):
-  global func_size
+  global func_size, current_function
   func_size = 0
   if func_name in current_class['#funcs']:
     return f"Redeclared function {func_name}"
   else:
-    global current_function
     current_class['#funcs'][func_name] = new_func_dict(func_name, current_type)
     current_function = current_class['#funcs'][func_name]
 
@@ -73,9 +73,11 @@ def varName(var_name):
     else:
       global var_count
       var_count += 1
+    print(current_class['#name'], current_function['#name'], var_name)
     address = current_function['#var_avail'].next(current_type)
     if current_class['#name'] == '#global':
-      current_function['#vars'][var_name] = new_var_dict(current_type, address)
+      current_function['#vars'][var_name] = new_var_dict(current_type,
+                                                         address-8000)
     elif current_function['#name'] == '#attributes':
       current_function['#vars'][var_name] = (
           new_var_dict(current_type, address-4000, current_access))
@@ -180,8 +182,7 @@ def seenSubRule(ops):
     operator = operators.pop()
     result_type = sCube[left_type][right_type][operator]
     if not result_type:
-      return (f'Type mismatch: Invalid operation {operator} on operands ' +
-          f'{left_operand} and {right_operand}')
+      return (f'Type mismatch: Invalid operation {operator} on given operands')
     result = temp_avail.next(result_type)
     generateQuadruple(operator, left_operand, right_operand, result)
     operands.append(result)
@@ -202,7 +203,7 @@ def doAssign(result):
   if operand.get_error(): return operand.get_error()
   result_type = operand.get_type()
   if not sCube[result_type][left_type]['=']:
-    return (f'Type mismatch: {left_operand} cannot be assigned to {result}')
+    return (f'Type mismatch: expression cannot be assigned to {result}')
   generateQuadruple('=', left_operand, None, result)
   types.append(result_type)
 

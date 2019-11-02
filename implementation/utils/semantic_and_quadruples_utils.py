@@ -32,7 +32,7 @@ def new_class_dict(name, parent='#global'):
     '#name': name,
     '#parent': parent,
     '#funcs': {
-      '#attributes': new_func_dict('#global', 'void')
+      '#attributes': new_func_dict('#attributes', 'void')
     }
   }
   return class_dict
@@ -71,8 +71,9 @@ class Available:
 
     return next_val
 
-  def print(self):
-    print(global_addr.__type['int'], global_addr.__type['float'])
+  def __str__(self):
+    return ""
+
 
 
 global_avail = Available(1000, 4999, var_types)
