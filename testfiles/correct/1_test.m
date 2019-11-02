@@ -40,7 +40,7 @@ var {
   int cont;
 }
 
-func void printAnimal(Animal a3) {
+func void printAnimal(Animal a) {
   var {
     int x1, y2;
   }

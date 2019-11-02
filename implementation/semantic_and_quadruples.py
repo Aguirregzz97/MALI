@@ -111,22 +111,11 @@ jumps = []
 returns_count = 0
 q_count = 1
 const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT, const_types)
+constant_addresses = {}
 calling_class = None
 calling_function = None
 param_count = 0
 var_count = 0
-
-
-def address_or_else(operand, is_visual=False):
-  if operand:
-    if isinstance(operand, Operand):
-      if is_visual:
-        return operand.get_raw()
-      else:
-        return operand.get_address()
-    else:
-      return operand
-  return None
 
 
 def generate_quadruple(a, b, c, d):
@@ -166,22 +155,36 @@ def populate_non_constant_operand(operand, mark_assigned=False):
     operand.set_error(f'Variable {operand.get_raw()} not in scope.')
 
 
+def get_or_create_cte_address(value, val_type):
+  global constant_addresses
+  if value in constant_addresses:
+    return constant_addresses[value]
+  else:
+    address = const_avail.next(val_type)
+    constant_addresses[value] = address
+    return address
+
+
 def build_operand(raw_operand):
   t = type(raw_operand)
   operand = Operand(raw_operand)
   if t == int:
+    address = get_or_create_cte_address(raw_operand, 'int')
     operand.set_type('int')
-    operand.set_address(const_avail.next('int'))
+    operand.set_address(address)
   elif t == float:
+    address = get_or_create_cte_address(raw_operand, 'float')
     operand.set_type('float')
-    operand.set_address(const_avail.next('float'))
+    operand.set_address(address)
   elif t == bool:
+    address = get_or_create_cte_address(raw_operand, 'bool')
     operand.set_type('bool')
-    operand.set_address(const_avail.next('bool'))
+    operand.set_address(address)
   elif t == str:
     if re.match(r"\'.\'", raw_operand):
+      address = get_or_create_cte_address(raw_operand, 'char')
       operand.set_type('char')
-      operand.set_address(const_avail.next('char'))
+      operand.set_address(address)
     else:
       populate_non_constant_operand(operand)
   return operand
@@ -319,6 +322,7 @@ def set_current_type_void():
 
 def register_main_beginning():
   quadruples[0][3] = q_count
+  visual_quadruples[0][3] = q_count
 
 
 def register_func_end(is_main=False):
@@ -389,7 +393,7 @@ def pass_param():
   if param_type != arg_type:
     return (f"{calling_function['#name']} expecting type {param_type} "
         + f'for parameter {param_count+1}')
-  #TODO: en el ejemplo param se imprime enel cuadruplo como 'param#'
+  #TODO: en el ejemplo param se imprime el cuadruplo como 'param#'
   generate_quadruple('param', argument, None, param_count)
 
 
@@ -413,13 +417,18 @@ def done_param_pass():
 
 def get_cleaned_symbol_table():
   for c in classes:
+    if classes[c]['#parent'] == '#global':
+      classes[c]['#parent'] = None
     for f in classes[c]['#funcs']:
       del classes[c]['#funcs'][f]['#var_avail']
       del classes[c]['#funcs'][f]['#temp_avail']
 
+  constant_segment = invert_dict(constant_addresses)
+
   output = {
     'symbol_table': classes,
-    'quadruples': quadruples
+    'constant_segment': constant_segment,
+    'quadruples': quadruples,
   }
 
   return output

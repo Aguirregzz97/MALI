@@ -429,7 +429,7 @@ def p_r_set_access(p):
 
 def p_r_seen_main(p):
   'r_seen_main : '
-  sq.set_current_type_void()
+  sq.register_main_beginning()
   sq.set_current_type_void()
   e = sq.seen_func(func_name='#main')
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)

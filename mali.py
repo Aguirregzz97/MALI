@@ -17,4 +17,3 @@ if __name__ == '__main__':
   # Generate object code file.
   file = open(program_name+'r', 'w+')
   file.write(generate_output())
-

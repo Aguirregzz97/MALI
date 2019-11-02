@@ -105,6 +105,18 @@ class Operand:
   def get_error(self): return self.__err
 
 
+def address_or_else(operand, is_visual=False):
+  if operand:
+    if isinstance(operand, Operand):
+      if is_visual:
+        return operand.get_raw()
+      else:
+        return operand.get_address()
+    else:
+      return operand
+  return None
+
+
 def populate_non_constant_operand_aux(operand, prefix, mark_assigned,
                                       check_access=False):
   raw_operand = operand.get_raw()
