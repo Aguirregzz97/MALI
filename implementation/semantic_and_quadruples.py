@@ -202,11 +202,11 @@ def register_operator(operator):
 
 def build_temp_operand(op_type):
   address = current_function['#temp_avail'].next(op_type)
-  current_function['#vars'][address] = new_var_dict(type, address)
+  current_function['#vars'][address] = new_var_dict(op_type, address)
   current_function['#var_count'] += 1
   operand = Operand()
   operand.set_address(address)
-  operand.set_type(type)
+  operand.set_type(op_type)
   return operand
 
 
@@ -409,3 +409,17 @@ def done_param_pass():
         f'{param_count+1} were given')
   generate_quadruple('gosub', calling_function['#name'], None,
                     calling_function['#start'])
+
+
+def get_cleaned_symbol_table():
+  for c in classes:
+    for f in classes[c]['#funcs']:
+      del classes[c]['#funcs'][f]['#var_avail']
+      del classes[c]['#funcs'][f]['#temp_avail']
+
+  output = {
+    'symbol_table': classes,
+    'quadruples': quadruples
+  }
+
+  return output

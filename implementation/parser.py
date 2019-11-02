@@ -4,9 +4,9 @@ import ply.yacc as yacc
 from implementation.scanner import tokens
 import implementation.semantic_and_quadruples as sq
 from implementation.utils.parser_utils import *
-import sys
+import sys, json
 
-import pprint, json
+import pprint
 pp = pprint.PrettyPrinter()
 
 input_str = ''
@@ -23,14 +23,6 @@ def p_program(p):
              | vars main
              | main'''
   add_to_tree('program', p)
-  #pp.pprint(p[0])
-  #print(json.dumps(sq.classes, indent=4))
-  pp.pprint(sq.classes)
-
-  qCount = 0
-  for q, vq in zip(sq.quadruples, sq.visual_quadruples):
-    print(qCount, q, '\t', vq)
-    qCount += 1
 
   if error:
     sys.exit(-1)
@@ -631,9 +623,20 @@ parser = yacc.yacc(start='program')
 parser.defaulted_states = {}
 
 
-# Run parser.
+# Run parser and generate output.
 
-def parseString(s):
+def parse_string(s):
   global input_str
   input_str = s
   parser.parse(s, tracking=True)
+
+def generate_output():
+  pp.pprint(sq.classes)
+  qCount = 0
+  for q, vq in zip(sq.quadruples, sq.visual_quadruples):
+    print(qCount, q, '\t', vq)
+    qCount += 1
+
+  symbol_table = sq.get_cleaned_symbol_table()
+
+  return str(symbol_table)
