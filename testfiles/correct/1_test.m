@@ -98,6 +98,7 @@ main {
   y = 535;
 
   a.Ladrar();
+  y = a.edad;
 
   printAlgo();
 }

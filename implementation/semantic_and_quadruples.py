@@ -396,7 +396,7 @@ def call_parent(parent):
   calling_function = calling_class['#funcs']['init']
 
 
-def seen_call(func_name, from_instance=False):
+def start_call(func_name, from_instance=False):
   global calling_class, calling_function
   if from_instance: switch_func(func_name)
   if func_name in current_class['#funcs']:
@@ -479,10 +479,7 @@ def switch_instance(instance):
 
   if not aux_current_class:
     aux_current_class = current_class
-    #aux_current_function = current_function
-
   current_class = classes[class_type]
-  #current_function = current_class['#funcs']
 
 
 def generate_output():
