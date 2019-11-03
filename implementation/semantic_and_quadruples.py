@@ -117,6 +117,7 @@ calling_class = None
 calling_function = None
 aux_current_class = None
 aux_current_function = None
+called_attribute = None
 
 
 def address_or_else(operand, is_visual=False):
@@ -396,9 +397,9 @@ def call_parent(parent):
   calling_function = calling_class['#funcs']['init']
 
 
-def start_call(func_name, from_instance=False):
+def start_func_call(func_name, do_switch_instance=False):
   global calling_class, calling_function
-  if from_instance: switch_func(func_name)
+  if do_switch_instance: switch_func(func_name)
   if func_name in current_class['#funcs']:
     calling_class = current_class
     calling_function = calling_class['#funcs'][func_name]
@@ -446,17 +447,36 @@ def done_param_pass():
   if param_count+1 != expected and not param_count == 0 and not expected == 0:
     return (f"{calling_function['#name']} expects {expected} parameters, but " +
         f'{param_count+1} were given')
-  generate_quadruple('gosub', calling_function['#name'], None,
-                    calling_function['#start'])
+  generate_quadruple('gosub', calling_function['#name'], None, None)
 
 
-def reset_instance():
+def attribute_call(attribute):
+  global current_function, called_attribute
+  current_function = current_class['#funcs']['#attributes']
+  called_attribute = Operand(attribute)
+  populate_non_constant_operand(called_attribute)
+  if called_attribute.get_error(): return called_attribute.get_error()
+  generate_quadruple('return', called_attribute, None, None)
+
+
+def finish_call():
   global current_class, aux_current_class, current_function
   generate_quadruple('exit_instances', None, None, None)
+
+  if current_function['#name'] == '#attributes':
+    op_type = called_attribute.get_type()
+  else:
+    op_type = current_function['#type']
 
   current_class = aux_current_class
   aux_current_class = None
   current_function = aux_current_function
+
+  if op_type != 'void':
+    operand = build_temp_operand(op_type)
+    operand.set_raw(operand.get_address())
+    generate_quadruple('get_return', None, None, operand.get_address())
+    operands.append(operand)
 
 
 def switch_func(func_name):

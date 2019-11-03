@@ -189,22 +189,27 @@ def p_assign(p):
 
 def p_call(p):
   '''call : path'''
-  sq.reset_instance()
+  sq.finish_call()
   add_to_tree('call', p)
 
 
 def p_path(p):
   '''path : ID r_switch_instance DOT path_aux
-          | ID r_start_call param_pass'''
+          | ID r_start_func_call param_pass'''
   add_to_tree('path', p)
 
 
 def p_path_aux(p):
   '''path_aux : ID r_switch_instance DOT path_aux
-              | ID r_switch_func_and_call param_pass
-              | INIT r_switch_func_and_call param_pass
-              | ID r_seen_operand'''
+              | ID r_switch_func_and_start_func_call param_pass
+              | INIT r_switch_func_and_start_func_call param_pass
+              | ID r_attribute_call'''
   add_to_tree('path_aux', p)
+
+def p_r_attribute_call(p):
+  'r_attribute_call : '
+  e = sq.attribute_call(p[-1])
+  if e: handle_error(p.lineno(1), p.lexpos(1), e)
 
 
 def p_param_pass(p):
@@ -542,15 +547,15 @@ def p_r_seen_return(p):
   sq.register_return()
 
 
-def p_r_start_call(p):
-  'r_start_call : '
-  e = sq.start_call(p[-1])
+def p_r_start_func_call(p):
+  'r_start_func_call : '
+  e = sq.start_func_call(p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
-def p_r_switch_func_and_call(p):
-  'r_switch_func_and_call : '
-  e = sq.start_call(p[-1], True)
+def p_r_switch_func_and_start_func_call(p):
+  'r_switch_func_and_start_func_call : '
+  e = sq.start_func_call(p[-1], True)
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
@@ -648,7 +653,7 @@ def parse_string(s):
 
 def generate_output():
   if not error:
-    pp.pprint(sq.classes)
+    #pp.pprint(sq.classes)
     qCount = 0
     for q, vq in zip(sq.quadruples, sq.visual_quadruples):
       print(qCount, q, '\t\t', vq)

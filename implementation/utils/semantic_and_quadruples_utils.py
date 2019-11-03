@@ -1,7 +1,7 @@
 # Utils module for semantic checks and quadruples generation.
 
-from implementation.utils.generic_utils import *
-from implementation.utils.constants import *
+from implementation.utils.generic_utils import * # pylint: disable=unused-wildcard-import
+from implementation.utils.constants import * # pylint: disable=unused-wildcard-import
 
 # Symbol table utils.
 
@@ -62,15 +62,15 @@ class Available:
       }
       type_begin += length + 1
 
-  def next(self, type):
-    if type not in self.__type:
-      type = "class"
+  def next(self, op_type):
+    if op_type not in self.__type:
+      op_type = "class"
 
-    next_val = self.__type[type]['next']
-    if next_val > self.__type[type]['limit']:
+    next_val = self.__type[op_type]['next']
+    if next_val > self.__type[op_type]['limit']:
       return None
 
-    self.__type[type]['next'] += 1
+    self.__type[op_type]['next'] += 1
 
     return next_val
 

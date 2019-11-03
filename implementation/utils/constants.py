@@ -42,7 +42,8 @@ operations = {
   'endproc': 25,
   'end': 26,
   'switch_instance': 27,
-  'exit_instances': 28
+  'exit_instances': 28,
+  'get_return': 29
 }
 
 

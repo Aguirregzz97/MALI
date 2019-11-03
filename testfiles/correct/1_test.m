@@ -34,6 +34,14 @@ class Perro extends Animal {
     write "Woof Woof";
     write edad;
   }
+
+  public int calculateB(int a){
+    if (a < 5){
+      return a * 5;
+    } elif (a == 5) {
+      return a + 5;
+    };
+  }
 }
 
 var {
@@ -99,6 +107,8 @@ main {
 
   a.Ladrar();
   y = a.edad;
+  y = a.calculateB(5);
+  #y = calculateA(5);
 
   printAlgo();
 }
