@@ -63,14 +63,14 @@ func int calculateA(int a){
 
 main {
   var {
-    Animal a;
+    Perro a;
     int x[5][10];
     int z,y,w,b,c;
   }
 
   #a = Perro;
 
-  #a.init();
+  a.init(5, 's', 'c');
 
   cont = 0;
 
@@ -97,5 +97,7 @@ main {
 
   y = 535;
 
-  #a.Ladrar;
+  a.Ladrar();
+
+  printAlgo();
 }

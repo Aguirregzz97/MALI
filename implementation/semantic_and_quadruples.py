@@ -1,6 +1,6 @@
 # Semantic checks and quadruple generation for MALI language.
 
-from implementation.utils.semantic_and_quadruples_utils import *
+from implementation.utils.semantic_and_quadruples_utils import * # pylint: disable=unused-wildcard-import
 from implementation.utils.generic_utils import *
 from implementation.utils.constants import *
 import re
@@ -16,6 +16,8 @@ current_type = None
 is_param = False
 current_x = None
 current_y = None
+param_count = 0
+var_count = 0
 
 
 def seen_class(class_name):
@@ -36,7 +38,7 @@ def class_parent(class_parent):
 
 
 def finish_class():
-  global current_class, current_function
+  global current_class, current_function, current_access
   current_class = classes['#global']
   current_function = current_class['#funcs']['#attributes']
   current_access = '#public'
@@ -67,7 +69,7 @@ def seen_type(new_type):
 
 
 def var_name(var_name):
-  global param_count, var_count, current_access
+  global param_count, var_count
   if var_name in current_function['#vars']:
     return f"Redeclared variable: {var_name}"
   else:
@@ -113,8 +115,8 @@ const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT, const_types)
 constant_addresses = {}
 calling_class = None
 calling_function = None
-param_count = 0
-var_count = 0
+aux_current_class = None
+aux_current_function = None
 
 
 def address_or_else(operand, is_visual=False):
@@ -290,7 +292,7 @@ def do_write(s):
     generate_quadruple('write', None, None, operand)
   else:
     word = operands.pop()
-    type = types.pop()
+    types.pop()
     operand = build_operand(word)
     if operand.get_error(): return operand.get_error()
     generate_quadruple('write', None, None, word)
@@ -394,8 +396,9 @@ def call_parent(parent):
   calling_function = calling_class['#funcs']['init']
 
 
-def seen_call(func_name):
+def seen_call(func_name, from_instance=False):
   global calling_class, calling_function
+  if from_instance: switch_func(func_name)
   if func_name in current_class['#funcs']:
     calling_class = current_class
     calling_function = calling_class['#funcs'][func_name]
@@ -407,14 +410,14 @@ def seen_call(func_name):
       calling_function = calling_class['#funcs'][func_name]
       return
     curr_class = classes[curr_class]['#parent']
-  return f"{func_name} not defined for {current_class['#name']}"
+  return f"{func_name} not defined in scope."
 
 
 def start_param_collection():
   global param_count
   param_count = 0
   size = calling_function['#param_count'] + calling_function['#var_count']
-  generate_quadruple('era', calling_function['#name'], None, None)
+  generate_quadruple('era', calling_function['#name'], size, None)
 
 
 def pass_param():
@@ -432,35 +435,79 @@ def pass_param():
 def prepare_upcoming_param():
   global param_count
   param_count += 1
-  if param_count+1 > calling_function['#var_count']:
-    expected = calling_function['#var_count']
-    return (f'{calling_function} expects {expected} parameters, but more' +
-        'were given')
+  expected = calling_function['#param_count']
+  if param_count+1 > expected:
+    return (f"{calling_function['#name']} expects {expected} parameters, " +
+        'but more were given')
 
 
 def done_param_pass():
-  expected = calling_function['#var_count']
-  if param_count+1 != expected:
-    return (f'{calling_function} expects {expected} parameters, but ' +
+  expected = calling_function['#param_count']
+  if param_count+1 != expected and not param_count == 0 and not expected == 0:
+    return (f"{calling_function['#name']} expects {expected} parameters, but " +
         f'{param_count+1} were given')
   generate_quadruple('gosub', calling_function['#name'], None,
                     calling_function['#start'])
 
 
-def get_cleaned_symbol_table():
-  for c in classes:
-    if classes[c]['#parent'] == '#global':
-      classes[c]['#parent'] = None
-    for f in classes[c]['#funcs']:
-      del classes[c]['#funcs'][f]['#var_avail']
-      del classes[c]['#funcs'][f]['#temp_avail']
+def reset_instance():
+  global current_class, aux_current_class, current_function
+  generate_quadruple('exit_instances', None, None, None)
 
+  current_class = aux_current_class
+  aux_current_class = None
+  current_function = aux_current_function
+
+
+def switch_func(func_name):
+  global aux_current_function, current_function
+  aux_current_function = current_function
+  current_function = current_class['#funcs'][func_name]
+
+
+def switch_instance(instance):
+  global aux_current_class, current_class
+
+  operand = Operand(instance)
+  populate_non_constant_operand(operand)
+  class_type = operand.get_type()
+  if operand.get_error():
+    return operand.get_error()
+  elif class_type in var_types:
+    return f'{instance} is not an instance.'
+  generate_quadruple('switch_instance', operand, None, None)
+
+  if not aux_current_class:
+    aux_current_class = current_class
+    #aux_current_function = current_function
+
+  current_class = classes[class_type]
+  #current_function = current_class['#funcs']
+
+
+def generate_output():
+  global classes
+  data_segment = ({v['#address']: None for k, v in
+      classes['#global']['#funcs']['#attributes']['#vars'].items()})
   constant_segment = invert_dict(constant_addresses)
 
-  output = {
-    'symbol_table': classes,
-    'constant_segment': constant_segment,
-    'quadruples': quadruples,
-  }
+  # Clean symbol table for use in virtual machine.
+  for v1 in classes.values():
+    if v1['#parent'] == '#global':
+      v1['#parent'] = None
+    for v2 in v1['#funcs'].values():
+      del v2['#var_avail']
+      del v2['#temp_avail']
+      if '#access' in v2: del v2['#access']
+      for v3 in v2['#vars'].values():
+        del v3['#assigned']
+        if '#access' in v3: del v3['#access']
 
-  return output
+  del classes['#global']['#funcs']['#attributes']
+
+  return {
+    'symbol_table': classes,
+    'data_segment': data_segment,
+    'constant_segment': constant_segment,
+    'quadruples': quadruples
+  }

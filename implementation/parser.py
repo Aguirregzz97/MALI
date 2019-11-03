@@ -3,8 +3,8 @@
 import ply.yacc as yacc
 from implementation.scanner import tokens
 import implementation.semantic_and_quadruples as sq
-from implementation.utils.parser_utils import *
-import sys, json
+from implementation.utils.parser_utils import * # pylint: disable=unused-wildcard-import
+import json
 
 import pprint
 pp = pprint.PrettyPrinter()
@@ -23,9 +23,6 @@ def p_program(p):
              | vars main
              | main'''
   add_to_tree('program', p)
-
-  if error:
-    sys.exit(-1)
 
 
 def p_classes(p):
@@ -191,9 +188,22 @@ def p_assign(p):
 
 
 def p_call(p):
-  '''call : path param_pass
-          | path_aux '''
+  '''call : path param_pass'''
+  sq.reset_instance()
   add_to_tree('call', p)
+
+
+def p_path(p):
+  '''path : ID r_switch_instance DOT path_aux
+          | ID r_seen_call'''
+  add_to_tree('path', p)
+
+
+def p_path_aux(p):
+  '''path_aux : ID r_switch_instance DOT path_aux
+              | ID r_switch_func
+              | INIT r_switch_func'''
+  add_to_tree('path_aux', p)
 
 
 def p_param_pass(p):
@@ -207,17 +217,6 @@ def p_param_pass_aux(p):
                       param_pass_aux
                     | expression r_pass_param '''
   add_to_tree('param_pass_aux', p)
-
-
-def p_path(p):
-  '''path : ID DOT path
-          | ID r_seen_call'''
-  add_to_tree('path', p)
-
-
-def p_path_aux(p):
-  '''path_aux : ID DOT path'''
-  add_to_tree('path_aux', p)
 
 
 def p_return(p):
@@ -548,6 +547,12 @@ def p_r_seen_call(p):
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
+def p_r_switch_func(p):
+  'r_switch_func : '
+  e = sq.seen_call(p[-1], True)
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
 def p_r_start_params(p):
   'r_start_params : '
   sq.start_param_collection()
@@ -561,13 +566,19 @@ def p_r_pass_param(p):
 
 def p_r_next_param_pass(p):
   'r_next_param_pass : '
-  e = sq.r_prepare_upcoming_param()
+  e = sq.prepare_upcoming_param()
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_done_param_pass(p):
   'r_done_param_pass : '
   e = sq.done_param_pass()
+  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_switch_instance(p):
+  'r_switch_instance : '
+  e = sq.switch_instance(p[-1])
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
@@ -609,11 +620,15 @@ def p_e_program_disorder(p):
 # Syntax error printing.
 
 def handle_error(line, lexpos, mssg):
+  global error
+  error = True
   error_prefix(line, lexpos, input_str)
   print(mssg)
   recover_parser(parser)
 
 def p_error(p):
+  global error
+  error = True
   error_prefix(p.lineno, p.lexpos, input_str)
   print(f'Unexpected token {p.value}.')
 
@@ -631,12 +646,14 @@ def parse_string(s):
   parser.parse(s, tracking=True)
 
 def generate_output():
-  pp.pprint(sq.classes)
-  qCount = 0
-  for q, vq in zip(sq.quadruples, sq.visual_quadruples):
-    print(qCount, q, '\t', vq)
-    qCount += 1
+  if not error:
+    pp.pprint(sq.classes)
+    qCount = 0
+    for q, vq in zip(sq.quadruples, sq.visual_quadruples):
+      print(qCount, q, '\t', vq)
+      qCount += 1
 
-  symbol_table = sq.get_cleaned_symbol_table()
-
-  return str(symbol_table)
+  if error: return
+  output = sq.generate_output()
+  #pp.pprint(output)
+  return str(output)
