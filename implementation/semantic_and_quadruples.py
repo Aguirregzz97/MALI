@@ -279,6 +279,8 @@ def solve_operation_or_continue(ops):
     operator = operators.pop()
     result_type = semantic_cube[left_type][right_type][operator]
     if not result_type:
+      if left_type == 'void' or right_type == 'void':
+        return f'Expression returns no value.'
       return (f'Type mismatch: Invalid operation {operator} on given operands')
     temp = build_temp_operand(result_type)
     generate_quadruple(operator, left_operand, right_operand, temp)
@@ -300,6 +302,8 @@ def do_assign(result):
   if result_operand.get_error(): return result_operand.get_error()
   result_type = result_operand.get_type()
   if not semantic_cube[result_type][left_type]['=']:
+    if left_type == 'void':
+      return f'Expression returns no value.'
     return (f'Type mismatch: expression cannot be assigned to {result}')
   generate_quadruple('=', left_operand, None, result_operand)
   types.append(result_type)
@@ -493,11 +497,16 @@ def finish_call():
   else:
     op_type = calling_function['#type']
 
-  if op_type != 'void':
+  if op_type == 'void':
+    operands.append('void')
+    types.append('void')
+  else:
     operand = build_temp_operand(op_type)
     operand.set_raw(operand.get_address())
     generate_quadruple('get_return', None, None, operand.get_address())
     operands.append(operand)
+    types.append(operand.get_type())
+
 
   calling_class = current_class
   calling_function = current_function

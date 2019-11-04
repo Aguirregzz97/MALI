@@ -111,5 +111,7 @@ main {
   printAlgo();
   y = calculateA(5);
 
+  b = printAlgo();
+
 
 }
