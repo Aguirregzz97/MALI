@@ -40,7 +40,7 @@ def finish_class():
   global current_class, current_function, current_access
   current_class = classes['#global']
   current_function = current_class['#funcs']['#attributes']
-  current_access = '#public'
+  current_access = 'public'
 
 
 def seen_func(func_name):
@@ -147,8 +147,8 @@ def generate_quadruple(a, b, c, d):
   visual_quadruples.append([a.name, v_left_operand, v_right_operand, v_result])
 
 
-def find_var_and_populate_operand(operand, prefix, mark_assigned,
-                                  check_access=False):
+def find_var_and_populate_operand(operand, prefix, mark_assigned, access):
+  print('Entra', operand.get_raw())
   raw_operand = operand.get_raw()
   var = prefix.get(raw_operand, None)
   if not var:
@@ -157,10 +157,14 @@ def find_var_and_populate_operand(operand, prefix, mark_assigned,
     var['#assigned'] = True
   if not var['#assigned']:
     operand.set_error(f'Variable {raw_operand} used before assignment')
-  elif check_access and var.get('#access', 'public') == 'private':
-    operand.set_error(f'Variable {raw_operand} has private access')
+    return True
+  elif var['#access'] not in access:
+    print(var['#access'])
+    operand.set_error(f'Variable {raw_operand} cannot be accessed')
+    return True
   else:
     operand.set_type(var['#type'])
+    print(operand.get_raw(), var['#address'])
     operand.set_address(var['#address'])
     return True
 
@@ -170,7 +174,8 @@ def populate_call(operand):
   curr_class = calling_class['#name']
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
-    if find_var_and_populate_operand(operand, class_attributes, False, True):
+    if find_var_and_populate_operand(operand, class_attributes, False,
+                                     ['public']):
       return
     curr_class = classes[curr_class]['#parent']
 
@@ -181,17 +186,20 @@ def populate_call(operand):
 def populate_local_var(operand, mark_assigned=False):
   # Search for var in function's local vars.
   function_vars = current_function['#vars']
-  if find_var_and_populate_operand(operand, function_vars, False):
+  if find_var_and_populate_operand(operand, function_vars, mark_assigned,
+                                   ['public', 'protected', 'private']):
     return
   # Search for var in the attributes from the class.
   class_attributes = current_class['#funcs']['#attributes']['#vars']
-  if find_var_and_populate_operand(operand, class_attributes, False):
+  if find_var_and_populate_operand(operand, class_attributes, mark_assigned,
+                                   ['public', 'protected', 'private']):
     return
   # Search for var in the attributes of inherited classes.
   curr_class = current_class['#parent']
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
-    if find_var_and_populate_operand(operand, class_attributes, False, True):
+    if find_var_and_populate_operand(operand, class_attributes, mark_assigned,
+                                     ['public', 'protected']):
       return
     curr_class = classes[curr_class]['#parent']
 
@@ -241,8 +249,6 @@ def find_and_build_operand(raw_operand):
       operand.set_address(address)
     else:
       populate_local_var(operand)
-      if not operand.get_address():
-        operand.set_error('Too many variables.')
   return operand
 
 
