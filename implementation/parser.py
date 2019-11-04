@@ -64,7 +64,7 @@ def p_init(p):
 
 def p_init_factor(p):
   '''init_factor : r_start_func proc_block
-                 | COLON ID r_call_parent param_pass \
+                 | COLON ID r_call_parent param_pass r_finish_parent_call \
                    r_start_func proc_block '''
   add_to_tree('init_factor', p)
 
@@ -201,15 +201,10 @@ def p_path(p):
 
 def p_path_aux(p):
   '''path_aux : ID r_switch_instance DOT path_aux
-              | ID r_switch_func_and_start_func_call param_pass
-              | INIT r_switch_func_and_start_func_call param_pass
+              | ID r_start_func_call param_pass
+              | INIT r_start_func_call param_pass
               | ID r_attribute_call'''
   add_to_tree('path_aux', p)
-
-def p_r_attribute_call(p):
-  'r_attribute_call : '
-  e = sq.attribute_call(p[-1])
-  if e: handle_error(p.lineno(1), p.lexpos(1), e)
 
 
 def p_param_pass(p):
@@ -421,6 +416,11 @@ def p_r_call_parent(p):
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
+def p_r_finish_parent_call(p):
+  'r_finish_parent_call : '
+  sq.finish_parent_call()
+
+
 def p_r_funcName(p):
   'r_funcName : '
   e = sq.seen_func(func_name=p[-1])
@@ -553,10 +553,10 @@ def p_r_start_func_call(p):
   if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
-def p_r_switch_func_and_start_func_call(p):
-  'r_switch_func_and_start_func_call : '
-  e = sq.start_func_call(p[-1], True)
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+def p_r_attribute_call(p):
+  'r_attribute_call : '
+  e = sq.attribute_call(p[-1])
+  if e: handle_error(p.lineno(1), p.lexpos(1), e)
 
 
 def p_r_start_params(p):
@@ -653,7 +653,7 @@ def parse_string(s):
 
 def generate_output():
   if not error:
-    #pp.pprint(sq.classes)
+    pp.pprint(sq.classes)
     qCount = 0
     for q, vq in zip(sq.quadruples, sq.visual_quadruples):
       print(qCount, q, '\t\t', vq)

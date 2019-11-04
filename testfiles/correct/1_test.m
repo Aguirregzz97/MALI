@@ -61,11 +61,11 @@ func void printAlgo() {
   write "Algo";
 }
 
-func int calculateA(int a){
-  if (a < 5){
-    return a * 5;
-  } elif (a == 5) {
-    return a + 5;
+func int calculateA(int b){
+  if (b < 5){
+    return b * 5;
+  } elif (b == 5) {
+    return b + 5;
   };
 }
 
@@ -108,7 +108,8 @@ main {
   a.Ladrar();
   y = a.edad;
   y = a.calculateB(5);
-  #y = calculateA(5);
-
   printAlgo();
+  y = calculateA(5);
+
+
 }

@@ -45,7 +45,7 @@ def finish_class():
 
 
 def seen_func(func_name):
-  global func_size, current_function
+  global func_size, current_class, current_function
   func_size = 0
   if func_name in current_class['#funcs']:
     return f"Redeclared function {func_name}"
@@ -60,12 +60,11 @@ def seen_access(new_access):
 
 
 def seen_type(new_type):
+  global current_type
   if new_type not in func_types and (
         new_type not in classes):
     return f"{new_type} is not a class nor data type"
-  else:
-    global current_type
-    current_type = new_type
+  current_type = new_type
 
 
 def var_name(var_name):
@@ -165,6 +164,27 @@ def find_var_and_populate_operand(operand, prefix, mark_assigned,
     operand.set_type(var['#type'])
     operand.set_address(var['#address'])
     return True
+
+
+def populate_attribute(operand):
+  # Search for var in function's local vars.
+  function_vars = calling_function['#vars']
+  if find_var_and_populate_operand(operand, function_vars, False):
+    return
+  # Search for var in the attributes from the class.
+  class_attributes = calling_class['#funcs']['#attributes']['#vars']
+  if find_var_and_populate_operand(operand, class_attributes, False):
+    return
+  # Search for var in the attributes of inherited classes.
+  curr_class = calling_class['#parent']
+  while curr_class:
+    class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
+    if find_var_and_populate_operand(operand, class_attributes, False, True):
+      return
+    curr_class = classes[curr_class]['#parent']
+
+  if not operand.get_error():
+    operand.set_error(f'Variable {operand.get_raw()} not in scope.')
 
 
 def populate_non_constant_operand(operand, mark_assigned=False):
@@ -397,14 +417,18 @@ def call_parent(parent):
   calling_function = calling_class['#funcs']['init']
 
 
-def start_func_call(func_name, do_switch_instance=False):
+def finish_parent_call():
   global calling_class, calling_function
-  if do_switch_instance: switch_func(func_name)
-  if func_name in current_class['#funcs']:
-    calling_class = current_class
+  calling_class = current_class
+  calling_function = current_function
+
+
+def start_func_call(func_name):
+  global calling_class, calling_function
+  if func_name in calling_class['#funcs']:
     calling_function = calling_class['#funcs'][func_name]
     return
-  curr_class = current_class['#parent']
+  curr_class = calling_class['#parent']
   while curr_class:
     if func_name in classes[curr_class]['#funcs']:
       calling_class = classes[curr_class]
@@ -451,26 +475,23 @@ def done_param_pass():
 
 
 def attribute_call(attribute):
-  global current_function, called_attribute
-  current_function = current_class['#funcs']['#attributes']
+  global calling_function, called_attribute
+  calling_function = calling_class['#funcs']['#attributes']
   called_attribute = Operand(attribute)
-  populate_non_constant_operand(called_attribute)
+  populate_attribute(called_attribute)
   if called_attribute.get_error(): return called_attribute.get_error()
   generate_quadruple('return', called_attribute, None, None)
 
 
 def finish_call():
-  global current_class, aux_current_class, current_function
+  global calling_class, calling_function
+
   generate_quadruple('exit_instances', None, None, None)
 
-  if current_function['#name'] == '#attributes':
+  if calling_function['#name'] == '#attributes':
     op_type = called_attribute.get_type()
   else:
-    op_type = current_function['#type']
-
-  current_class = aux_current_class
-  aux_current_class = None
-  current_function = aux_current_function
+    op_type = calling_function['#type']
 
   if op_type != 'void':
     operand = build_temp_operand(op_type)
@@ -478,28 +499,30 @@ def finish_call():
     generate_quadruple('get_return', None, None, operand.get_address())
     operands.append(operand)
 
+  calling_class = current_class
+  calling_function = current_function
+
 
 def switch_func(func_name):
-  global aux_current_function, current_function
-  aux_current_function = current_function
-  current_function = current_class['#funcs'][func_name]
+  global calling_function
+  calling_function = calling_class['#funcs'][func_name]
 
 
 def switch_instance(instance):
-  global aux_current_class, current_class
+  global calling_class, calling_function
+
+  calling_function = current_function
 
   operand = Operand(instance)
-  populate_non_constant_operand(operand)
+  populate_attribute(operand)
   class_type = operand.get_type()
   if operand.get_error():
     return operand.get_error()
   elif class_type in var_types:
-    return f'{instance} is not an instance.'
+    return f'{instance} is of type {class_type} and not an instance.'
   generate_quadruple('switch_instance', operand, None, None)
 
-  if not aux_current_class:
-    aux_current_class = current_class
-  current_class = classes[class_type]
+  calling_class = classes[class_type]
 
 
 def generate_output():
