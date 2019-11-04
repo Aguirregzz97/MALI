@@ -81,6 +81,8 @@ def var_name(var_name):
     else:
       var_count += 1
     address = var_avail.next(current_type)
+    if not address:
+      return 'Too many variables.'
     adjust = 0
     if current_function['#name'] == '#attributes':
       adjust = INSTANCE_ADJUSTMENT
@@ -209,34 +211,45 @@ def get_or_create_cte_address(value, val_type):
     return address
 
 
-def build_operand(raw_operand):
+def find_and_build_operand(raw_operand):
   t = type(raw_operand)
   operand = Operand(raw_operand)
   if t == int:
     address = get_or_create_cte_address(raw_operand, Types.INT)
+    if not address:
+      operand.set_error('Too many int constants.')
     operand.set_type(Types.INT)
     operand.set_address(address)
   elif t == float:
     address = get_or_create_cte_address(raw_operand, Types.FLOAT)
+    if not address:
+      operand.set_error('Too many float constants.')
     operand.set_type(Types.FLOAT)
     operand.set_address(address)
+  # TODO: This might not occur.
   elif t == bool:
     address = get_or_create_cte_address(raw_operand, Types.BOOL)
+    if not address:
+      operand.set_error('Too many bool constants.')
     operand.set_type(Types.BOOL)
     operand.set_address(address)
   elif t == str:
     if re.match(r"\'.\'", raw_operand):
       address = get_or_create_cte_address(raw_operand, Types.CHAR)
+      if not address:
+        operand.set_error('Too many char constants.')
       operand.set_type(Types.CHAR)
       operand.set_address(address)
     else:
       populate_non_constant_operand(operand)
+      if not operand.get_address():
+        operand.set_error('Too many variables.')
   return operand
 
 
 def register_operand(raw_operand):
   global operands, types
-  operand = build_operand(raw_operand)
+  operand = find_and_build_operand(raw_operand)
   if operand.get_error():
     return operand.get_error()
   operands.append(operand)
@@ -250,10 +263,12 @@ def register_operator(operator):
 
 def build_temp_operand(op_type):
   global current_function
+  operand = Operand()
   address = temp_avail.next(op_type)
+  if not address:
+    operand.set_error('Too many variables.')
   current_function['#vars'][address] = new_var_dict(op_type, address)
   current_function['#var_count'] += 1
-  operand = Operand()
   operand.set_address(address)
   operand.set_type(op_type)
   return operand
@@ -274,6 +289,8 @@ def solve_operation_or_continue(ops):
         return f'Expression returns no value.'
       return (f'Type mismatch: Invalid operation {operator} on given operands')
     temp = build_temp_operand(result_type)
+    if temp.get_error():
+      return temp.get_error()
     generate_quadruple(operator, left_operand, right_operand, temp)
     operands.append(temp)
     types.append(result_type)
@@ -393,7 +410,7 @@ def register_return():
     return 'Void function cannot return a value'
   return_val = operands.pop()
   return_type = types.pop()
-  if function_type != return_type:
+  if not semantic_cube[function_type][return_type][Operations.EQUAL]:
     return f'Cannot return type {return_type} as {function_type}'
   generate_quadruple(Operations.RETURN, return_val, None, None)
   jumps.append(q_count)
