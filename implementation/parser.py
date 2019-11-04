@@ -4,7 +4,7 @@ import ply.yacc as yacc
 from implementation.scanner import tokens
 import implementation.semantic_and_quadruples as sq
 from implementation.utils.parser_utils import *  # pylint: disable=unused-wildcard-import
-from implementation.utils.constants import Types, func_types, Operations, string_operations
+from implementation.utils.constants import Types, func_types, Operations, str_operations, str_access
 import json
 
 import pprint
@@ -376,7 +376,7 @@ def p_r_finish_class(p):
 
 def p_r_seen_access(p):
   'r_seen_access : '
-  sq.seen_access(new_access=p[-1])
+  sq.seen_access(new_access=str_access[p[-1]])
 
 
 def p_r_seen_type(p):
@@ -457,7 +457,7 @@ def p_r_seen_operand(p):
 
 def p_r_seen_operator(p):
   'r_seen_operator : '
-  sq.register_operator(string_operations[p[-1]])
+  sq.register_operator(str_operations[p[-1]])
 
 
 def p_r_seen_factor(p):

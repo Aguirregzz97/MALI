@@ -6,12 +6,13 @@ from implementation.utils.constants import *  # pylint: disable=unused-wildcard-
 # Symbol table utils.
 
 
-def new_var_dict(type, address, access=None):
+def new_var_dict(type, address, access='public'):
   var_dict = {
       # TODO: hacer verdadero.
       '#assigned': True,
       '#type': type,
-      '#address': address
+      '#address': address,
+      '#access': access
   }
   if access:
     var_dict['#access'] = access

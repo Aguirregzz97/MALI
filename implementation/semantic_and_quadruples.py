@@ -40,7 +40,7 @@ def finish_class():
   global current_class, current_function, current_access
   current_class = classes['#global']
   current_function = current_class['#funcs']['#attributes']
-  current_access = 'public'
+  current_access = Access.PUBLIC
 
 
 def seen_func(func_name):
@@ -175,7 +175,7 @@ def populate_call(operand):
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
     if find_var_and_populate_operand(operand, class_attributes, False,
-                                     ['public']):
+                                     [Access.PUBLIC]):
       return
     curr_class = classes[curr_class]['#parent']
 
@@ -187,19 +187,19 @@ def populate_local_var(operand, mark_assigned=False):
   # Search for var in function's local vars.
   function_vars = current_function['#vars']
   if find_var_and_populate_operand(operand, function_vars, mark_assigned,
-                                   ['public', 'protected', 'private']):
+                                   [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE]):
     return
   # Search for var in the attributes from the class.
   class_attributes = current_class['#funcs']['#attributes']['#vars']
   if find_var_and_populate_operand(operand, class_attributes, mark_assigned,
-                                   ['public', 'protected', 'private']):
+                                   [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE]):
     return
   # Search for var in the attributes of inherited classes.
   curr_class = current_class['#parent']
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
     if find_var_and_populate_operand(operand, class_attributes, mark_assigned,
-                                     ['public', 'protected']):
+                                     [Access.PUBLIC, Access.PROTECTED]):
       return
     curr_class = classes[curr_class]['#parent']
 

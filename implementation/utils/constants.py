@@ -32,6 +32,18 @@ const_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL,
 func_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL, Types.VOID)
 
 
+class Access(Enum):
+  PUBLIC = 'public'
+  PRIVATE = 'private'
+  PROTECTED = 'protected'
+
+str_access = {
+  'public' : Access.PUBLIC,
+  'private' : Access.PRIVATE,
+  'protected' : Access.PROTECTED
+}
+
+
 class Operations(IntEnum):
   PLUS_UNARY = 1
   MINUS_UNARY = 2
@@ -64,8 +76,7 @@ class Operations(IntEnum):
   GET_RETURN = 29
   FAKE_BOTTOM = 30
 
-
-string_operations = {
+str_operations = {
   'unary+': Operations.PLUS_UNARY,
   'unary-': Operations.MINUS_UNARY,
   'unarynot': Operations.NOT,
