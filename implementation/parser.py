@@ -546,12 +546,16 @@ def p_r_start_func(p):
 
 def p_r_finish_func(p):
   'r_finish_func : '
-  sq.register_func_end()
+  e = sq.register_func_end()
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_finish_main(p):
   'r_finish_main : '
-  sq.register_func_end(is_main=True)
+  e = sq.register_func_end(is_main=True)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_return(p):

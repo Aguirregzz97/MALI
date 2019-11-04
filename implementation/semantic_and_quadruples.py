@@ -394,6 +394,8 @@ def register_main_beginning():
 
 def register_func_end(is_main=False):
   global returns_count
+  if current_function['#type'] != Types.VOID and returns_count == 0:
+    return f"No return statement on non-void function {current_function['#name']}"
   while returns_count:
     quadruples[jumps.pop()][3] = q_count
     returns_count -= 1
@@ -456,7 +458,8 @@ def start_param_collection():
   global param_count
   param_count = 0
   size = calling_function['#param_count'] + calling_function['#var_count']
-  generate_quadruple(Operations.ERA, calling_function['#name'], size, None)
+  generate_quadruple(
+      Operations.ERA, calling_class['#name'], calling_function['#name'], size)
 
 
 def pass_param():
@@ -486,7 +489,8 @@ def done_param_pass():
   if param_count+1 != expected and not param_count == 0 and not expected == 0:
     return (f"{calling_function['#name']} expects {expected} parameters, " +
             f'but {param_count+1} were given')
-  generate_quadruple(Operations.GOSUB, calling_function['#name'], None, None)
+  generate_quadruple(
+      Operations.GOSUB, calling_class['#name'], calling_function['#name'], None)
 
 
 def attribute_call(attribute):
