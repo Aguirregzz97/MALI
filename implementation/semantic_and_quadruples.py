@@ -165,17 +165,9 @@ def find_var_and_populate_operand(operand, prefix, mark_assigned,
     return True
 
 
-def populate_aux(class_prefix, function_prefix, operand, mark_assigned=False):
-  # Search for var in function's local vars.
-  function_vars = function_prefix['#vars']
-  if find_var_and_populate_operand(operand, function_vars, False):
-    return
-  # Search for var in the attributes from the class.
-  class_attributes = class_prefix['#funcs']['#attributes']['#vars']
-  if find_var_and_populate_operand(operand, class_attributes, False):
-    return
-  # Search for var in the attributes of inherited classes.
-  curr_class = class_prefix['#parent']
+def populate_call(operand):
+  # Search for var in the attributes of the class and its parents.
+  curr_class = calling_class['#name']
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
     if find_var_and_populate_operand(operand, class_attributes, False, True):
@@ -186,16 +178,26 @@ def populate_aux(class_prefix, function_prefix, operand, mark_assigned=False):
     operand.set_error(f'Variable {operand.get_raw()} not in scope.')
 
 
-def populate_attribute(operand, just_attributes=False):
-  if just_attributes:
-    find_var_and_populate_operand(
-        operand, calling_class['#funcs']['#attributes']['#vars'], False, True)
-  else:
-    populate_aux(calling_class, calling_function, operand)
+def populate_local_var(operand, mark_assigned=False):
+  # Search for var in function's local vars.
+  function_vars = current_function['#vars']
+  if find_var_and_populate_operand(operand, function_vars, False):
+    return
+  # Search for var in the attributes from the class.
+  class_attributes = current_class['#funcs']['#attributes']['#vars']
+  if find_var_and_populate_operand(operand, class_attributes, False):
+    return
+  # Search for var in the attributes of inherited classes.
+  curr_class = current_class['#parent']
+  while curr_class:
+    class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
+    if find_var_and_populate_operand(operand, class_attributes, False, True):
+      return
+    curr_class = classes[curr_class]['#parent']
 
+  if not operand.get_error():
+    operand.set_error(f'Variable {operand.get_raw()} not in scope.')
 
-def populate_non_constant_operand(operand, mark_assigned=False):
-  populate_aux(current_class, current_function, operand, mark_assigned)
 
 
 def get_or_create_cte_address(value, val_type):
@@ -238,7 +240,7 @@ def find_and_build_operand(raw_operand):
       operand.set_type(Types.CHAR)
       operand.set_address(address)
     else:
-      populate_non_constant_operand(operand)
+      populate_local_var(operand)
       if not operand.get_address():
         operand.set_error('Too many variables.')
   return operand
@@ -303,7 +305,7 @@ def do_assign(result):
   left_operand = operands.pop()
   left_type = types.pop()
   result_operand = Operand(result)
-  populate_non_constant_operand(result_operand, True)
+  populate_local_var(result_operand, True)
   if result_operand.get_error():
     return result_operand.get_error()
   result_type = result_operand.get_type()
@@ -488,7 +490,7 @@ def attribute_call(attribute):
   global calling_function, called_attribute
   calling_function = calling_class['#funcs']['#attributes']
   called_attribute = Operand(attribute)
-  populate_attribute(called_attribute)
+  populate_call(called_attribute)
   if called_attribute.get_error():
     return called_attribute.get_error()
   generate_quadruple(Operations.RETURN, called_attribute, None, None)
@@ -531,10 +533,9 @@ def switch_instance(instance):
 
   if not calling_function:
     calling_function = current_function
-    populate_attribute(operand)
+    populate_local_var(operand)
   else:
-    calling_function = calling_class['#funcs']['#attributes']
-    populate_attribute(operand, True)
+    populate_call(operand)
 
   class_type = operand.get_type()
   if operand.get_error():
@@ -544,6 +545,7 @@ def switch_instance(instance):
   generate_quadruple(Operations.SWITCH_INSTANCE, operand, None, None)
 
   calling_class = classes[class_type]
+  calling_function = calling_class['#funcs']['#attributes']
 
 
 def generate_output():
