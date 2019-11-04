@@ -105,8 +105,8 @@ def set_access():
 operators = []
 types = []
 operands = []
-quadruples = [[operations['goto'], None, None, None]]
-visual_quadruples = [['goto', None, None, None]]
+quadruples = [[Operations.GOTO.value, None, None, None]]
+visual_quadruples = [[Operations.GOTO, None, None, None]]
 jumps = []
 returns_count = 0
 q_count = 1
@@ -134,18 +134,17 @@ def address_or_else(operand, is_visual=False):
 def generate_quadruple(a, b, c, d):
   global q_count, quadruples, visual_quadruples
 
-  operation = operations.get(a, f'NOT FOUND {a}')
   left_operand = address_or_else(b)
   right_operand = address_or_else(c)
   result = address_or_else(d)
 
-  quadruples.append([operation, left_operand, right_operand, result])
+  quadruples.append([a.value, left_operand, right_operand, result])
   q_count += 1
 
   v_left_operand = address_or_else(b, True)
   v_right_operand = address_or_else(c, True)
   v_result = address_or_else(d, True)
-  visual_quadruples.append([a, v_left_operand, v_right_operand, v_result])
+  visual_quadruples.append([a.name, v_left_operand, v_right_operand, v_result])
 
 
 def find_var_and_populate_operand(operand, prefix, mark_assigned,
@@ -255,7 +254,7 @@ def register_operand(raw_operand):
 
 def register_operator(operator):
   global operators
-  operators.append(str(operator))
+  operators.append(operator)
 
 
 def build_temp_operand(op_type):
@@ -303,11 +302,11 @@ def do_assign(result):
   if result_operand.get_error():
     return result_operand.get_error()
   result_type = result_operand.get_type()
-  if not semantic_cube[result_type][left_type]['=']:
+  if not semantic_cube[result_type][left_type][Operations.EQUAL]:
     if left_type == Types.VOID:
       return f'Expression returns no value.'
     return (f'Type mismatch: expression cannot be assigned to {result}')
-  generate_quadruple('=', left_operand, None, result_operand)
+  generate_quadruple(Operations.EQUAL, left_operand, None, result_operand)
   types.append(result_type)
 
 
@@ -316,20 +315,16 @@ def do_write(s):
     operand = Operand(s)
     operand.set_type(Types.CTE_STRING)
     operand.set_address(const_avail.next(Types.CTE_STRING))
-    generate_quadruple('write', None, None, operand)
   else:
-    word = operands.pop()
+    operand = operands.pop()
     types.pop()
-    operand = build_operand(word)
-    if operand.get_error():
-      return operand.get_error()
-    generate_quadruple('write', None, None, word)
+  generate_quadruple(Operations.WRITE, None, None, operand)
 
 
 def do_read():
   global operands, types
   operand = Operand('read')
-  operand.set_address(operations['read'])
+  operand.set_address(Operations.READ.value)
   operand.set_type(Types.READ)
   operands.append(operand)
   types.append(Types.READ)
@@ -337,15 +332,16 @@ def do_read():
 
 def register_condition():
   exp_type = types.pop()
+  print(exp_type)
   if exp_type != Types.BOOL:
     return 'Evaluated expression is not boolean'
   result = operands.pop()
-  generate_quadruple('gotof', result, None, None)
+  generate_quadruple(Operations.GOTOF, result, None, None)
   jumps.append(q_count-1)
 
 
 def register_else():
-  generate_quadruple('goto', None, None, None)
+  generate_quadruple(Operations.GOTO, None, None, None)
   false = jumps.pop()
   jumps.append(q_count-1)
   quadruples[false][3] = q_count
@@ -364,7 +360,7 @@ def register_end_while():
   end = jumps.pop()
   quadruples[end][3] = q_count
   ret = jumps.pop()
-  generate_quadruple('goto', None, None, ret)
+  generate_quadruple(Operations.GOTO, None, None, ret)
 
 
 def end_vars():
@@ -393,9 +389,9 @@ def register_func_end(is_main=False):
     quadruples[jumps.pop()][3] = q_count
     returns_count -= 1
   if is_main:
-    generate_quadruple('end', None, None, None)
+    generate_quadruple(Operations.END, None, None, None)
   else:
-    generate_quadruple('endproc', None, None, None)
+    generate_quadruple(Operations.ENDPROC, None, None, None)
 
 
 def register_return():
@@ -407,10 +403,10 @@ def register_return():
   return_type = types.pop()
   if function_type != return_type:
     return f'Cannot return type {return_type} as {function_type}'
-  generate_quadruple('return', return_val, None, None)
+  generate_quadruple(Operations.RETURN, return_val, None, None)
   jumps.append(q_count)
   returns_count += 1
-  generate_quadruple('goto', None, None, None)
+  generate_quadruple(Operations.GOTO, None, None, None)
 
 
 def call_parent(parent):
@@ -428,6 +424,8 @@ def finish_parent_call():
   global calling_class, calling_function
   calling_class = current_class
   calling_function = current_function
+  operands.append(Types.VOID)
+  types.append(Types.VOID)
 
 
 def start_func_call(func_name):
@@ -449,7 +447,7 @@ def start_param_collection():
   global param_count
   param_count = 0
   size = calling_function['#param_count'] + calling_function['#var_count']
-  generate_quadruple('era', calling_function['#name'], size, None)
+  generate_quadruple(Operations.ERA, calling_function['#name'], size, None)
 
 
 def pass_param():
@@ -461,7 +459,7 @@ def pass_param():
     return (f"{calling_function['#name']} expecting type {param_type} "
             + f'for parameter {param_count+1}')
   # TODO: en el ejemplo param se imprime el cuadruplo como 'param#'
-  generate_quadruple('param', argument, None, param_count)
+  generate_quadruple(Operations.PARAM, argument, None, param_count)
 
 
 def prepare_upcoming_param():
@@ -478,7 +476,7 @@ def done_param_pass():
   if param_count+1 != expected and not param_count == 0 and not expected == 0:
     return (f"{calling_function['#name']} expects {expected} parameters, " +
             f'but {param_count+1} were given')
-  generate_quadruple('gosub', calling_function['#name'], None, None)
+  generate_quadruple(Operations.GOSUB, calling_function['#name'], None, None)
 
 
 def attribute_call(attribute):
@@ -488,13 +486,13 @@ def attribute_call(attribute):
   populate_attribute(called_attribute)
   if called_attribute.get_error():
     return called_attribute.get_error()
-  generate_quadruple('return', called_attribute, None, None)
+  generate_quadruple(Operations.RETURN, called_attribute, None, None)
 
 
 def finish_call():
   global calling_class, calling_function
 
-  generate_quadruple('exit_instances', None, None, None)
+  generate_quadruple(Operations.EXIT_INSTANCES, None, None, None)
 
   if calling_function['#name'] == '#attributes':
     op_type = called_attribute.get_type()
@@ -507,7 +505,8 @@ def finish_call():
   else:
     operand = build_temp_operand(op_type)
     operand.set_raw(operand.get_address())
-    generate_quadruple('get_return', None, None, operand.get_address())
+    generate_quadruple(Operations.GET_RETURN, None, None,
+                       operand.get_address())
     operands.append(operand)
     types.append(operand.get_type())
 
@@ -532,15 +531,16 @@ def switch_instance(instance):
     return operand.get_error()
   elif class_type in var_types:
     return f'{instance} is of type {class_type} and not an instance.'
-  generate_quadruple('switch_instance', operand, None, None)
+  generate_quadruple(Operations.SWITCH_INSTANCE, operand, None, None)
 
   calling_class = classes[class_type]
 
 
 def generate_output():
   global classes
-  data_segment = ({v['#address']: None for k, v in
-                   classes['#global']['#funcs']['#attributes']['#vars'].items()})
+  data_segment = (
+      {v['#address']: None for v in
+          classes['#global']['#funcs']['#attributes']['#vars'].values()})
   constant_segment = invert_dict(constant_addresses)
 
   # Clean symbol table for use in virtual machine.

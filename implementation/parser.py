@@ -4,7 +4,7 @@ import ply.yacc as yacc
 from implementation.scanner import tokens
 import implementation.semantic_and_quadruples as sq
 from implementation.utils.parser_utils import *  # pylint: disable=unused-wildcard-import
-from implementation.utils.constants import Types, func_types
+from implementation.utils.constants import Types, func_types, Operations, string_operations
 import json
 
 import pprint
@@ -462,32 +462,34 @@ def p_r_seen_operand(p):
 
 def p_r_seen_operator(p):
   'r_seen_operator : '
-  sq.register_operator(p[-1])
+  sq.register_operator(string_operations[p[-1]])
 
 
 def p_r_seen_factor(p):
   'r_seen_factor : '
-  sq.solve_operation_or_continue(['*', '/'])
+  sq.solve_operation_or_continue([Operations.TIMES, Operations.DIV])
 
 
 def p_r_seen_term(p):
   'r_seen_term : '
-  sq.solve_operation_or_continue(['+', '-'])
+  sq.solve_operation_or_continue([Operations.PLUS, Operations.MINUS])
 
 
 def p_r_seenX(p):
   'r_seen_x : '
-  sq.solve_operation_or_continue(['>', '<', '<>', '==', '<=', '>='])
+  sq.solve_operation_or_continue(
+      [Operations.MORE_THAN, Operations.LESS_THAN, Operations.DIFFERENT,
+       Operations.IS_EQUAL, Operations.LESS_EQUAL, Operations.MORE_EQUAL])
 
 
 def p_r_seen_xp(p):
   'r_seen_xp : '
-  sq.solve_operation_or_continue(['or'])
+  sq.solve_operation_or_continue([Operations.OR])
 
 
 def p_r_seen_exp(p):
   'r_seen_exp : '
-  sq.solve_operation_or_continue(['and'])
+  sq.solve_operation_or_continue([Operations.AND])
 
 
 def p_r_pop_fake_bottom(p):
