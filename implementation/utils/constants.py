@@ -1,6 +1,7 @@
 # Constants used for MALI language.
 
 from collections import defaultdict
+from enum import Enum, IntEnum, auto
 
 # Memory addresses thresholds.
 VAR_LOWER_LIMIT = 11000
@@ -11,6 +12,24 @@ GLOBAL_ADJUSTMENT = 10000
 INSTANCE_ADJUSTMENT = 5000
 CONSTANT_LOWER_LIMIT = 20000
 CONSTANT_UPPER_LIMIT = 24999
+
+# Language data types.
+class Types(Enum):
+  INT = auto()
+  FLOAT = auto()
+  CHAR = auto()
+  BOOL = auto()
+  CTE_STRING = auto()
+  CLASS = auto()
+  VOID = auto()
+  READ = auto()
+
+
+var_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL, Types.CLASS)
+temp_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL)
+const_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL,
+               Types.CTE_STRING)
+func_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL, Types.VOID)
 
 
 operations = {
@@ -49,156 +68,156 @@ operations = {
 semantic_cube = defaultdict(lambda : defaultdict(lambda : defaultdict(
     lambda : defaultdict(None))))
 
-semantic_cube['int']['int']['and'] = 'bool'
-semantic_cube['int']['int']['or'] = 'bool'
-semantic_cube['int']['int']['>'] = 'bool'
-semantic_cube['int']['int']['<'] = 'bool'
-semantic_cube['int']['int']['<>'] = 'bool'
-semantic_cube['int']['int']['=='] = 'bool'
-semantic_cube['int']['int']['<='] = 'bool'
-semantic_cube['int']['int']['>='] = 'bool'
-semantic_cube['int']['int']['+'] = 'int'
-semantic_cube['int']['int']['-'] = 'int'
-semantic_cube['int']['int']['*'] = 'int'
-semantic_cube['int']['int']['/'] = 'int'
-semantic_cube['int']['int']['='] = 'int'
-semantic_cube['int']['dynamic']['='] = 'int'
+semantic_cube[Types.INT][Types.INT]['and'] = Types.BOOL
+semantic_cube[Types.INT][Types.INT]['or'] = Types.BOOL
+semantic_cube[Types.INT][Types.INT]['>'] = Types.BOOL
+semantic_cube[Types.INT][Types.INT]['<'] = Types.BOOL
+semantic_cube[Types.INT][Types.INT]['<>'] = Types.BOOL
+semantic_cube[Types.INT][Types.INT]['=='] = Types.BOOL
+semantic_cube[Types.INT][Types.INT]['<='] = Types.BOOL
+semantic_cube[Types.INT][Types.INT]['>='] = Types.BOOL
+semantic_cube[Types.INT][Types.INT]['+'] = Types.INT
+semantic_cube[Types.INT][Types.INT]['-'] = Types.INT
+semantic_cube[Types.INT][Types.INT]['*'] = Types.INT
+semantic_cube[Types.INT][Types.INT]['/'] = Types.INT
+semantic_cube[Types.INT][Types.INT]['='] = Types.INT
+semantic_cube[Types.INT][Types.READ]['='] = Types.INT
 
-semantic_cube['float']['float']['and'] = 'bool'
-semantic_cube['float']['float']['or'] = 'bool'
-semantic_cube['float']['float']['>'] = 'bool'
-semantic_cube['float']['float']['<'] = 'bool'
-semantic_cube['float']['float']['<>'] = 'bool'
-semantic_cube['float']['float']['=='] = 'bool'
-semantic_cube['float']['float']['<='] = 'bool'
-semantic_cube['float']['float']['>='] = 'bool'
-semantic_cube['float']['float']['+'] = 'float'
-semantic_cube['float']['float']['-'] = 'float'
-semantic_cube['float']['float']['*'] = 'float'
-semantic_cube['float']['float']['/'] = 'float'
-semantic_cube['float']['float']['='] = 'float'
-semantic_cube['float']['dynamic']['='] = 'float'
+semantic_cube[Types.FLOAT][Types.FLOAT]['and'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.FLOAT]['or'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.FLOAT]['>'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.FLOAT]['<'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.FLOAT]['<>'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.FLOAT]['=='] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.FLOAT]['<='] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.FLOAT]['>='] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.FLOAT]['+'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.FLOAT]['-'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.FLOAT]['*'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.FLOAT]['/'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.FLOAT]['='] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.READ]['='] = Types.FLOAT
 
-semantic_cube['char']['char']['and'] = 'bool'
-semantic_cube['char']['char']['or'] = 'bool'
-semantic_cube['char']['char']['>'] = 'bool'
-semantic_cube['char']['char']['<'] = 'bool'
-semantic_cube['char']['char']['<>'] = 'bool'
-semantic_cube['char']['char']['=='] = 'bool'
-semantic_cube['char']['char']['>='] = 'bool'
-semantic_cube['char']['char']['<='] = 'bool'
-semantic_cube['char']['char']['+'] = 'char'
-semantic_cube['char']['char']['-'] = 'char'
-semantic_cube['char']['char']['*'] = 'char'
-semantic_cube['char']['char']['/'] = 'char'
-semantic_cube['char']['char']['='] = 'char'
-semantic_cube['char']['dynamic']['='] = 'char'
+semantic_cube[Types.CHAR][Types.CHAR]['and'] = Types.BOOL
+semantic_cube[Types.CHAR][Types.CHAR]['or'] = Types.BOOL
+semantic_cube[Types.CHAR][Types.CHAR]['>'] = Types.BOOL
+semantic_cube[Types.CHAR][Types.CHAR]['<'] = Types.BOOL
+semantic_cube[Types.CHAR][Types.CHAR]['<>'] = Types.BOOL
+semantic_cube[Types.CHAR][Types.CHAR]['=='] = Types.BOOL
+semantic_cube[Types.CHAR][Types.CHAR]['>='] = Types.BOOL
+semantic_cube[Types.CHAR][Types.CHAR]['<='] = Types.BOOL
+semantic_cube[Types.CHAR][Types.CHAR]['+'] = Types.CHAR
+semantic_cube[Types.CHAR][Types.CHAR]['-'] = Types.CHAR
+semantic_cube[Types.CHAR][Types.CHAR]['*'] = Types.CHAR
+semantic_cube[Types.CHAR][Types.CHAR]['/'] = Types.CHAR
+semantic_cube[Types.CHAR][Types.CHAR]['='] = Types.CHAR
+semantic_cube[Types.CHAR][Types.READ]['='] = Types.CHAR
 
-semantic_cube['bool']['bool']['and'] = 'bool'
-semantic_cube['bool']['bool']['or'] = 'bool'
-semantic_cube['bool']['bool']['>'] = 'bool'
-semantic_cube['bool']['bool']['<'] = 'bool'
-semantic_cube['bool']['bool']['<>'] = 'bool'
-semantic_cube['bool']['bool']['=='] = 'bool'
-semantic_cube['bool']['bool']['>='] = 'bool'
-semantic_cube['bool']['bool']['<='] = 'bool'
-semantic_cube['bool']['bool']['+'] = 'int'
-semantic_cube['bool']['bool']['-'] = 'int'
-semantic_cube['bool']['bool']['*'] = 'int'
-semantic_cube['bool']['bool']['/'] = 'int'
-semantic_cube['bool']['bool']['='] = 'bool'
-semantic_cube['bool']['dynamic']['='] = 'bool'
+semantic_cube[Types.BOOL][Types.BOOL]['and'] = Types.BOOL
+semantic_cube[Types.BOOL][Types.BOOL]['or'] = Types.BOOL
+semantic_cube[Types.BOOL][Types.BOOL]['>'] = Types.BOOL
+semantic_cube[Types.BOOL][Types.BOOL]['<'] = Types.BOOL
+semantic_cube[Types.BOOL][Types.BOOL]['<>'] = Types.BOOL
+semantic_cube[Types.BOOL][Types.BOOL]['=='] = Types.BOOL
+semantic_cube[Types.BOOL][Types.BOOL]['>='] = Types.BOOL
+semantic_cube[Types.BOOL][Types.BOOL]['<='] = Types.BOOL
+semantic_cube[Types.BOOL][Types.BOOL]['+'] = Types.INT
+semantic_cube[Types.BOOL][Types.BOOL]['-'] = Types.INT
+semantic_cube[Types.BOOL][Types.BOOL]['*'] = Types.INT
+semantic_cube[Types.BOOL][Types.BOOL]['/'] = Types.INT
+semantic_cube[Types.BOOL][Types.BOOL]['='] = Types.BOOL
+semantic_cube[Types.BOOL][Types.READ]['='] = Types.BOOL
 
-semantic_cube['int']['float']['and'] = semantic_cube['float']['int']['and'] = 'bool'
-semantic_cube['int']['float']['or'] = semantic_cube['float']['int']['or'] = 'bool'
-semantic_cube['int']['float']['>'] = semantic_cube['float']['int']['>'] = 'bool'
-semantic_cube['int']['float']['<'] = semantic_cube['float']['int']['<'] = 'bool'
-semantic_cube['int']['float']['<>'] = semantic_cube['float']['int']['<>'] = 'bool'
-semantic_cube['int']['float']['=='] = semantic_cube['float']['int']['=='] = 'bool'
-semantic_cube['int']['float']['<='] = semantic_cube['float']['int']['<='] = 'bool'
-semantic_cube['int']['float']['>='] = semantic_cube['float']['int']['>='] = 'bool'
-semantic_cube['int']['float']['+'] = semantic_cube['float']['int']['+'] = 'float'
-semantic_cube['int']['float']['-'] = semantic_cube['float']['int']['-'] = 'float'
-semantic_cube['int']['float']['*'] = semantic_cube['float']['int']['*'] = 'float'
-semantic_cube['int']['float']['/'] = semantic_cube['float']['int']['/'] = 'float'
-semantic_cube['int']['float']['='] = 'int'
-semantic_cube['float']['int']['='] = 'float'
+semantic_cube[Types.INT][Types.FLOAT]['and'] = semantic_cube[Types.FLOAT][Types.INT]['and'] = Types.BOOL
+semantic_cube[Types.INT][Types.FLOAT]['or'] = semantic_cube[Types.FLOAT][Types.INT]['or'] = Types.BOOL
+semantic_cube[Types.INT][Types.FLOAT]['>'] = semantic_cube[Types.FLOAT][Types.INT]['>'] = Types.BOOL
+semantic_cube[Types.INT][Types.FLOAT]['<'] = semantic_cube[Types.FLOAT][Types.INT]['<'] = Types.BOOL
+semantic_cube[Types.INT][Types.FLOAT]['<>'] = semantic_cube[Types.FLOAT][Types.INT]['<>'] = Types.BOOL
+semantic_cube[Types.INT][Types.FLOAT]['=='] = semantic_cube[Types.FLOAT][Types.INT]['=='] = Types.BOOL
+semantic_cube[Types.INT][Types.FLOAT]['<='] = semantic_cube[Types.FLOAT][Types.INT]['<='] = Types.BOOL
+semantic_cube[Types.INT][Types.FLOAT]['>='] = semantic_cube[Types.FLOAT][Types.INT]['>='] = Types.BOOL
+semantic_cube[Types.INT][Types.FLOAT]['+'] = semantic_cube[Types.FLOAT][Types.INT]['+'] = Types.FLOAT
+semantic_cube[Types.INT][Types.FLOAT]['-'] = semantic_cube[Types.FLOAT][Types.INT]['-'] = Types.FLOAT
+semantic_cube[Types.INT][Types.FLOAT]['*'] = semantic_cube[Types.FLOAT][Types.INT]['*'] = Types.FLOAT
+semantic_cube[Types.INT][Types.FLOAT]['/'] = semantic_cube[Types.FLOAT][Types.INT]['/'] = Types.FLOAT
+semantic_cube[Types.INT][Types.FLOAT]['='] = Types.INT
+semantic_cube[Types.FLOAT][Types.INT]['='] = Types.FLOAT
 
-semantic_cube['int']['char']['and'] = semantic_cube['char']['int']['and'] = 'char'
-semantic_cube['int']['char']['or'] = semantic_cube['char']['int']['or'] = 'char'
-semantic_cube['int']['char']['>'] = semantic_cube['char']['int']['>'] = 'char'
-semantic_cube['int']['char']['<'] = semantic_cube['char']['int']['<'] = 'char'
-semantic_cube['int']['char']['<>'] = semantic_cube['char']['int']['<>'] = 'char'
-semantic_cube['int']['char']['=='] = semantic_cube['char']['int']['=='] = 'char'
-semantic_cube['int']['char']['<='] = semantic_cube['char']['int']['<='] = 'char'
-semantic_cube['int']['char']['>='] = semantic_cube['char']['int']['>='] = 'char'
-semantic_cube['int']['char']['+'] = semantic_cube['char']['int']['+'] = 'char'
-semantic_cube['int']['char']['-'] = semantic_cube['char']['int']['-'] = 'char'
-semantic_cube['int']['char']['*'] = semantic_cube['char']['int']['*'] = 'char'
-semantic_cube['int']['char']['/'] = semantic_cube['char']['int']['/'] = 'char'
-semantic_cube['int']['char']['='] = 'int'
-semantic_cube['char']['int']['='] = 'char'
+semantic_cube[Types.INT][Types.CHAR]['and'] = semantic_cube[Types.CHAR][Types.INT]['and'] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['or'] = semantic_cube[Types.CHAR][Types.INT]['or'] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['>'] = semantic_cube[Types.CHAR][Types.INT]['>'] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['<'] = semantic_cube[Types.CHAR][Types.INT]['<'] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['<>'] = semantic_cube[Types.CHAR][Types.INT]['<>'] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['=='] = semantic_cube[Types.CHAR][Types.INT]['=='] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['<='] = semantic_cube[Types.CHAR][Types.INT]['<='] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['>='] = semantic_cube[Types.CHAR][Types.INT]['>='] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['+'] = semantic_cube[Types.CHAR][Types.INT]['+'] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['-'] = semantic_cube[Types.CHAR][Types.INT]['-'] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['*'] = semantic_cube[Types.CHAR][Types.INT]['*'] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['/'] = semantic_cube[Types.CHAR][Types.INT]['/'] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR]['='] = Types.INT
+semantic_cube[Types.CHAR][Types.INT]['='] = Types.CHAR
 
-semantic_cube['int']['bool']['and'] = semantic_cube['bool']['int']['and'] = 'bool'
-semantic_cube['int']['bool']['or'] = semantic_cube['bool']['int']['or'] = 'bool'
-semantic_cube['int']['bool']['>'] = semantic_cube['bool']['int']['>'] = 'bool'
-semantic_cube['int']['bool']['<'] = semantic_cube['bool']['int']['<'] = 'bool'
-semantic_cube['int']['bool']['<>'] = semantic_cube['bool']['int']['<>'] = 'bool'
-semantic_cube['int']['bool']['=='] = semantic_cube['bool']['int']['=='] = 'bool'
-semantic_cube['int']['bool']['<='] = semantic_cube['bool']['int']['<='] = 'bool'
-semantic_cube['int']['bool']['>='] = semantic_cube['bool']['int']['>='] = 'bool'
-semantic_cube['int']['bool']['+'] = semantic_cube['bool']['int']['+'] = 'int'
-semantic_cube['int']['bool']['-'] = semantic_cube['bool']['int']['-'] = 'int'
-semantic_cube['int']['bool']['*'] = semantic_cube['bool']['int']['*'] = 'int'
-semantic_cube['int']['bool']['/'] = semantic_cube['bool']['int']['/'] = 'int'
-semantic_cube['int']['bool']['='] = 'int'
-semantic_cube['bool']['int']['='] = 'bool'
-semantic_cube['float']['dynamic']['='] = 'float'
+semantic_cube[Types.INT][Types.BOOL]['and'] = semantic_cube[Types.BOOL][Types.INT]['and'] = Types.BOOL
+semantic_cube[Types.INT][Types.BOOL]['or'] = semantic_cube[Types.BOOL][Types.INT]['or'] = Types.BOOL
+semantic_cube[Types.INT][Types.BOOL]['>'] = semantic_cube[Types.BOOL][Types.INT]['>'] = Types.BOOL
+semantic_cube[Types.INT][Types.BOOL]['<'] = semantic_cube[Types.BOOL][Types.INT]['<'] = Types.BOOL
+semantic_cube[Types.INT][Types.BOOL]['<>'] = semantic_cube[Types.BOOL][Types.INT]['<>'] = Types.BOOL
+semantic_cube[Types.INT][Types.BOOL]['=='] = semantic_cube[Types.BOOL][Types.INT]['=='] = Types.BOOL
+semantic_cube[Types.INT][Types.BOOL]['<='] = semantic_cube[Types.BOOL][Types.INT]['<='] = Types.BOOL
+semantic_cube[Types.INT][Types.BOOL]['>='] = semantic_cube[Types.BOOL][Types.INT]['>='] = Types.BOOL
+semantic_cube[Types.INT][Types.BOOL]['+'] = semantic_cube[Types.BOOL][Types.INT]['+'] = Types.INT
+semantic_cube[Types.INT][Types.BOOL]['-'] = semantic_cube[Types.BOOL][Types.INT]['-'] = Types.INT
+semantic_cube[Types.INT][Types.BOOL]['*'] = semantic_cube[Types.BOOL][Types.INT]['*'] = Types.INT
+semantic_cube[Types.INT][Types.BOOL]['/'] = semantic_cube[Types.BOOL][Types.INT]['/'] = Types.INT
+semantic_cube[Types.INT][Types.BOOL]['='] = Types.INT
+semantic_cube[Types.BOOL][Types.INT]['='] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.READ]['='] = Types.FLOAT
 
-semantic_cube['float']['char']['and'] = semantic_cube['char']['float']['and'] = 'bool'
-semantic_cube['float']['char']['or'] = semantic_cube['char']['float']['or'] = 'bool'
-semantic_cube['float']['char']['>'] = semantic_cube['char']['float']['>'] = 'bool'
-semantic_cube['float']['char']['<'] = semantic_cube['char']['float']['<'] = 'bool'
-semantic_cube['float']['char']['<>'] = semantic_cube['char']['float']['<>'] = 'bool'
-semantic_cube['float']['char']['=='] = semantic_cube['char']['float']['=='] = 'bool'
-semantic_cube['float']['char']['<='] = semantic_cube['char']['float']['<='] = 'bool'
-semantic_cube['float']['char']['>='] = semantic_cube['char']['float']['>='] = 'bool'
-semantic_cube['float']['char']['+'] = semantic_cube['char']['float']['+'] = 'float'
-semantic_cube['float']['char']['-'] = semantic_cube['char']['float']['-'] = 'float'
-semantic_cube['float']['char']['*'] = semantic_cube['char']['float']['*'] = 'float'
-semantic_cube['float']['char']['/'] = semantic_cube['char']['float']['/'] = 'float'
-semantic_cube['float']['char']['='] = 'float'
-semantic_cube['char']['float']['='] = 'char'
-semantic_cube['char']['dynamic']['='] = 'char'
+semantic_cube[Types.FLOAT][Types.CHAR]['and'] = semantic_cube[Types.CHAR][Types.FLOAT]['and'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.CHAR]['or'] = semantic_cube[Types.CHAR][Types.FLOAT]['or'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.CHAR]['>'] = semantic_cube[Types.CHAR][Types.FLOAT]['>'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.CHAR]['<'] = semantic_cube[Types.CHAR][Types.FLOAT]['<'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.CHAR]['<>'] = semantic_cube[Types.CHAR][Types.FLOAT]['<>'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.CHAR]['=='] = semantic_cube[Types.CHAR][Types.FLOAT]['=='] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.CHAR]['<='] = semantic_cube[Types.CHAR][Types.FLOAT]['<='] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.CHAR]['>='] = semantic_cube[Types.CHAR][Types.FLOAT]['>='] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.CHAR]['+'] = semantic_cube[Types.CHAR][Types.FLOAT]['+'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.CHAR]['-'] = semantic_cube[Types.CHAR][Types.FLOAT]['-'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.CHAR]['*'] = semantic_cube[Types.CHAR][Types.FLOAT]['*'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.CHAR]['/'] = semantic_cube[Types.CHAR][Types.FLOAT]['/'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.CHAR]['='] = Types.FLOAT
+semantic_cube[Types.CHAR][Types.FLOAT]['='] = Types.CHAR
+semantic_cube[Types.CHAR][Types.READ]['='] = Types.CHAR
 
-semantic_cube['float']['bool']['and'] = semantic_cube['bool']['float']['and'] = 'bool'
-semantic_cube['float']['bool']['or'] = semantic_cube['bool']['float']['or'] = 'bool'
-semantic_cube['float']['bool']['>'] = semantic_cube['bool']['float']['>'] = 'bool'
-semantic_cube['float']['bool']['<'] = semantic_cube['bool']['float']['<'] = 'bool'
-semantic_cube['float']['bool']['<>'] = semantic_cube['bool']['float']['<>'] = 'bool'
-semantic_cube['float']['bool']['=='] = semantic_cube['bool']['float']['=='] = 'bool'
-semantic_cube['float']['bool']['<='] = semantic_cube['bool']['float']['<='] = 'bool'
-semantic_cube['float']['bool']['>='] = semantic_cube['bool']['float']['>='] = 'bool'
-semantic_cube['float']['bool']['+'] = semantic_cube['bool']['float']['+'] = 'float'
-semantic_cube['float']['bool']['-'] = semantic_cube['bool']['float']['-'] = 'float'
-semantic_cube['float']['bool']['*'] = semantic_cube['bool']['float']['*'] = 'float'
-semantic_cube['float']['bool']['/'] = semantic_cube['bool']['float']['/'] = 'float'
-semantic_cube['float']['bool']['='] = 'float'
-semantic_cube['bool']['float']['='] = 'bool'
-semantic_cube['bool']['dynamic']['='] = 'bool'
+semantic_cube[Types.FLOAT][Types.BOOL]['and'] = semantic_cube[Types.BOOL][Types.FLOAT]['and'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.BOOL]['or'] = semantic_cube[Types.BOOL][Types.FLOAT]['or'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.BOOL]['>'] = semantic_cube[Types.BOOL][Types.FLOAT]['>'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.BOOL]['<'] = semantic_cube[Types.BOOL][Types.FLOAT]['<'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.BOOL]['<>'] = semantic_cube[Types.BOOL][Types.FLOAT]['<>'] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.BOOL]['=='] = semantic_cube[Types.BOOL][Types.FLOAT]['=='] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.BOOL]['<='] = semantic_cube[Types.BOOL][Types.FLOAT]['<='] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.BOOL]['>='] = semantic_cube[Types.BOOL][Types.FLOAT]['>='] = Types.BOOL
+semantic_cube[Types.FLOAT][Types.BOOL]['+'] = semantic_cube[Types.BOOL][Types.FLOAT]['+'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.BOOL]['-'] = semantic_cube[Types.BOOL][Types.FLOAT]['-'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.BOOL]['*'] = semantic_cube[Types.BOOL][Types.FLOAT]['*'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.BOOL]['/'] = semantic_cube[Types.BOOL][Types.FLOAT]['/'] = Types.FLOAT
+semantic_cube[Types.FLOAT][Types.BOOL]['='] = Types.FLOAT
+semantic_cube[Types.BOOL][Types.FLOAT]['='] = Types.BOOL
+semantic_cube[Types.BOOL][Types.READ]['='] = Types.BOOL
 
-semantic_cube['char']['bool']['and'] = semantic_cube['bool']['char']['and'] = 'bool'
-semantic_cube['char']['bool']['or'] = semantic_cube['bool']['char']['or'] = 'bool'
-semantic_cube['char']['bool']['>'] = semantic_cube['bool']['char']['>'] = 'bool'
-semantic_cube['char']['bool']['<'] = semantic_cube['bool']['char']['<'] = 'bool'
-semantic_cube['char']['bool']['<>'] = semantic_cube['bool']['char']['<>'] = 'bool'
-semantic_cube['char']['bool']['=='] = semantic_cube['bool']['char']['=='] = 'bool'
-semantic_cube['char']['bool']['<='] = semantic_cube['bool']['char']['<='] = 'bool'
-semantic_cube['char']['bool']['>='] = semantic_cube['bool']['char']['>='] = 'bool'
-semantic_cube['char']['bool']['+'] = semantic_cube['bool']['char']['+'] = 'char'
-semantic_cube['char']['bool']['-'] = semantic_cube['bool']['char']['-'] = 'char'
-semantic_cube['char']['bool']['*'] = semantic_cube['bool']['char']['*'] = 'char'
-semantic_cube['char']['bool']['/'] = semantic_cube['bool']['char']['/'] = 'char'
-semantic_cube['char']['bool']['='] = 'char'
-semantic_cube['bool']['char']['='] = 'bool'
-semantic_cube['bool']['dynamic']['='] = 'bool'
+semantic_cube[Types.CHAR][Types.BOOL]['and'] = semantic_cube[Types.BOOL][Types.CHAR]['and'] = Types.BOOL
+semantic_cube[Types.CHAR][Types.BOOL]['or'] = semantic_cube[Types.BOOL][Types.CHAR]['or'] = Types.BOOL
+semantic_cube[Types.CHAR][Types.BOOL]['>'] = semantic_cube[Types.BOOL][Types.CHAR]['>'] = Types.BOOL
+semantic_cube[Types.CHAR][Types.BOOL]['<'] = semantic_cube[Types.BOOL][Types.CHAR]['<'] = Types.BOOL
+semantic_cube[Types.CHAR][Types.BOOL]['<>'] = semantic_cube[Types.BOOL][Types.CHAR]['<>'] = Types.BOOL
+semantic_cube[Types.CHAR][Types.BOOL]['=='] = semantic_cube[Types.BOOL][Types.CHAR]['=='] = Types.BOOL
+semantic_cube[Types.CHAR][Types.BOOL]['<='] = semantic_cube[Types.BOOL][Types.CHAR]['<='] = Types.BOOL
+semantic_cube[Types.CHAR][Types.BOOL]['>='] = semantic_cube[Types.BOOL][Types.CHAR]['>='] = Types.BOOL
+semantic_cube[Types.CHAR][Types.BOOL]['+'] = semantic_cube[Types.BOOL][Types.CHAR]['+'] = Types.CHAR
+semantic_cube[Types.CHAR][Types.BOOL]['-'] = semantic_cube[Types.BOOL][Types.CHAR]['-'] = Types.CHAR
+semantic_cube[Types.CHAR][Types.BOOL]['*'] = semantic_cube[Types.BOOL][Types.CHAR]['*'] = Types.CHAR
+semantic_cube[Types.CHAR][Types.BOOL]['/'] = semantic_cube[Types.BOOL][Types.CHAR]['/'] = Types.CHAR
+semantic_cube[Types.CHAR][Types.BOOL]['='] = Types.CHAR
+semantic_cube[Types.BOOL][Types.CHAR]['='] = Types.BOOL
+semantic_cube[Types.BOOL][Types.READ]['='] = Types.BOOL

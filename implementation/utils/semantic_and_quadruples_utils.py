@@ -1,49 +1,45 @@
 # Utils module for semantic checks and quadruples generation.
 
-from implementation.utils.generic_utils import * # pylint: disable=unused-wildcard-import
-from implementation.utils.constants import * # pylint: disable=unused-wildcard-import
+from implementation.utils.generic_utils import *  # pylint: disable=unused-wildcard-import
+from implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
 # Symbol table utils.
 
+
 def new_var_dict(type, address, access=None):
   var_dict = {
-    #TODO: hacer verdadero.
-    '#assigned': True,
-    '#type': type,
-    '#address': address
+      # TODO: hacer verdadero.
+      '#assigned': True,
+      '#type': type,
+      '#address': address
   }
-  if access: var_dict['#access'] = access
+  if access:
+    var_dict['#access'] = access
   return var_dict
 
 
-def new_func_dict(name, type):
+def new_func_dict(name, func_type):
   func_dict = {
-    '#name': name,
-    '#type': type,
-    '#param_count': 0,
-    '#var_count': 0,
-    '#var_avail': Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types),
-    '#temp_avail': Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, temp_types),
-    '#vars': {}
+      '#name': name,
+      '#type': func_type,
+      '#param_count': 0,
+      '#var_count': 0,
+      '#var_avail': Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types),
+      '#temp_avail': Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, temp_types),
+      '#vars': {}
   }
   return func_dict
 
 
 def new_class_dict(name, parent='#global'):
   class_dict = {
-    '#name': name,
-    '#parent': parent,
-    '#funcs': {
-      '#attributes': new_func_dict('#attributes', 'void')
-    }
+      '#name': name,
+      '#parent': parent,
+      '#funcs': {
+          '#attributes': new_func_dict('#attributes', Types.VOID)
+      }
   }
   return class_dict
-
-
-var_types = ("int", "float", "char", "bool", "class")
-temp_types = ("int", "float", "char", "bool")
-const_types = ("int", "float", "char", "bool", "cte_string")
-func_types = ("int", "float", "char", "bool", "void")
 
 
 class Available:
@@ -56,15 +52,15 @@ class Available:
     length = int((limit-begin)/len(types))
     for t in types:
       self.__type[t] = {
-        'begin': type_begin, #TODO: este podria no ser necesario.
-        'next': type_begin,
-        'limit': (type_begin + length)
+          'begin': type_begin,  # TODO: este podria no ser necesario.
+          'next': type_begin,
+          'limit': (type_begin + length)
       }
       type_begin += length + 1
 
   def next(self, op_type):
     if op_type not in self.__type:
-      op_type = "class"
+      op_type = Types.CLASS
 
     next_val = self.__type[op_type]['next']
     if next_val > self.__type[op_type]['limit']:

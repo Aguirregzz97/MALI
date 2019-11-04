@@ -1,6 +1,6 @@
 # Semantic checks and quadruple generation for MALI language.
 
-from implementation.utils.semantic_and_quadruples_utils import * # pylint: disable=unused-wildcard-import
+from implementation.utils.semantic_and_quadruples_utils import *  # pylint: disable=unused-wildcard-import
 from implementation.utils.generic_utils import *
 from implementation.utils.constants import *
 import re
@@ -62,7 +62,7 @@ def seen_access(new_access):
 def seen_type(new_type):
   global current_type
   if new_type not in func_types and (
-        new_type not in classes):
+          new_type not in classes):
     return f"{new_type} is not a class nor data type"
   current_type = new_type
 
@@ -84,7 +84,7 @@ def var_name(var_name):
         adjust = GLOBAL_ADJUSTMENT
 
     current_function['#vars'][var_name] = (
-          new_var_dict(current_type, address-adjust, current_access))
+        new_var_dict(current_type, address-adjust, current_access))
 
 
 def set_param(params_ahead):
@@ -149,7 +149,7 @@ def generate_quadruple(a, b, c, d):
 
 
 def find_var_and_populate_operand(operand, prefix, mark_assigned,
-                                      check_access=False):
+                                  check_access=False):
   raw_operand = operand.get_raw()
   var = prefix.get(raw_operand, None)
   if not var:
@@ -223,21 +223,21 @@ def build_operand(raw_operand):
   t = type(raw_operand)
   operand = Operand(raw_operand)
   if t == int:
-    address = get_or_create_cte_address(raw_operand, 'int')
-    operand.set_type('int')
+    address = get_or_create_cte_address(raw_operand, Types.INT)
+    operand.set_type(Types.INT)
     operand.set_address(address)
   elif t == float:
-    address = get_or_create_cte_address(raw_operand, 'float')
-    operand.set_type('float')
+    address = get_or_create_cte_address(raw_operand, Types.FLOAT)
+    operand.set_type(Types.FLOAT)
     operand.set_address(address)
   elif t == bool:
-    address = get_or_create_cte_address(raw_operand, 'bool')
-    operand.set_type('bool')
+    address = get_or_create_cte_address(raw_operand, Types.BOOL)
+    operand.set_type(Types.BOOL)
     operand.set_address(address)
   elif t == str:
     if re.match(r"\'.\'", raw_operand):
-      address = get_or_create_cte_address(raw_operand, 'char')
-      operand.set_type('char')
+      address = get_or_create_cte_address(raw_operand, Types.CHAR)
+      operand.set_type(Types.CHAR)
       operand.set_address(address)
     else:
       populate_non_constant_operand(operand)
@@ -247,7 +247,8 @@ def build_operand(raw_operand):
 def register_operand(raw_operand):
   global operands, types
   operand = build_operand(raw_operand)
-  if operand.get_error(): return operand.get_error()
+  if operand.get_error():
+    return operand.get_error()
   operands.append(operand)
   types.append(operand.get_type())
 
@@ -279,7 +280,7 @@ def solve_operation_or_continue(ops):
     operator = operators.pop()
     result_type = semantic_cube[left_type][right_type][operator]
     if not result_type:
-      if left_type == 'void' or right_type == 'void':
+      if left_type == Types.VOID or right_type == Types.VOID:
         return f'Expression returns no value.'
       return (f'Type mismatch: Invalid operation {operator} on given operands')
     temp = build_temp_operand(result_type)
@@ -299,10 +300,11 @@ def do_assign(result):
   left_type = types.pop()
   result_operand = Operand(result)
   populate_non_constant_operand(result_operand, True)
-  if result_operand.get_error(): return result_operand.get_error()
+  if result_operand.get_error():
+    return result_operand.get_error()
   result_type = result_operand.get_type()
   if not semantic_cube[result_type][left_type]['=']:
-    if left_type == 'void':
+    if left_type == Types.VOID:
       return f'Expression returns no value.'
     return (f'Type mismatch: expression cannot be assigned to {result}')
   generate_quadruple('=', left_operand, None, result_operand)
@@ -312,14 +314,15 @@ def do_assign(result):
 def do_write(s):
   if s:
     operand = Operand(s)
-    operand.set_type('cte_string')
-    operand.set_address(const_avail.next('cte_string'))
+    operand.set_type(Types.CTE_STRING)
+    operand.set_address(const_avail.next(Types.CTE_STRING))
     generate_quadruple('write', None, None, operand)
   else:
     word = operands.pop()
     types.pop()
     operand = build_operand(word)
-    if operand.get_error(): return operand.get_error()
+    if operand.get_error():
+      return operand.get_error()
     generate_quadruple('write', None, None, word)
 
 
@@ -327,14 +330,14 @@ def do_read():
   global operands, types
   operand = Operand('read')
   operand.set_address(operations['read'])
-  operand.set_type('dynamic')
+  operand.set_type(Types.READ)
   operands.append(operand)
-  types.append('dynamic')
+  types.append(Types.READ)
 
 
 def register_condition():
   exp_type = types.pop()
-  if exp_type != 'bool':
+  if exp_type != Types.BOOL:
     return 'Evaluated expression is not boolean'
   result = operands.pop()
   generate_quadruple('gotof', result, None, None)
@@ -376,7 +379,7 @@ def register_function_beginning():
 
 def set_current_type_void():
   global current_type
-  current_type = 'void'
+  current_type = Types.VOID
 
 
 def register_main_beginning():
@@ -398,7 +401,7 @@ def register_func_end(is_main=False):
 def register_return():
   global returns_count
   function_type = current_function['#type']
-  if function_type == 'void':
+  if function_type == Types.VOID:
     return 'Void function cannot return a value'
   return_val = operands.pop()
   return_type = types.pop()
@@ -414,7 +417,7 @@ def call_parent(parent):
   global calling_class, calling_function
   if not current_class['#parent']:
     return (f"{current_class['#name']} has no parent class but tries "
-        + f'to extend {parent} in constructor')
+            + f'to extend {parent} in constructor')
   elif parent != current_class['#parent']:
     return f"{parent} is not {current_class['#name']}'s parent"
   calling_class = classes[parent]
@@ -456,8 +459,8 @@ def pass_param():
   arg_type = types.pop()
   if param_type != arg_type:
     return (f"{calling_function['#name']} expecting type {param_type} "
-        + f'for parameter {param_count+1}')
-  #TODO: en el ejemplo param se imprime el cuadruplo como 'param#'
+            + f'for parameter {param_count+1}')
+  # TODO: en el ejemplo param se imprime el cuadruplo como 'param#'
   generate_quadruple('param', argument, None, param_count)
 
 
@@ -467,14 +470,14 @@ def prepare_upcoming_param():
   expected = calling_function['#param_count']
   if param_count+1 > expected:
     return (f"{calling_function['#name']} expects {expected} parameters, " +
-        'but more were given')
+            'but more were given')
 
 
 def done_param_pass():
   expected = calling_function['#param_count']
   if param_count+1 != expected and not param_count == 0 and not expected == 0:
-    return (f"{calling_function['#name']} expects {expected} parameters, but " +
-        f'{param_count+1} were given')
+    return (f"{calling_function['#name']} expects {expected} parameters, " +
+            f'but {param_count+1} were given')
   generate_quadruple('gosub', calling_function['#name'], None, None)
 
 
@@ -483,7 +486,8 @@ def attribute_call(attribute):
   calling_function = calling_class['#funcs']['#attributes']
   called_attribute = Operand(attribute)
   populate_attribute(called_attribute)
-  if called_attribute.get_error(): return called_attribute.get_error()
+  if called_attribute.get_error():
+    return called_attribute.get_error()
   generate_quadruple('return', called_attribute, None, None)
 
 
@@ -497,16 +501,15 @@ def finish_call():
   else:
     op_type = calling_function['#type']
 
-  if op_type == 'void':
-    operands.append('void')
-    types.append('void')
+  if op_type == Types.VOID:
+    operands.append(Types.VOID)
+    types.append(Types.VOID)
   else:
     operand = build_temp_operand(op_type)
     operand.set_raw(operand.get_address())
     generate_quadruple('get_return', None, None, operand.get_address())
     operands.append(operand)
     types.append(operand.get_type())
-
 
   calling_class = current_class
   calling_function = current_function
@@ -537,7 +540,7 @@ def switch_instance(instance):
 def generate_output():
   global classes
   data_segment = ({v['#address']: None for k, v in
-      classes['#global']['#funcs']['#attributes']['#vars'].items()})
+                   classes['#global']['#funcs']['#attributes']['#vars'].items()})
   constant_segment = invert_dict(constant_addresses)
 
   # Clean symbol table for use in virtual machine.
@@ -547,16 +550,18 @@ def generate_output():
     for v2 in v1['#funcs'].values():
       del v2['#var_avail']
       del v2['#temp_avail']
-      if '#access' in v2: del v2['#access']
+      if '#access' in v2:
+        del v2['#access']
       for v3 in v2['#vars'].values():
         del v3['#assigned']
-        if '#access' in v3: del v3['#access']
+        if '#access' in v3:
+          del v3['#access']
 
   del classes['#global']['#funcs']['#attributes']
 
   return {
-    'symbol_table': classes,
-    'data_segment': data_segment,
-    'constant_segment': constant_segment,
-    'quadruples': quadruples
+      'symbol_table': classes,
+      'data_segment': data_segment,
+      'constant_segment': constant_segment,
+      'quadruples': quadruples
   }

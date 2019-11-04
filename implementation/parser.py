@@ -3,7 +3,8 @@
 import ply.yacc as yacc
 from implementation.scanner import tokens
 import implementation.semantic_and_quadruples as sq
-from implementation.utils.parser_utils import * # pylint: disable=unused-wildcard-import
+from implementation.utils.parser_utils import *  # pylint: disable=unused-wildcard-import
+from implementation.utils.constants import Types, func_types
 import json
 
 import pprint
@@ -13,6 +14,7 @@ input_str = ''
 error = False
 
 # Syntax rules.
+
 
 def p_program(p):
   '''program : classes vars modules main
@@ -117,8 +119,6 @@ def p_type(p):
           | CHAR r_seen_type
           | BOOL r_seen_type'''
   add_to_tree('type', p)
-  e = sq.seen_type(new_type=p[1])
-  if e: handle_error(p.lineno(1), p.lexpos(1), e)
 
 
 def p_complex_type(p):
@@ -183,7 +183,8 @@ def p_assign(p):
             | ID EQUAL expression
             | ID EQUAL READ r_do_read'''
   e = sq.do_assign(p[1])
-  if e: handle_error(p.lineno(1), p.lexpos(1), e)
+  if e:
+    handle_error(p.lineno(1), p.lexpos(1), e)
   add_to_tree('assign', p)
 
 
@@ -357,13 +358,15 @@ def p_empty(p):
 def p_r_seen_class(p):
   'r_seen_class : '
   e = sq.seen_class(class_name=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_class_parent(p):
   'r_class_parent : '
   e = sq.class_parent(class_parent=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_finish_class(p):
@@ -383,21 +386,28 @@ def p_r_seen_access(p):
 
 def p_r_seen_type(p):
   'r_seen_type : '
-  e = sq.seen_type(new_type=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if p[-1].upper() in Types.__members__:
+    new_type = Types[p[-1].upper()]
+  else:
+    new_type = p[-1]
+  e = sq.seen_type(new_type=new_type)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_var_name(p):
   'r_var_name : '
   e = sq.var_name(var_name=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_init(p):
   'r_seen_init : '
   sq.set_current_type_void()
   e = sq.seen_func(func_name='init')
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_param(p):
@@ -413,7 +423,8 @@ def p_r_finish_param(p):
 def p_r_call_parent(p):
   'r_call_parent : '
   e = sq.call_parent(parent=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_finish_parent_call(p):
@@ -424,7 +435,8 @@ def p_r_finish_parent_call(p):
 def p_r_funcName(p):
   'r_funcName : '
   e = sq.seen_func(func_name=p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_set_access(p):
@@ -437,13 +449,15 @@ def p_r_seen_main(p):
   sq.register_main_beginning()
   sq.set_current_type_void()
   e = sq.seen_func(func_name='#main')
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_operand(p):
   'r_seen_operand : '
   e = sq.register_operand(p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_operator(p):
@@ -499,7 +513,8 @@ def p_r_do_read(p):
 def p_r_seen_cond(p):
   'r_seen_cond : '
   e = sq.register_condition()
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_else(p):
@@ -550,13 +565,15 @@ def p_r_seen_return(p):
 def p_r_start_func_call(p):
   'r_start_func_call : '
   e = sq.start_func_call(p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_attribute_call(p):
   'r_attribute_call : '
   e = sq.attribute_call(p[-1])
-  if e: handle_error(p.lineno(1), p.lexpos(1), e)
+  if e:
+    handle_error(p.lineno(1), p.lexpos(1), e)
 
 
 def p_r_start_params(p):
@@ -567,25 +584,29 @@ def p_r_start_params(p):
 def p_r_pass_param(p):
   'r_pass_param : '
   e = sq.pass_param()
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_next_param_pass(p):
   'r_next_param_pass : '
   e = sq.prepare_upcoming_param()
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_done_param_pass(p):
   'r_done_param_pass : '
   e = sq.done_param_pass()
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_switch_instance(p):
   'r_switch_instance : '
   e = sq.switch_instance(p[-1])
-  if e: handle_error(p.lineno(-1), p.lexpos(-1), e)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 # Syntax error detection rules.
@@ -632,6 +653,7 @@ def handle_error(line, lexpos, mssg):
   print(mssg)
   recover_parser(parser)
 
+
 def p_error(p):
   global error
   error = True
@@ -651,6 +673,7 @@ def parse_string(s):
   input_str = s
   parser.parse(s, tracking=True)
 
+
 def generate_output():
   if not error:
     pp.pprint(sq.classes)
@@ -659,7 +682,8 @@ def generate_output():
       print(qCount, q, '\t\t', vq)
       qCount += 1
 
-  if error: return
+  if error:
+    return
   output = sq.generate_output()
-  #pp.pprint(output)
+  # pp.pprint(output)
   return str(output)
