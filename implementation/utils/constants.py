@@ -33,9 +33,9 @@ func_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL, Types.VOID)
 
 
 class Access(Enum):
-  PUBLIC = 'public'
-  PRIVATE = 'private'
-  PROTECTED = 'protected'
+  PUBLIC = auto()
+  PRIVATE = auto()
+  PROTECTED = auto()
 
 str_access = {
   'public' : Access.PUBLIC,
