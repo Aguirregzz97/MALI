@@ -203,7 +203,7 @@ def p_path(p):
 def p_path_aux(p):
   '''path_aux : ID r_switch_instance DOT path_aux
               | ID r_start_func_call param_pass
-              | INIT r_start_func_call param_pass
+              | INIT r_start_init_call param_pass
               | ID r_attribute_call'''
   add_to_tree('path_aux', p)
 
@@ -566,6 +566,13 @@ def p_r_seen_return(p):
 def p_r_start_func_call(p):
   'r_start_func_call : '
   e = sq.start_func_call(p[-1])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_start_init_call(p):
+  'r_start_init_call : '
+  e = sq.start_func_call(p[-1], is_init=True)
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
 

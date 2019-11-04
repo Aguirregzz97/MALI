@@ -46,6 +46,7 @@ class Perro extends Animal {
 
 var {
   int cont;
+  Perro perro;
 }
 
 func void printAnimal(Animal a) {
@@ -112,6 +113,9 @@ main {
   y = calculateA(5);
 
   printAlgo();
+
+  perro.init(6, 'l', 'c');
+  perro.Ladrar();
 
 
 }

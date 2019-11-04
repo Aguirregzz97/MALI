@@ -14,8 +14,6 @@ current_function = current_class['#funcs']['#attributes']
 current_access = None
 current_type = None
 is_param = False
-current_x = None
-current_y = None
 param_count = 0
 var_count = 0
 var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
@@ -193,8 +191,12 @@ def populate_aux(class_prefix, function_prefix, operand, mark_assigned=False):
     operand.set_error(f'Variable {operand.get_raw()} not in scope.')
 
 
-def populate_attribute(operand):
-  populate_aux(calling_class, calling_function, operand)
+def populate_attribute(operand, just_attributes=False):
+  if just_attributes:
+    find_var_and_populate_operand(
+        operand, calling_class['#funcs']['#attributes']['#vars'], False, True)
+  else:
+    populate_aux(calling_class, calling_function, operand)
 
 
 def populate_non_constant_operand(operand, mark_assigned=False):
@@ -434,12 +436,12 @@ def call_parent(parent):
 def finish_parent_call():
   global calling_class, calling_function, operands, types
   calling_class = current_class
-  calling_function = current_function
+  calling_function = None
   operands.append(Types.VOID)
   types.append(Types.VOID)
 
 
-def start_func_call(func_name):
+def start_func_call(func_name, is_init=False):
   global calling_class, calling_function
   if func_name in calling_class['#funcs']:
     calling_function = calling_class['#funcs'][func_name]
@@ -525,7 +527,7 @@ def finish_call():
     types.append(operand.get_type())
 
   calling_class = current_class
-  calling_function = current_function
+  calling_function = None
 
 
 def switch_func(func_name):
@@ -536,10 +538,15 @@ def switch_func(func_name):
 def switch_instance(instance):
   global calling_class, calling_function
 
-  calling_function = current_function
-
   operand = Operand(instance)
-  populate_attribute(operand)
+
+  if not calling_function:
+    calling_function = current_function
+    populate_attribute(operand)
+  else:
+    calling_function = calling_class['#funcs']['#attributes']
+    populate_attribute(operand, True)
+
   class_type = operand.get_type()
   if operand.get_error():
     return operand.get_error()
