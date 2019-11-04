@@ -49,7 +49,7 @@ def p_classblock(p):
 
 
 def p_attributes(p):
-  '''attributes : ATTR LEFT_B attr_dec RIGHT_B r_end_vars'''
+  '''attributes : ATTR LEFT_B attr_dec RIGHT_B'''
   add_to_tree('attributes', p)
 
 
@@ -85,7 +85,7 @@ def p_access(p):
 
 
 def p_vars(p):
-  '''vars : VAR LEFT_B vars_dec RIGHT_B r_end_vars'''
+  '''vars : VAR LEFT_B vars_dec RIGHT_B'''
   add_to_tree('vars', p)
 
 
@@ -407,12 +407,12 @@ def p_r_seen_init(p):
 
 def p_r_seen_param(p):
   'r_seen_param : '
-  sq.set_param(True)
+  sq.switch_param(True)
 
 
 def p_r_finish_param(p):
   'r_finish_param : '
-  sq.set_param(False)
+  sq.switch_param(False)
 
 
 def p_r_call_parent(p):
@@ -532,11 +532,6 @@ def p_r_seen_while(p):
 def p_r_seen_end_while(p):
   'r_seen_end_while : '
   sq.register_end_while()
-
-
-def p_r_end_vars(p):
-  'r_end_vars : '
-  sq.end_vars()
 
 
 def p_r_start_func(p):

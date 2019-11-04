@@ -15,7 +15,6 @@ current_access = None
 current_type = None
 is_param = False
 param_count = 0
-var_count = 0
 var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
 temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, temp_types)
 
@@ -70,14 +69,14 @@ def seen_type(new_type):
 
 
 def var_name(var_name):
-  global param_count, var_count
+  global param_count
   if var_name in current_function['#vars']:
     return f"Redeclared variable: {var_name}"
   else:
     if is_param:
-      param_count += 1
+      current_function['#param_count'] += 1
     else:
-      var_count += 1
+      current_function['#var_count'] += 1
     address = var_avail.next(current_type)
     if not address:
       return 'Too many variables.'
@@ -91,13 +90,9 @@ def var_name(var_name):
         new_var_dict(current_type, address-adjust, current_access))
 
 
-def set_param(params_ahead):
-  global param_count, is_param
-  if params_ahead:
-    param_count = 0
-  else:
-    current_function['#param_count'] = param_count
-  is_param = params_ahead
+def switch_param(reading_params):
+  global is_param
+  is_param = reading_params
 
 
 def set_access():
@@ -372,12 +367,6 @@ def register_end_while():
   quadruples[end][3] = q_count
   ret = jumps.pop()
   generate_quadruple(Operations.GOTO, None, None, ret)
-
-
-def end_vars():
-  global var_count
-  current_function['#var_count'] = var_count
-  var_count = 0
 
 
 def register_function_beginning():
