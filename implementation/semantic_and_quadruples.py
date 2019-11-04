@@ -170,17 +170,17 @@ def find_var_and_populate_operand(operand, prefix, mark_assigned,
     return True
 
 
-def populate_attribute(operand):
+def populate_aux(class_prefix, function_prefix, operand, mark_assigned=False):
   # Search for var in function's local vars.
-  function_vars = calling_function['#vars']
+  function_vars = function_prefix['#vars']
   if find_var_and_populate_operand(operand, function_vars, False):
     return
   # Search for var in the attributes from the class.
-  class_attributes = calling_class['#funcs']['#attributes']['#vars']
+  class_attributes = class_prefix['#funcs']['#attributes']['#vars']
   if find_var_and_populate_operand(operand, class_attributes, False):
     return
   # Search for var in the attributes of inherited classes.
-  curr_class = calling_class['#parent']
+  curr_class = class_prefix['#parent']
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
     if find_var_and_populate_operand(operand, class_attributes, False, True):
@@ -191,26 +191,12 @@ def populate_attribute(operand):
     operand.set_error(f'Variable {operand.get_raw()} not in scope.')
 
 
-def populate_non_constant_operand(operand, mark_assigned=False):
-  # Search for var in function's local vars.
-  function_vars = current_function['#vars']
-  if find_var_and_populate_operand(operand, function_vars, mark_assigned):
-    return
-  # Search for var in the attributes from the class.
-  class_attributes = current_class['#funcs']['#attributes']['#vars']
-  if find_var_and_populate_operand(operand, class_attributes, mark_assigned):
-    return
-  # Search for var in the attributes of inherited classes.
-  curr_class = current_class['#parent']
-  while curr_class:
-    class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
-    if find_var_and_populate_operand(operand, class_attributes, mark_assigned,
-                                     True):
-      return
-    curr_class = classes[curr_class]['#parent']
+def populate_attribute(operand):
+  populate_aux(calling_class, calling_function, operand)
 
-  if not operand.get_error():
-    operand.set_error(f'Variable {operand.get_raw()} not in scope.')
+
+def populate_non_constant_operand(operand, mark_assigned=False):
+  populate_aux(current_class, current_function, operand, mark_assigned)
 
 
 def get_or_create_cte_address(value, val_type):
@@ -274,7 +260,7 @@ def build_temp_operand(op_type):
 
 
 def solve_operation_or_continue(ops):
-  global operators, types, operands
+  global operators, operands, types
   operator = top(operators)
   if operator in ops:
     right_operand = operands.pop()
@@ -299,7 +285,7 @@ def pop_fake_bottom():
 
 
 def do_assign(result):
-  global operators, types, operands
+  global operators, operands, types
   left_operand = operands.pop()
   left_type = types.pop()
   result_operand = Operand(result)
@@ -316,6 +302,7 @@ def do_assign(result):
 
 
 def do_write(s):
+  global operands, types
   if s:
     operand = Operand(s)
     operand.set_type(Types.CTE_STRING)
@@ -336,6 +323,7 @@ def do_read():
 
 
 def register_condition():
+  global operands, types
   exp_type = types.pop()
   if exp_type != Types.BOOL:
     return 'Evaluated expression is not boolean'
@@ -399,7 +387,7 @@ def register_func_end(is_main=False):
 
 
 def register_return():
-  global returns_count
+  global returns_count, operands, types
   function_type = current_function['#type']
   if function_type == Types.VOID:
     return 'Void function cannot return a value'
@@ -425,7 +413,7 @@ def call_parent(parent):
 
 
 def finish_parent_call():
-  global calling_class, calling_function
+  global calling_class, calling_function, operands, types
   calling_class = current_class
   calling_function = current_function
   operands.append(Types.VOID)
@@ -455,6 +443,7 @@ def start_param_collection():
 
 
 def pass_param():
+  global operands, types
   param = list(calling_function['#vars'].values())[param_count]
   param_type = param['#type']
   argument = operands.pop()
@@ -494,7 +483,7 @@ def attribute_call(attribute):
 
 
 def finish_call():
-  global calling_class, calling_function
+  global calling_class, calling_function, operands, types
 
   generate_quadruple(Operations.EXIT_INSTANCES, None, None, None)
 
