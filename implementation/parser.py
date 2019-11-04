@@ -49,7 +49,7 @@ def p_classblock(p):
 
 
 def p_attributes(p):
-  '''attributes : ATTR r_seen_attribute LEFT_B attr_dec RIGHT_B r_end_vars'''
+  '''attributes : ATTR LEFT_B attr_dec RIGHT_B r_end_vars'''
   add_to_tree('attributes', p)
 
 
@@ -374,11 +374,6 @@ def p_r_finish_class(p):
   sq.finish_class()
 
 
-def p_r_seen_attribute(p):
-  'r_seen_attribute : '
-  sq.seen_func(func_name='#attributes')
-
-
 def p_r_seen_access(p):
   'r_seen_access : '
   sq.seen_access(new_access=p[-1])
@@ -688,4 +683,5 @@ def generate_output():
     return
   output = sq.generate_output()
   # pp.pprint(output)
+  # out = eval(str(output))
   return str(output)

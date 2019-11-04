@@ -15,14 +15,14 @@ CONSTANT_UPPER_LIMIT = 24999
 
 # Language data types.
 class Types(Enum):
-  INT = auto()
-  FLOAT = auto()
-  CHAR = auto()
-  BOOL = auto()
-  CTE_STRING = auto()
-  CLASS = auto()
-  VOID = auto()
-  READ = auto()
+  INT = 'int'
+  FLOAT = 'float'
+  CHAR = 'char'
+  BOOL = 'bool'
+  CTE_STRING = 'cte_string'
+  CLASS = 'class'
+  VOID = 'void'
+  READ = 'read'
 
 
 var_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL, Types.CLASS)

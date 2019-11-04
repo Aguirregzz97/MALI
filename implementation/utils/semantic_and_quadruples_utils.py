@@ -24,8 +24,6 @@ def new_func_dict(name, func_type):
       '#type': func_type,
       '#param_count': 0,
       '#var_count': 0,
-      '#var_avail': Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types),
-      '#temp_avail': Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, temp_types),
       '#vars': {}
   }
   return func_dict

@@ -18,6 +18,8 @@ current_x = None
 current_y = None
 param_count = 0
 var_count = 0
+var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
+temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, temp_types)
 
 
 def seen_class(class_name):
@@ -45,13 +47,15 @@ def finish_class():
 
 
 def seen_func(func_name):
-  global func_size, current_class, current_function
+  global func_size, current_class, current_function, var_avail, temp_avail
   func_size = 0
   if func_name in current_class['#funcs']:
     return f"Redeclared function {func_name}"
   else:
     current_class['#funcs'][func_name] = new_func_dict(func_name, current_type)
     current_function = current_class['#funcs'][func_name]
+  var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
+  temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, temp_types)
 
 
 def seen_access(new_access):
@@ -76,7 +80,7 @@ def var_name(var_name):
       param_count += 1
     else:
       var_count += 1
-    address = current_function['#var_avail'].next(current_type)
+    address = var_avail.next(current_type)
     adjust = 0
     if current_function['#name'] == '#attributes':
       adjust = INSTANCE_ADJUSTMENT
@@ -110,7 +114,8 @@ visual_quadruples = [[Operations.GOTO, None, None, None]]
 jumps = []
 returns_count = 0
 q_count = 1
-const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT, const_types)
+const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT,
+                        const_types)
 constant_addresses = {}
 calling_class = None
 calling_function = None
@@ -259,7 +264,7 @@ def register_operator(operator):
 
 def build_temp_operand(op_type):
   global current_function
-  address = current_function['#temp_avail'].next(op_type)
+  address = temp_avail.next(op_type)
   current_function['#vars'][address] = new_var_dict(op_type, address)
   current_function['#var_count'] += 1
   operand = Operand()
@@ -332,7 +337,6 @@ def do_read():
 
 def register_condition():
   exp_type = types.pop()
-  print(exp_type)
   if exp_type != Types.BOOL:
     return 'Evaluated expression is not boolean'
   result = operands.pop()
@@ -548,12 +552,13 @@ def generate_output():
     if v1['#parent'] == '#global':
       v1['#parent'] = None
     for v2 in v1['#funcs'].values():
-      del v2['#var_avail']
-      del v2['#temp_avail']
+      v2['#type'] = v2['#type'].value
       if '#access' in v2:
         del v2['#access']
       for v3 in v2['#vars'].values():
         del v3['#assigned']
+        if type(v3['#type']) != str:
+          v3['#type'] = v3['#type'].value
         if '#access' in v3:
           del v3['#access']
 
