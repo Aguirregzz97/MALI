@@ -73,10 +73,6 @@ def var_name(var_name):
   if var_name in current_function['#vars']:
     return f"Redeclared variable: {var_name}"
   else:
-    if is_param:
-      current_function['#param_count'] += 1
-    else:
-      current_function['#var_count'] += 1
     address = var_avail.next(current_type)
     if not address:
       return 'Too many variables.'
@@ -88,6 +84,12 @@ def var_name(var_name):
 
     current_function['#vars'][var_name] = (
         new_var_dict(current_type, address-adjust, current_access))
+
+    if is_param:
+      current_function['#param_count'] += 1
+      current_function['#vars'][var_name]['#assigned'] = True
+    else:
+      current_function['#var_count'] += 1
 
 
 def switch_param(reading_params):
@@ -147,24 +149,23 @@ def generate_quadruple(a, b, c, d):
   visual_quadruples.append([a.name, v_left_operand, v_right_operand, v_result])
 
 
-def find_var_and_populate_operand(operand, prefix, mark_assigned, access):
-  print('Entra', operand.get_raw())
+def find_var_and_populate_operand(operand, prefix, check_assigned,
+                                  mark_assigned, access):
   raw_operand = operand.get_raw()
   var = prefix.get(raw_operand, None)
   if not var:
     return False
-  if mark_assigned:
-    var['#assigned'] = True
-  if not var['#assigned']:
-    operand.set_error(f'Variable {raw_operand} used before assignment')
-    return True
-  elif var['#access'] not in access:
-    print(var['#access'])
+  if check_assigned:
+    if mark_assigned:
+      var['#assigned'] = True
+    if not var['#assigned']:
+      operand.set_error(f'Variable {raw_operand} used before assignment')
+      return True
+  if var['#access'] not in access:
     operand.set_error(f'Variable {raw_operand} cannot be accessed')
     return True
   else:
     operand.set_type(var['#type'])
-    print(operand.get_raw(), var['#address'])
     operand.set_address(var['#address'])
     return True
 
@@ -174,38 +175,37 @@ def populate_call(operand):
   curr_class = calling_class['#name']
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
-    if find_var_and_populate_operand(operand, class_attributes, False,
+    if find_var_and_populate_operand(operand, class_attributes, False, False,
                                      [Access.PUBLIC]):
       return
     curr_class = classes[curr_class]['#parent']
 
   if not operand.get_error():
-    operand.set_error(f'Variable {operand.get_raw()} not in scope.')
+    operand.set_error(f'Instance {operand.get_raw()} not in scope.')
 
 
-def populate_local_var(operand, mark_assigned=False):
+def populate_local_var(operand, check_assigned=True, mark_assigned=False):
   # Search for var in function's local vars.
   function_vars = current_function['#vars']
-  if find_var_and_populate_operand(operand, function_vars, mark_assigned,
-                                   [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE]):
+  if find_var_and_populate_operand(operand, function_vars, check_assigned,
+                                   mark_assigned, [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE]):
     return
   # Search for var in the attributes from the class.
   class_attributes = current_class['#funcs']['#attributes']['#vars']
-  if find_var_and_populate_operand(operand, class_attributes, mark_assigned,
-                                   [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE]):
+  if find_var_and_populate_operand(operand, class_attributes, check_assigned,
+                                   mark_assigned, [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE]):
     return
   # Search for var in the attributes of inherited classes.
   curr_class = current_class['#parent']
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
-    if find_var_and_populate_operand(operand, class_attributes, mark_assigned,
-                                     [Access.PUBLIC, Access.PROTECTED]):
+    if find_var_and_populate_operand(operand, class_attributes, check_assigned,
+                                     mark_assigned, [Access.PUBLIC, Access.PROTECTED]):
       return
     curr_class = classes[curr_class]['#parent']
 
   if not operand.get_error():
     operand.set_error(f'Variable {operand.get_raw()} not in scope.')
-
 
 
 def get_or_create_cte_address(value, val_type):
@@ -311,7 +311,7 @@ def do_assign(result):
   left_operand = operands.pop()
   left_type = types.pop()
   result_operand = Operand(result)
-  populate_local_var(result_operand, True)
+  populate_local_var(result_operand, mark_assigned=True)
   if result_operand.get_error():
     return result_operand.get_error()
   result_type = result_operand.get_type()
@@ -539,7 +539,7 @@ def switch_instance(instance):
 
   if not calling_function:
     calling_function = current_function
-    populate_local_var(operand)
+    populate_local_var(operand, check_assigned=False)
   else:
     populate_call(operand)
 

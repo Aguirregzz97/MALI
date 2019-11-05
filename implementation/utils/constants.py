@@ -13,6 +13,7 @@ INSTANCE_ADJUSTMENT = 5000
 CONSTANT_LOWER_LIMIT = 20000
 CONSTANT_UPPER_LIMIT = 24999
 
+
 # Language data types.
 class Types(Enum):
   INT = 'int'
