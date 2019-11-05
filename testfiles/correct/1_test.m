@@ -1,6 +1,7 @@
 class Animal {
   attr {
     public int edad;
+    private int anios_captivo;
   }
 
   init(int e) {
@@ -54,7 +55,8 @@ func void printAnimal(Animal a) {
     int x1, y2;
   }
 
-  #write a.nombre;
+  write a.edad;
+  #write a.anios_captivo;
 }
 
 func void printAlgo() {

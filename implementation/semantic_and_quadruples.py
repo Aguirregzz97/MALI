@@ -98,6 +98,7 @@ def switch_param(reading_params):
 
 
 def set_access():
+  global current_function
   current_function['#access'] = current_access
 
 
@@ -163,10 +164,10 @@ def find_and_populate(operand, prefix, access, check_assigned_var=False,
     if mark_assigned:
       var['#assigned'] = True
     elif not var['#assigned']:
-      operand.set_error(f'Variable {raw_operand} used before assignment')
+      operand.set_error(f'Variable {raw_operand} used before assignment.')
       return True
   if var['#access'] not in access:
-    operand.set_error(f'Variable {raw_operand} cannot be accessed')
+    operand.set_error(f'Variable {raw_operand} cannot be accessed.')
     return True
   else:
     operand.set_type(var['#type'])
@@ -185,7 +186,7 @@ def populate_call(operand, check_init_called=True):
     curr_class = classes[curr_class]['#parent']
 
   if not operand.get_error():
-    operand.set_error(f'Instance {operand.get_raw()} not in scope.')
+    operand.set_error(f'{operand.get_raw()} not in scope.')
 
 
 def populate_local_var(operand, mark_assigned=False, is_instance=False):
