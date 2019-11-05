@@ -9,6 +9,7 @@ import json
 
 import pprint
 pp = pprint.PrettyPrinter()
+pprint.sorted = lambda x, key=None: x
 
 input_str = ''
 error = False
@@ -687,10 +688,11 @@ def parse_string(s):
 def generate_output():
   if not error:
     pp.pprint(sq.classes)
-    qCount = 0
+    q_count = 0
     for q, vq in zip(sq.quadruples, sq.visual_quadruples):
-      print(qCount, q, '\t\t', vq)
-      qCount += 1
+      print('{0:<5} {1:<40} {2:<40}'.format(
+          str(q_count) + ':', str(q), str(vq)))
+      q_count += 1
 
   if error:
     return
