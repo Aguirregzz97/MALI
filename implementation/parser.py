@@ -4,7 +4,7 @@ import ply.yacc as yacc
 from implementation.scanner import tokens
 import implementation.semantic_and_quadruples as sq
 from implementation.utils.parser_utils import *  # pylint: disable=unused-wildcard-import
-from implementation.utils.constants import Types, func_types, Operations, str_operations, str_access
+from implementation.utils.constants import Types, func_types, Operations, str_operations, Access, str_access
 import json
 
 import pprint
@@ -196,13 +196,13 @@ def p_call(p):
 
 def p_path(p):
   '''path : ID r_switch_instance DOT path_aux
-          | ID r_start_func_call param_pass'''
+          | ID r_start_local_func_call param_pass'''
   add_to_tree('path', p)
 
 
 def p_path_aux(p):
   '''path_aux : ID r_switch_instance DOT path_aux
-              | ID r_start_func_call param_pass
+              | ID r_start_instance_func_call param_pass
               | INIT r_start_init_call param_pass
               | ID r_attribute_call'''
   add_to_tree('path_aux', p)
@@ -558,25 +558,32 @@ def p_r_seen_return(p):
   sq.register_return()
 
 
-def p_r_start_func_call(p):
-  'r_start_func_call : '
+def p_r_start_local_func_call(p):
+  'r_start_local_func_call : '
   e = sq.start_func_call(p[-1])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_start_instance_func_call(p):
+  'r_start_instance_func_call : '
+  e = sq.start_instance_func_call(p[-1])
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_start_init_call(p):
   'r_start_init_call : '
-  e = sq.start_func_call(p[-1], is_init=True)
+  e = sq.start_instance_func_call(p[-1], is_init=True)
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_attribute_call(p):
   'r_attribute_call : '
-  e = sq.attribute_call(p[-1])
+  e = sq.instance_attribute_call(p[-1])
   if e:
-    handle_error(p.lineno(1), p.lexpos(1), e)
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_start_params(p):

@@ -116,9 +116,8 @@ const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT,
 constant_addresses = {}
 calling_class = None
 calling_function = None
-aux_current_class = None
-aux_current_function = None
 called_attribute = None
+expecting_init = False
 
 
 def address_or_else(operand, is_visual=False):
@@ -149,16 +148,21 @@ def generate_quadruple(a, b, c, d):
   visual_quadruples.append([a.name, v_left_operand, v_right_operand, v_result])
 
 
-def find_var_and_populate_operand(operand, prefix, check_assigned,
-                                  mark_assigned, access):
+def find_and_populate(operand, prefix, access, check_assigned_var=False,
+                      mark_assigned=False, check_init_called=False):
+  global expecting_init
   raw_operand = operand.get_raw()
   var = prefix.get(raw_operand, None)
   if not var:
     return False
-  if check_assigned:
+  if check_init_called:
+    if not var['#assigned']:
+      expecting_init = True
+      var['#assigned'] = True
+  if check_assigned_var:
     if mark_assigned:
       var['#assigned'] = True
-    if not var['#assigned']:
+    elif not var['#assigned']:
       operand.set_error(f'Variable {raw_operand} used before assignment')
       return True
   if var['#access'] not in access:
@@ -170,13 +174,13 @@ def find_var_and_populate_operand(operand, prefix, check_assigned,
     return True
 
 
-def populate_call(operand):
+def populate_call(operand, check_init_called=True):
   # Search for var in the attributes of the class and its parents.
   curr_class = calling_class['#name']
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
-    if find_var_and_populate_operand(operand, class_attributes, False, False,
-                                     [Access.PUBLIC]):
+    if find_and_populate(operand, class_attributes, [Access.PUBLIC], False,
+                         False, check_init_called):
       return
     curr_class = classes[curr_class]['#parent']
 
@@ -184,23 +188,27 @@ def populate_call(operand):
     operand.set_error(f'Instance {operand.get_raw()} not in scope.')
 
 
-def populate_local_var(operand, check_assigned=True, mark_assigned=False):
+def populate_local_var(operand, mark_assigned=False, is_instance=False):
   # Search for var in function's local vars.
+  check_assigned_var = not is_instance
   function_vars = current_function['#vars']
-  if find_var_and_populate_operand(operand, function_vars, check_assigned,
-                                   mark_assigned, [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE]):
+  if find_and_populate(operand, function_vars,
+                       [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE],
+                       check_assigned_var, mark_assigned, is_instance):
     return
   # Search for var in the attributes from the class.
   class_attributes = current_class['#funcs']['#attributes']['#vars']
-  if find_var_and_populate_operand(operand, class_attributes, check_assigned,
-                                   mark_assigned, [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE]):
+  if find_and_populate(operand, class_attributes,
+                       [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE],
+                       check_assigned_var, mark_assigned, is_instance):
     return
   # Search for var in the attributes of inherited classes.
   curr_class = current_class['#parent']
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
-    if find_var_and_populate_operand(operand, class_attributes, check_assigned,
-                                     mark_assigned, [Access.PUBLIC, Access.PROTECTED]):
+    if find_and_populate(operand, class_attributes,
+                         [Access.PUBLIC, Access.PROTECTED],
+                         check_assigned_var, mark_assigned, is_instance):
       return
     curr_class = classes[curr_class]['#parent']
 
@@ -438,7 +446,7 @@ def finish_parent_call():
   types.append(Types.VOID)
 
 
-def start_func_call(func_name, is_init=False):
+def start_func_call(func_name):
   global calling_class, calling_function
   if func_name in calling_class['#funcs']:
     calling_function = calling_class['#funcs'][func_name]
@@ -448,9 +456,28 @@ def start_func_call(func_name, is_init=False):
     if func_name in classes[curr_class]['#funcs']:
       calling_class = classes[curr_class]
       calling_function = calling_class['#funcs'][func_name]
+      if calling_function['#access'] not in [Access.PUBLIC, Access.PROTECTED]:
+        return f"Cannot access {calling_function['#name']}."
       return
     curr_class = classes[curr_class]['#parent']
-  return f"{func_name} not defined in scope."
+  return f'{func_name} not defined in scope.'
+
+
+def start_instance_func_call(func_name, is_init=False):
+  global calling_class, calling_function, expecting_init
+  if is_init:
+    expecting_init = False
+  curr_class = calling_class['#name']
+  while curr_class:
+    if func_name in classes[curr_class]['#funcs']:
+      calling_class = classes[curr_class]
+      calling_function = calling_class['#funcs'][func_name]
+      print(calling_function)
+      if calling_function['#access'] != Access.PUBLIC:
+        return f"Cannot access {calling_function['#name']}."
+      return
+    curr_class = classes[curr_class]['#parent']
+  return f'{func_name} not defined in scope.'
 
 
 def start_param_collection():
@@ -492,8 +519,10 @@ def done_param_pass():
       Operations.GOSUB, calling_class['#name'], calling_function['#name'], None)
 
 
-def attribute_call(attribute):
+def instance_attribute_call(attribute):
   global calling_function, called_attribute
+  if expecting_init:
+    return 'Calling class member before calling init.'
   calling_function = calling_class['#funcs']['#attributes']
   called_attribute = Operand(attribute)
   populate_call(called_attribute)
@@ -535,11 +564,14 @@ def switch_func(func_name):
 def switch_instance(instance):
   global calling_class, calling_function
 
+  if expecting_init:
+    return 'Calling class member before calling init.'
+
   operand = Operand(instance)
 
   if not calling_function:
     calling_function = current_function
-    populate_local_var(operand, check_assigned=False)
+    populate_local_var(operand,  is_instance=True)
   else:
     populate_call(operand)
 

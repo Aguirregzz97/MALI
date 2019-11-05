@@ -77,10 +77,6 @@ main {
     int z,y,w,b,c;
   }
 
-  #a = Perro;
-
-  a.init(5, 's', 'c');
-
   cont = 0;
 
   w = read;
@@ -112,8 +108,10 @@ main {
 
   y = 535;
 
-  a.Ladrar();
+  a.init(5, 's', 'c');
   y = a.edad;
+  a.Ladrar();
+
   y = a.calculateB(5);
   printAlgo();
   y = calculateA(5);
