@@ -473,7 +473,6 @@ def start_instance_func_call(func_name, is_init=False):
     if func_name in classes[curr_class]['#funcs']:
       calling_class = classes[curr_class]
       calling_function = calling_class['#funcs'][func_name]
-      print(calling_function)
       if calling_function['#access'] != Access.PUBLIC:
         return f"Cannot access {calling_function['#name']}."
       return
