@@ -16,7 +16,8 @@ current_type = None
 is_param = False
 param_count = 0
 var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
-temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, temp_types)
+# TODO: Get rid of temp_avail
+temp_avail = var_avail
 
 
 def seen_class(class_name):
@@ -52,7 +53,8 @@ def seen_func(func_name):
     current_class['#funcs'][func_name] = new_func_dict(func_name, current_type)
     current_function = current_class['#funcs'][func_name]
   var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
-  temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, temp_types)
+  # TODO: ditto
+  temp_avail = var_avail
 
 
 def seen_access(new_access):
@@ -303,6 +305,7 @@ def solve_operation_or_continue(ops):
         return f'Expression returns no value.'
       return (f'Type mismatch: Invalid operation {operator} on given operands')
     temp = build_temp_operand(result_type)
+    temp.set_raw(temp.get_address())
     if temp.get_error():
       return temp.get_error()
     generate_quadruple(operator, left_operand, right_operand, temp)
@@ -337,7 +340,7 @@ def do_write(s):
   if s:
     operand = Operand(s)
     operand.set_type(Types.CTE_STRING)
-    operand.set_address(const_avail.next(Types.CTE_STRING))
+    operand.set_address(s)
   else:
     operand = operands.pop()
     types.pop()

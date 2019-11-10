@@ -10,11 +10,11 @@ if __name__ == '__main__':
   program_name = sys.argv[1]
 
   # Compile program.
-  file = open(program_name, 'r', newline='\n')
-  parse_string(file.read())
-  file.close()
-
+  with open(program_name, 'r', newline='\n') as file:
+      parse_string(file.read())
+  
   # Generate object code file.
-  file = open(program_name+'r', 'w+')
   output = generate_output()
-  if output: file.write(output)
+  if output:
+    with open(program_name + 'r', 'w') as file:
+      file.write(output)
