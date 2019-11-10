@@ -16,8 +16,6 @@ current_type = None
 is_param = False
 param_count = 0
 var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
-# TODO: Get rid of temp_avail
-temp_avail = var_avail
 
 
 def seen_class(class_name):
@@ -45,7 +43,7 @@ def finish_class():
 
 
 def seen_func(func_name):
-  global func_size, current_class, current_function, var_avail, temp_avail
+  global func_size, current_class, current_function, var_avail
   func_size = 0
   if func_name in current_class['#funcs']:
     return f"Redeclared function {func_name}"
@@ -53,8 +51,6 @@ def seen_func(func_name):
     current_class['#funcs'][func_name] = new_func_dict(func_name, current_type)
     current_function = current_class['#funcs'][func_name]
   var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
-  # TODO: ditto
-  temp_avail = var_avail
 
 
 def seen_access(new_access):
@@ -280,7 +276,7 @@ def register_operator(operator):
 def build_temp_operand(op_type):
   global current_function
   operand = Operand()
-  address = temp_avail.next(op_type)
+  address = var_avail.next(op_type)
   if not address:
     operand.set_error('Too many variables.')
   current_function['#vars'][address] = new_var_dict(op_type, address)
