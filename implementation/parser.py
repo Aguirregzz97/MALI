@@ -67,8 +67,8 @@ def p_init(p):
 
 def p_init_factor(p):
   '''init_factor : r_start_func proc_block
-                 | COLON ID r_call_parent param_pass r_finish_parent_call \
-                   r_start_func proc_block '''
+                 | COLON r_start_func ID r_call_parent param_pass \
+                   r_finish_parent_call proc_block '''
   add_to_tree('init_factor', p)
 
 

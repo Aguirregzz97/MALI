@@ -20,7 +20,7 @@ operations = [
     op_or,  # 14
     op_and,  # 15
     op_equal,  # 16
-    op_read,  # 17
+    None,  # 17 (funcion read)
     op_write,  # 18
     op_goto,  # 19
     op_gotof,  # 20
@@ -33,7 +33,7 @@ operations = [
     op_switch_instance,  # 27
     op_exit_instances,  # 28
     op_get_return,  # 29
-    op_fake_bottom  # 30
+    None,  # 30 (fake bottom)
 ]
 
 
@@ -41,12 +41,10 @@ def run(input):
   quadruples = input['quadruples']
   set_input(input)
 
-  cont = 100
-  while not should_end() or cont > 0:
+  while not should_end():
     quadruple = quadruples[get_q()]
-    print(get_q(), operations[quadruple[0]].__name__, quadruple)
+    # print(get_q(), '-', operations[quadruple[0]].__name__, quadruple)
     e = operations[quadruple[0]](quadruple[1], quadruple[2], quadruple[3])
     if e:
       print(e)
       break
-    cont -= 1

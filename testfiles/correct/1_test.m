@@ -79,9 +79,9 @@ main {
     int z,y,w,b,c;
   }
 
-  cont = 0;
+  cont = 5;
 
-  w = read;
+  w = 5;
   write w;
 
   z = 0;
@@ -104,8 +104,8 @@ main {
     write "Neither";
   };
 
-  while(cont < 5) {
-    write '1', '2', '3';
+  while(cont < 10) {
+    write "CICLO";
     cont = cont + 1;
   };
 

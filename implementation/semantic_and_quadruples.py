@@ -16,6 +16,7 @@ current_type = None
 is_param = False
 param_count = 0
 var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
+temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, var_types)
 
 
 def seen_class(class_name):
@@ -43,7 +44,7 @@ def finish_class():
 
 
 def seen_func(func_name):
-  global func_size, current_class, current_function, var_avail
+  global func_size, current_class, current_function, var_avail, temp_avail
   func_size = 0
   if func_name in current_class['#funcs']:
     return f"Redeclared function {func_name}"
@@ -51,6 +52,7 @@ def seen_func(func_name):
     current_class['#funcs'][func_name] = new_func_dict(func_name, current_type)
     current_function = current_class['#funcs'][func_name]
   var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
+  temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, var_types)
 
 
 def seen_access(new_access):
@@ -108,7 +110,7 @@ operands = []
 quadruples = [[Operations.GOTO.value, None, None, None]]
 visual_quadruples = [[Operations.GOTO.name, None, None, None]]
 jumps = []
-returns_count = 0
+pending_returns = []
 q_count = 1
 const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT,
                         const_types)
@@ -120,7 +122,7 @@ expecting_init = False
 
 
 def address_or_else(operand, is_visual=False):
-  if operand:
+  if operand is not None:
     if isinstance(operand, Operand):
       if is_visual:
         return operand.get_raw()
@@ -276,7 +278,7 @@ def register_operator(operator):
 def build_temp_operand(op_type):
   global current_function
   operand = Operand()
-  address = var_avail.next(op_type)
+  address = temp_avail.next(op_type)
   if not address:
     operand.set_error('Too many variables.')
   current_function['#vars'][address] = new_var_dict(
@@ -337,7 +339,7 @@ def do_write(s=None):
   if s:
     operand = Operand(s[1:-1])
     operand.set_type(Types.CTE_STRING)
-    operand.set_address(s)
+    operand.set_address(s[1:-1])
   else:
     operand = operands.pop()
     types.pop()
@@ -381,7 +383,7 @@ def register_while():
 
 def register_end_while():
   end = jumps.pop()
-  quadruples[end][3] = q_count
+  quadruples[end][3] = q_count+1
   ret = jumps.pop()
   generate_quadruple(Operations.GOTO, None, None, ret)
 
@@ -401,12 +403,11 @@ def register_main_beginning():
 
 
 def register_func_end(is_main=False):
-  global returns_count
-  if current_function['#type'] != Types.VOID and returns_count == 0:
+  global pending_returns
+  if current_function['#type'] != Types.VOID and len(pending_returns) == 0:
     return f"No return statement on non-void function {current_function['#name']}"
-  while returns_count:
-    quadruples[jumps.pop()][3] = q_count
-    returns_count -= 1
+  while len(pending_returns):
+    quadruples[pending_returns.pop()][3] = q_count
   if is_main:
     generate_quadruple(Operations.END, None, None, None)
   else:
@@ -414,7 +415,7 @@ def register_func_end(is_main=False):
 
 
 def register_return():
-  global returns_count, operands, types
+  global operands, types, pending_returns
   function_type = current_function['#type']
   if function_type == Types.VOID:
     return 'Void function cannot return a value'
@@ -422,10 +423,8 @@ def register_return():
   return_type = types.pop()
   if not semantic_cube[function_type][return_type][Operations.EQUAL]:
     return f'Cannot return type {return_type} as {function_type}'
+  pending_returns.append(q_count)
   generate_quadruple(Operations.RETURN, return_val, None, None)
-  jumps.append(q_count)
-  returns_count += 1
-  generate_quadruple(Operations.GOTO, None, None, None)
 
 
 def call_parent(parent):
@@ -494,11 +493,9 @@ def pass_param():
   param_type = param['#type']
   argument = operands.pop()
   arg_type = types.pop()
-  if param_type != arg_type:
-    print(param_type, arg_type)
+  if not semantic_cube[arg_type][param_type][Operations.EQUAL]:
     return (f"{calling_function['#name']} expecting type {param_type.value} "
             + f'for parameter {param_count+1}')
-  # TODO: en el ejemplo param se imprime el cuadruplo como 'param#'
   generate_quadruple(Operations.PARAM, argument, None, param_count)
 
 
@@ -529,7 +526,7 @@ def instance_attribute_call(attribute):
   populate_call(called_attribute)
   if called_attribute.get_error():
     return called_attribute.get_error()
-  generate_quadruple(Operations.RETURN, called_attribute, None, None)
+  generate_quadruple(Operations.RETURN, called_attribute, None, q_count+1)
 
 
 def finish_call():
