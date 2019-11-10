@@ -256,6 +256,7 @@ def find_and_build_operand(raw_operand):
         operand.set_error('Too many char constants.')
       operand.set_type(Types.CHAR)
       operand.set_address(address)
+      operand.set_raw(raw_operand[1:-1])
     else:
       populate_local_var(operand)
   return operand

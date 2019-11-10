@@ -1,5 +1,6 @@
 from vm_implementation.utils.memory import Memory  # pylint: disable=unused-wildcard-import
 
+
 memory: Memory
 symbol_table = None
 q = 0
@@ -120,9 +121,13 @@ def op_equal(a, b, c):
 
 def op_write(a, b, c):
   if type(c) == str:
-    print(c)
+    print(c, end='')
   else:
-    print(memory.get(c))
+    elem = memory.get(c)
+    if elem == '$':
+      print()
+    else:
+      print(memory.get(c), end='')
   next_q()
 
 

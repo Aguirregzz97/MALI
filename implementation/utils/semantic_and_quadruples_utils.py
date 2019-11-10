@@ -80,8 +80,6 @@ class Operand:
     self.__err = None
 
   def set_raw(self, raw):
-    if (self.__raw):
-      raise Exception('raw can only be defined once')
     self.__raw = raw
 
   def set_address(self, addr):

@@ -111,6 +111,8 @@ class Memory:
         self.set(v['#address'], None)
 
     self.__procedure_stack.append({
+        'class_name': class_name,  # TODO: delete (for display purpose only)
+        'func_name': func_name,  # TODO: delete (for display purpose only)
         'vars': Values(),
         'temps': Values()
     })
@@ -119,11 +121,12 @@ class Memory:
     for v in var:
       self.set(v['#address'], None)
 
+
+
   def clear_procedure(self):
     procedure_instances = self.__procedure_stack[-1]['vars'].get_class_slots()
     for instance in self.__instances:
       if instance in procedure_instances:
-        # TODO: borrar recursivamente instancias dentro de intancias
         del instance
     self.__procedure_stack.pop()
 
@@ -140,3 +143,18 @@ class Memory:
     return_value = self.__return
     self.__return = None
     return return_value
+
+  def print_memory(self):
+    print('***********************************************')
+    print("Data segment:")
+    self.__data_segment.print_values()
+    print("Constant segment:")
+    self.__constant_segment.print_values()
+    for instance in self.__instances.values():
+      print("Instance")
+      instance.print_values()
+    for procedure in self.__procedure_stack:
+      print(procedure['class_name'], procedure['func_name'])
+      procedure['vars'].print_values()
+      procedure['temps'].print_values()
+

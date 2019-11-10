@@ -32,8 +32,8 @@ class Perro extends Animal {
     var {
       int z;
     }
-    write "Woof Woof";
-    write edad;
+    write "Woof Woof", '$';
+    write edad, '$';
   }
 
   public int calculateB(int a){
@@ -61,7 +61,7 @@ func void printAnimal(Animal a) {
 
 func void printAlgo() {
 
-  write "Algo";
+  write "Algo", '$';
 }
 
 func int calculateA(int b){
@@ -82,7 +82,7 @@ main {
   cont = 5;
 
   w = 5;
-  write w;
+  write w, '$';
 
   z = 0;
   y = 0;
@@ -92,20 +92,20 @@ main {
 
   z = w * y + b * c + 100 * (7.8 + 2);
 
-  write z;
+  write z, '$';
 
   if (y > b) {
-    write "True";
+    write "True", '$';
   } elif (y < b) {
-    write "False";
+    write "False", '$';
   } elif (c < b) {
-    write "False2";
+    write "False2", '$';
   } else {
-    write "Neither";
+    write "Neither", '$';
   };
 
   while(cont < 10) {
-    write "CICLO";
+    write "CICLO", '$';
     cont = cont + 1;
   };
 
