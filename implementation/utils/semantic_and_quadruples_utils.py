@@ -6,9 +6,9 @@ from implementation.utils.constants import *  # pylint: disable=unused-wildcard-
 # Symbol table utils.
 
 
-def new_var_dict(var_type, address, access=Access.PUBLIC):
+def new_var_dict(var_type, address, access=Access.PUBLIC, assigned=False):
   var_dict = {
-      '#assigned': False,
+      '#assigned': assigned,
       '#type': var_type,
       '#address': address,
       '#access': access

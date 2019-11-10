@@ -279,7 +279,8 @@ def build_temp_operand(op_type):
   address = var_avail.next(op_type)
   if not address:
     operand.set_error('Too many variables.')
-  current_function['#vars'][address] = new_var_dict(op_type, address)
+  current_function['#vars'][address] = new_var_dict(
+      op_type, address, assigned=True)
   current_function['#var_count'] += 1
   operand.set_address(address)
   operand.set_type(op_type)
@@ -346,7 +347,7 @@ def do_write(s):
 def do_read():
   global operands, types
   operand = Operand('read')
-  operand.set_address(Operations.READ.value)
+  operand.set_address('read')
   operand.set_type(Types.READ)
   operands.append(operand)
   types.append(Types.READ)

@@ -27,7 +27,6 @@ class Types(Enum):
 
 
 var_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL, Types.CLASS)
-temp_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL)
 const_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL,
                Types.CTE_STRING)
 func_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL, Types.VOID)

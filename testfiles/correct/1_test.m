@@ -82,6 +82,7 @@ main {
   cont = 0;
 
   w = read;
+  write w;
 
   z = 0;
   y = 0;
@@ -89,7 +90,9 @@ main {
   b = 0;
   c = 0;
 
-  z = w * y + b * c + 100 * (7.8 + 'a');
+  z = w * y + b * c + 100 * (7.8 + 2);
+
+  write z;
 
   if (y > b) {
     write "True";

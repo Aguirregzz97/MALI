@@ -1,85 +1,109 @@
-from vm_implementation.constants import *  # pylint: disable=unused-wildcard-import
+from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
 
 class Values:
   def __init__(self):
-    self.int_slots = {}
-    self.float_slots = {}
-    self.char_slots = {}
-    self.bool_slots = {}
-    self.class_slots = {}
+    self.__int_slots = {}
+    self.__float_slots = {}
+    self.__char_slots = {}
+    self.__bool_slots = {}
+    self.__class_slots = {}
 
   def set(self, address, value):
-    if int_lower_limit <= address <= int_upper_limit:
-      self.int_slots[address] = value
-    elif float_lower_limit <= address <= float_upper_limit:
-      self.float_slots[address] = value
-    elif char_lower_limit <= address <= char_upper_limit:
-      self.char_slots[address] = value
-    elif bool_lower_limit <= address <= bool_upper_limit:
-      self.bool_slots[address] = value
-    elif class_lower_limit <= address <= class_upper_limit:
-      self.class_slots[address] = value
+    if INT_LOWER_LIMIT <= address <= INT_UPPER_LIMIT:
+      self.__int_slots[address] = value
+    elif FLOAT_LOWER_LIMIT <= address <= FLOAT_UPPER_LIMIT:
+      self.__float_slots[address] = value
+    elif CHAR_LOWER_LIMIT <= address <= CHAR_UPPER_LIMIT:
+      self.__char_slots[address] = value
+    elif BOOL_LOWER_LIMIT <= address <= BOOL_UPPER_LIMIT:
+      self.__bool_slots[address] = value
+    elif CLASS_LOWER_LIMIT <= address <= CLASS_UPPER_LIMIT:
+      self.__class_slots[address] = value
     else:
-      raise Exception("Valor fuera del rango de memoria de tipos")
+      raise Exception(
+          f"Set {address}: Valor fuera del rango de memoria de tipos")
 
   def get(self, address):
-    if int_lower_limit <= address <= int_upper_limit:
-      return self.int_slots[address]
-    elif float_lower_limit <= address <= float_upper_limit:
-      return self.float_slots[address]
-    elif char_lower_limit <= address <= char_upper_limit:
-      return self.char_slots[address]
-    elif bool_lower_limit <= address <= bool_upper_limit:
-      return self.bool_slots[address]
-    elif class_lower_limit <= address <= class_upper_limit:
-      return self.class_slots[address]
+    if INT_LOWER_LIMIT <= address <= INT_UPPER_LIMIT:
+      return self.__int_slots[address]
+    elif FLOAT_LOWER_LIMIT <= address <= FLOAT_UPPER_LIMIT:
+      return self.__float_slots[address]
+    elif CHAR_LOWER_LIMIT <= address <= CHAR_UPPER_LIMIT:
+      return self.__char_slots[address]
+    elif BOOL_LOWER_LIMIT <= address <= BOOL_UPPER_LIMIT:
+      return self.__bool_slots[address]
+    elif CLASS_LOWER_LIMIT <= address <= CLASS_UPPER_LIMIT:
+      return self.__class_slots[address]
     else:
-      raise Exception("Valor fuera del rango de memoria de tipos")
+      raise Exception(
+          f"Get {address}: Valor fuera del rango de memoria de tipos")
+
+  def print_values(self):
+    print('int', self.__int_slots)
+    print('float', self.__float_slots)
+    print('char', self.__char_slots)
+    print('bool', self.__bool_slots)
+    print('class', self.__class_slots)
+    print()
 
 
 class Memory:
-  def __init__(self):
-    self.data_segment = Values()
-    self.constant_segment = Values()
-    self.instances = {}
-    self.procedure_stack = []
-    self.current_instance = None
+  def __init__(self, symbol_table):
+    self.__data_segment = Values()
+    self.__constant_segment = Values()
+    self.__instances = {}
+    self.__procedure_stack = []
+    self.__symbol_table = symbol_table
+    self.__current_instance = None
 
   def set(self, address, value):
-    if data_lower_limit <= address <= data_upper_limit:
-      self.data_segment.set(address - data_lower_limit, value)
-    elif procedure_lower_limit <= address <= procedure_upper_limit:
-      self.procedure_stack[-1].set(address - procedure_lower_limit, value)
-    elif class_lower_limit <= address <= class_upper_limit:
-      self.current_instance = address - class_lower_limit
-      self.instances[address - class_lower_limit] = Values()
-    elif instance_lower_limit <= address <= class_upper_limit:
-      if not self.current_instance:
+    if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
+      self.__data_segment.set(address - DATA_LOWER_LIMIT, value)
+    elif PROCEDURE_LOWER_LIMIT <= address <= PROCEDURE_UPPER_LIMIT:
+      self.__procedure_stack[-1].set(address - PROCEDURE_LOWER_LIMIT, value)
+    elif CLASS_LOWER_LIMIT <= address <= CLASS_UPPER_LIMIT:
+      self.__current_instance = address - CLASS_LOWER_LIMIT
+      self.__instances[address - CLASS_LOWER_LIMIT] = Values()
+    elif INSTANCE_LOWER_LIMIT <= address <= INSTANCE_UPPER_LIMIT:
+      if not self.__current_instance:
         raise Exception("Instance not set")
-      self.instances[self.current_instance].set(
-          address - instance_lower_limit, value)
-    elif cte_lower_limit <= address <= cte_upper_limit:
-      self.constant_segment.set(address - cte_lower_limit, value)
+      self.__instances[self.__current_instance].set(
+          address - INSTANCE_LOWER_LIMIT, value)
+    elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
+      self.__constant_segment.set(address - CTE_LOWER_LIMIT, value)
     else:
-      print(address)
-      raise Exception("Valor fuera del rango de memorias")
+      raise Exception(f"Set {address}: valor fuera del rango de memorias")
 
   def get(self, address):
-    if data_lower_limit <= address <= data_upper_limit:
-      self.data_segment.get(address - data_lower_limit)
-    elif procedure_lower_limit <= address <= procedure_upper_limit:
-      self.procedure_stack[-1].get(address - procedure_lower_limit)
-    elif class_lower_limit <= address <= class_upper_limit:
-      self.current_instance = address - class_lower_limit
+    if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
+      return self.__data_segment.get(address - DATA_LOWER_LIMIT)
+    elif PROCEDURE_LOWER_LIMIT <= address <= PROCEDURE_UPPER_LIMIT:
+      return self.__procedure_stack[-1].get(address - PROCEDURE_LOWER_LIMIT)
+    elif CLASS_LOWER_LIMIT <= address <= CLASS_UPPER_LIMIT:
+      self.__current_instance = address - CLASS_LOWER_LIMIT
       # TODO delete this condition and statements
       raise Exception("q haces")
-      # return self.instances[address - class_lower_limit]
-    elif instance_lower_limit <= address <= class_upper_limit:
-      if not self.current_instance:
+      # return self.__instances[address - class_LOWER_LIMIT]
+    elif INSTANCE_LOWER_LIMIT <= address <= INSTANCE_UPPER_LIMIT:
+      if not self.__current_instance:
         raise Exception("Instance not set")
-      return self.instances[self.current_instance].get(address - instance_lower_limit)
-    elif cte_lower_limit <= address <= cte_upper_limit:
-      return self.constant_segment.get(address - cte_lower_limit)
+      return self.__instances[
+          self.__current_instance].get(address - INSTANCE_LOWER_LIMIT)
+    elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
+      return self.__constant_segment.get(address - CTE_LOWER_LIMIT)
     else:
-      raise Exception("Valor fuera del rango de memorias")
+      raise Exception(f"Get {address}: valor fuera del rango de memorias")
+
+  def new_procedure(self, class_name, func_name):
+    if func_name == 'init':
+      self.__instances[self.__current_instance] = Values()
+      values = self.__instances[self.__current_instance]
+    else:
+      self.__procedure_stack.append(Values())
+      values = self.__procedure_stack[-1]
+
+    vars = self.__symbol_table[class_name]['#funcs'][func_name]['#vars'].values(
+    )
+    for var in vars:
+      values.set(var['#address'] - PROCEDURE_LOWER_LIMIT, None)
