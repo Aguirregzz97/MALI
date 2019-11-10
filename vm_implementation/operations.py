@@ -1,4 +1,4 @@
-from vm_implementation.memory import Memory  # pylint: disable=unused-wildcard-import
+from vm_implementation.utils.memory import Memory  # pylint: disable=unused-wildcard-import
 
 memory: Memory
 symbol_table = None

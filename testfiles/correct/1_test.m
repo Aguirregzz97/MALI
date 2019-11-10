@@ -23,7 +23,7 @@ class Perro extends Animal {
 
   # El e dentro de Animal es una expresion que se agrega a los cuadruplos pero que no se
   # saca porque aun no programamos la llamada a funcion
-  init(int e, char n, char r) : Animal(e) {
+  init(int i, char n, char r) : Animal(i) {
     nombre = n;
     raza = r;
   }

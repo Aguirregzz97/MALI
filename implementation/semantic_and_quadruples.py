@@ -249,7 +249,7 @@ def find_and_build_operand(raw_operand):
     operand.set_address(address)
   elif t == str:
     if re.match(r"\'.\'", raw_operand):
-      address = get_or_create_cte_address(raw_operand, Types.CHAR)
+      address = get_or_create_cte_address(raw_operand[1:-1], Types.CHAR)
       if not address:
         operand.set_error('Too many char constants.')
       operand.set_type(Types.CHAR)
@@ -332,10 +332,10 @@ def do_assign(result):
   types.append(result_type)
 
 
-def do_write(s):
+def do_write(s=None):
   global operands, types
   if s:
-    operand = Operand(s)
+    operand = Operand(s[1:-1])
     operand.set_type(Types.CTE_STRING)
     operand.set_address(s)
   else:
@@ -495,7 +495,8 @@ def pass_param():
   argument = operands.pop()
   arg_type = types.pop()
   if param_type != arg_type:
-    return (f"{calling_function['#name']} expecting type {param_type} "
+    print(param_type, arg_type)
+    return (f"{calling_function['#name']} expecting type {param_type.value} "
             + f'for parameter {param_count+1}')
   # TODO: en el ejemplo param se imprime el cuadruplo como 'param#'
   generate_quadruple(Operations.PARAM, argument, None, param_count)

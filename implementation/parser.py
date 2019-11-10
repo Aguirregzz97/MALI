@@ -500,7 +500,7 @@ def p_r_do_write_str(p):
 
 def p_r_do_write(p):
   'r_do_write : '
-  sq.do_write(None)
+  sq.do_write()
 
 
 def p_r_do_read(p):

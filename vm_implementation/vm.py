@@ -41,10 +41,12 @@ def run(input):
   quadruples = input['quadruples']
   set_input(input)
 
-  while not should_end():
+  cont = 100
+  while not should_end() or cont > 0:
     quadruple = quadruples[get_q()]
     print(get_q(), operations[quadruple[0]].__name__, quadruple)
     e = operations[quadruple[0]](quadruple[1], quadruple[2], quadruple[3])
     if e:
       print(e)
       break
+    cont -= 1
