@@ -214,11 +214,16 @@ def p_param_pass(p):
                 | LEFT_P r_start_params param_pass_aux RIGHT_P r_done_param_pass'''
   add_to_tree('param_pass', p)
 
+def p_r_push_fake_bottom(p):
+  'r_push_fake_bottom : '
+  sq.register_operator(Operations.FAKE_BOTTOM)
+
 
 def p_param_pass_aux(p):
-  '''param_pass_aux : expression r_pass_param COMMA r_next_param_pass \
-                      param_pass_aux
-                    | expression r_pass_param '''
+  '''param_pass_aux : r_push_fake_bottom expression r_pass_param \
+                      r_pop_fake_bottom COMMA r_next_param_pass param_pass_aux
+                    | r_push_fake_bottom expression r_pass_param \
+                      r_pop_fake_bottom'''
   add_to_tree('param_pass_aux', p)
 
 
@@ -344,7 +349,7 @@ def p_cte(p):
          | CTE_F r_seen_operand
          | CTE_CH r_seen_operand
          | arraccess
-         | call r_pop_fake_bottom'''
+         | call'''
   add_to_tree('cte', p)
 
 
@@ -561,7 +566,6 @@ def p_r_seen_return(p):
 
 def p_r_start_local_func_call(p):
   'r_start_local_func_call : '
-  sq.register_operator(Operations.FAKE_BOTTOM)
   e = sq.start_func_call(p[-1])
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
@@ -569,7 +573,6 @@ def p_r_start_local_func_call(p):
 
 def p_r_start_instance_func_call(p):
   'r_start_instance_func_call : '
-  sq.register_operator(Operations.FAKE_BOTTOM)
   e = sq.start_instance_func_call(p[-1])
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
@@ -577,7 +580,6 @@ def p_r_start_instance_func_call(p):
 
 def p_r_start_init_call(p):
   'r_start_init_call : '
-  sq.register_operator(Operations.FAKE_BOTTOM)
   e = sq.start_instance_func_call(p[-1], is_init=True)
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
