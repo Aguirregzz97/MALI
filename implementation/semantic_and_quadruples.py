@@ -11,7 +11,7 @@ classes = {'#global': new_class_dict(name='#global', parent=None)}
 
 current_class = classes['#global']
 current_function = current_class['#funcs']['#attributes']
-current_access = None
+current_access = Access.PUBLIC
 current_type = None
 is_param = False
 param_count = 0
@@ -115,7 +115,7 @@ q_count = 1
 const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT,
                         const_types)
 constant_addresses = {}
-calling_class = None
+calling_class = current_class
 calling_function = None
 called_attribute = None
 expecting_init = False

@@ -7,6 +7,7 @@ q = 0
 aux_q = []
 end = False
 variables = None
+procedure = -1
 
 
 def set_input(input):
@@ -46,7 +47,7 @@ def op_not(a, b, c):
 
 
 def op_times(a, b, c):
-  memory.set(c, memory.get(a) * memory.get(b))
+  memory.set(c, memory.get(a, procedure) * memory.get(b, procedure), procedure)
   next_q()
 
 
@@ -54,57 +55,57 @@ def op_div(a, b, c):
   b_val = memory.get(b)
   if b_val == 0:
     return 'Division by 0.'
-  memory.set(c, memory.get(a) / b_val)
+  memory.set(c, memory.get(a, procedure) / b_val, procedure)
   next_q()
 
 
 def op_plus(a, b, c):
-  memory.set(c, memory.get(a) + memory.get(b))
+  memory.set(c, memory.get(a, procedure) + memory.get(b, procedure), procedure)
   next_q()
 
 
 def op_minus(a, b, c):
-  memory.set(c, memory.get(a) - memory.get(b))
+  memory.set(c, memory.get(a, procedure) - memory.get(b, procedure), procedure)
   next_q()
 
 
 def op_less_than(a, b, c):
-  memory.set(c, memory.get(a) < memory.get(b))
+  memory.set(c, memory.get(a, procedure) < memory.get(b, procedure), procedure)
   next_q()
 
 
 def op_more_than(a, b, c):
-  memory.set(c, memory.get(a) > memory.get(b))
+  memory.set(c, memory.get(a, procedure) > memory.get(b, procedure), procedure)
   next_q()
 
 
 def op_different(a, b, c):
-  memory.set(c, memory.get(a) != memory.get(b))
+  memory.set(c, memory.get(a, procedure) != memory.get(b, procedure), procedure)
   next_q()
 
 
 def op_is_equal(a, b, c):
-  memory.set(c, memory.get(a) == memory.get(b))
+  memory.set(c, memory.get(a, procedure) == memory.get(b, procedure), procedure)
   next_q()
 
 
 def op_less_equal(a, b, c):
-  memory.set(c, memory.get(a) <= memory.get(b))
+  memory.set(c, memory.get(a, procedure) <= memory.get(b, procedure), procedure)
   next_q()
 
 
 def op_more_equal(a, b, c):
-  memory.set(c, memory.get(a) >= memory.get(b))
+  memory.set(c, memory.get(a, procedure) >= memory.get(b, procedure), procedure)
   next_q()
 
 
 def op_or(a, b, c):
-  memory.set(c, memory.get(a) or memory.get(b))
+  memory.set(c, memory.get(a, procedure) or memory.get(b, procedure), procedure)
   next_q()
 
 
 def op_and(a, b, c):
-  memory.set(c, memory.get(a) and memory.get(b))
+  memory.set(c, memory.get(a, procedure) and memory.get(b, procedure), procedure)
   next_q()
 
 
@@ -145,9 +146,10 @@ def op_gotof(a, b, c):
 
 
 def op_gosub(a, b, c):
-  global q, aux_q
+  global q, aux_q, procedure
   aux_q.append(q + 1)
   q = symbol_table[a]['#funcs'][b]['#start']
+  procedure = -1
 
 
 def op_param(a, b, c):
@@ -157,15 +159,17 @@ def op_param(a, b, c):
 
 
 def op_era(a, b, c):
-  global variables
+  global variables, procedure
   memory.new_procedure(a, b)
   variables = list(symbol_table[a]['#funcs'][b]['#vars'].values())
+  procedure = -2
   next_q()
 
 
 def op_return(a, b, c):
+  global q
   memory.set_return(memory.get(a))
-  next_q()
+  q = c
 
 
 def op_endproc(a, b, c):
@@ -191,7 +195,7 @@ def op_exit_instances(a, b, c):
 
 def op_get_return(a, b, c):
   return_value = memory.get_return()
-  if not return_value:
+  if return_value is None:
     return 'Segmentation fault: missing return.'
   memory.set(c, return_value)
   next_q()

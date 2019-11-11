@@ -59,15 +59,17 @@ class Memory:
     self.__procedure_stack = []
     self.__symbol_table = symbol_table
     self.__current_instance = None
-    self.__return = None
+    self.__return_stack = []
 
-  def set(self, address, value):
+  def set(self, address, value, procedure=-1):
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
       self.__data_segment.set(address - DATA_LOWER_LIMIT, value)
     elif VAR_LOWER_LIMIT <= address <= VAR_UPPER_LIMIT:
-      self.__procedure_stack[-1]['vars'].set(address - VAR_LOWER_LIMIT, value)
+      self.__procedure_stack[procedure]['vars'].set(address - VAR_LOWER_LIMIT,
+                                                    value)
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
-      self.__procedure_stack[-1]['temps'].set(address - TEMP_LOWER_LIMIT, value)
+      self.__procedure_stack[procedure]['temps'].set(address - TEMP_LOWER_LIMIT,
+                                                     value)
     elif CLASS_LOWER_LIMIT <= address <= CLASS_UPPER_LIMIT:
       self.__current_instance = address - CLASS_LOWER_LIMIT
       self.__instances[address - CLASS_LOWER_LIMIT] = Values()
@@ -137,12 +139,10 @@ class Memory:
     self.__current_instance = None
 
   def set_return(self, value):
-    self.__return = value
+    self.__return_stack.append(value)
 
   def get_return(self):
-    return_value = self.__return
-    self.__return = None
-    return return_value
+    return self.__return_stack.pop()
 
   def print_memory(self):
     print('***********************************************')

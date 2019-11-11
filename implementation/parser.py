@@ -344,7 +344,7 @@ def p_cte(p):
          | CTE_F r_seen_operand
          | CTE_CH r_seen_operand
          | arraccess
-         | call'''
+         | call r_pop_fake_bottom'''
   add_to_tree('cte', p)
 
 
@@ -561,6 +561,7 @@ def p_r_seen_return(p):
 
 def p_r_start_local_func_call(p):
   'r_start_local_func_call : '
+  sq.register_operator(Operations.FAKE_BOTTOM)
   e = sq.start_func_call(p[-1])
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
@@ -568,6 +569,7 @@ def p_r_start_local_func_call(p):
 
 def p_r_start_instance_func_call(p):
   'r_start_instance_func_call : '
+  sq.register_operator(Operations.FAKE_BOTTOM)
   e = sq.start_instance_func_call(p[-1])
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
@@ -575,6 +577,7 @@ def p_r_start_instance_func_call(p):
 
 def p_r_start_init_call(p):
   'r_start_init_call : '
+  sq.register_operator(Operations.FAKE_BOTTOM)
   e = sq.start_instance_func_call(p[-1], is_init=True)
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)

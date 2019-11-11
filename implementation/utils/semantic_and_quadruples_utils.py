@@ -13,8 +13,6 @@ def new_var_dict(var_type, address, access=Access.PUBLIC, assigned=False):
       '#address': address,
       '#access': access
   }
-  if access:
-    var_dict['#access'] = access
   return var_dict
 
 
