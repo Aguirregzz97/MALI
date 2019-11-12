@@ -6,8 +6,7 @@ symbol_table = None
 q = 0
 aux_q = []
 end = False
-variables = None
-procedure = -1
+params = None
 
 
 def set_input(input):
@@ -18,7 +17,7 @@ def set_input(input):
     memory.set(address, value)
   for address, value in input['constant_segment'].items():
     memory.set(address, value)
-  memory.new_procedure('#global', '#main')
+  memory.push_new_procedure()
 
 
 def should_end():
@@ -47,7 +46,7 @@ def op_not(a, b, c):
 
 
 def op_times(a, b, c):
-  memory.set(c, memory.get(a, procedure) * memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a) * memory.get(b))
   next_q()
 
 
@@ -55,57 +54,58 @@ def op_div(a, b, c):
   b_val = memory.get(b)
   if b_val == 0:
     return 'Division by 0.'
-  memory.set(c, memory.get(a, procedure) / b_val, procedure)
+  memory.set(c, memory.get(a) / b_val)
   next_q()
 
 
 def op_plus(a, b, c):
-  memory.set(c, memory.get(a, procedure) + memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a) + memory.get(b))
   next_q()
 
 
 def op_minus(a, b, c):
-  memory.set(c, memory.get(a, procedure) - memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a) - memory.get(b))
   next_q()
 
 
 def op_less_than(a, b, c):
-  memory.set(c, memory.get(a, procedure) < memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a) < memory.get(b))
   next_q()
 
 
 def op_more_than(a, b, c):
-  memory.set(c, memory.get(a, procedure) > memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a) > memory.get(b))
   next_q()
 
 
 def op_different(a, b, c):
-  memory.set(c, memory.get(a, procedure) != memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a) != memory.get(b))
   next_q()
 
 
 def op_is_equal(a, b, c):
-  memory.set(c, memory.get(a, procedure) == memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a) == memory.get(b))
   next_q()
 
 
 def op_less_equal(a, b, c):
-  memory.set(c, memory.get(a, procedure) <= memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a) <= memory.get(b))
   next_q()
 
 
 def op_more_equal(a, b, c):
-  memory.set(c, memory.get(a, procedure) >= memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a) >= memory.get(b))
   next_q()
 
 
 def op_or(a, b, c):
-  memory.set(c, memory.get(a, procedure) or memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a) or memory.get(b))
   next_q()
 
 
 def op_and(a, b, c):
-  memory.set(c, memory.get(a, procedure) and memory.get(b, procedure), procedure)
+  memory.set(c, memory.get(a)
+             and memory.get(b))
   next_q()
 
 
@@ -128,7 +128,7 @@ def op_write(a, b, c):
     if elem == '$':
       print()
     else:
-      print(memory.get(c), end='')
+      print(elem, end='')
   next_q()
 
 
@@ -146,27 +146,27 @@ def op_gotof(a, b, c):
 
 
 def op_gosub(a, b, c):
-  global q, aux_q, procedure
+  global q, aux_q
   aux_q.append(q + 1)
   q = symbol_table[a]['#funcs'][b]['#start']
-  procedure = -1
+  memory.push_new_procedure()
 
 
 def op_param(a, b, c):
-  address = variables[c]['#address']
-  memory.set(address, memory.get(a, procedure=-2))
+  address = params[c]['#address']
+  memory.set(address, memory.get(a), setting_param=True)
   next_q()
 
 
 def op_era(a, b, c):
-  global variables, procedure
-  memory.new_procedure(a, b)
-  variables = list(symbol_table[a]['#funcs'][b]['#vars'].values())
-  procedure = -2
+  global params
+  memory.prepare_new_procedure(a, b)
+  params = list(symbol_table[a]['#funcs'][b]['#vars'].values())
   next_q()
 
 
 def op_return(a, b, c):
+  memory.print_memory()
   global q
   memory.set_return(memory.get(a))
   q = c
@@ -174,7 +174,7 @@ def op_return(a, b, c):
 
 def op_endproc(a, b, c):
   global q, aux_q
-  memory.clear_procedure()
+  memory.pop_procedure()
   q = aux_q.pop()
 
 
@@ -183,13 +183,13 @@ def op_end(a, b, c):
   end = True
 
 
-def op_switch_instance(a, b, c):
-  memory.set_instance(a)
+def op_enter_instance(a, b, c):
+  memory.push_instance(a)
   next_q()
 
 
-def op_exit_instances(a, b, c):
-  memory.clear_instances()
+def op_exit_instance(a, b, c):
+  memory.pop_instance()
   next_q()
 
 

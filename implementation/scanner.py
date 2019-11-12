@@ -95,8 +95,10 @@ def t_ID(t):
   t.type = reserved.get(t.value,'ID')
   if t.type == 'TRUE':
     t.value = 1
+    t.type = 'CTE_I'
   elif t.type == 'FALSE':
     t.value = 0
+    t.type = 'CTE_I'
   return t
 
 def t_CTE_F(t):

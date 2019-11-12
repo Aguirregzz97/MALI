@@ -4,14 +4,15 @@ from collections import defaultdict
 from enum import Enum, IntEnum, auto
 
 # Memory addresses thresholds.
-VAR_LOWER_LIMIT = 11_000
-VAR_UPPER_LIMIT = 15_999
-TEMP_LOWER_LIMIT = 16_000
-TEMP_UPPER_LIMIT = 20_999
-GLOBAL_ADJUSTMENT = 10_000
-INSTANCE_ADJUSTMENT = 5_000
-CONSTANT_LOWER_LIMIT = 21_000
-CONSTANT_UPPER_LIMIT = 25_999
+
+VAR_LOWER_LIMIT = 13_000
+VAR_UPPER_LIMIT = 18_999
+TEMP_LOWER_LIMIT = 19_000
+TEMP_UPPER_LIMIT = 24_999
+GLOBAL_ADJUSTMENT = 12_000
+ATTRIBUTES_ADJUSTMENT = 6_000
+CONSTANT_LOWER_LIMIT = 25_000
+CONSTANT_UPPER_LIMIT = 30_999
 
 
 # Language data types.
@@ -23,12 +24,13 @@ class Types(Enum):
   CTE_STRING = 'cte_string'
   CLASS = 'class'
   VOID = 'void'
+  POINTER = 'pointer'
   READ = 'read'
 
 
-var_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL, Types.CLASS)
-const_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL,
-               Types.CTE_STRING)
+var_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL)
+avail_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL, Types.CLASS,
+               Types.POINTER)
 func_types = (Types.INT, Types.FLOAT, Types.CHAR, Types.BOOL, Types.VOID)
 
 
@@ -71,10 +73,11 @@ class Operations(IntEnum):
   RETURN = 24
   ENDPROC = 25
   END = 26
-  SWITCH_INSTANCE = 27
-  EXIT_INSTANCES = 28
+  ENTER_INSTANCE = 27
+  EXIT_INSTANCE = 28
   GET_RETURN = 29
   FAKE_BOTTOM = 30
+
 
 str_operations = {
   'unary+': Operations.PLUS_UNARY,

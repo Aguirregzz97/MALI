@@ -40,6 +40,11 @@ main {
   student.init(1, 500, 20);
   student2.init(2, 600, 30);
 
+  write student.id, '$';
+  write student.book.cost, '$';
   write student.book.page.num, '$';
+
+  write student2.id, '$';
+  write student2.book.cost, '$';
   write student2.book.page.num, '$';
 }

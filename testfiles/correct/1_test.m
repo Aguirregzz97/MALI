@@ -113,18 +113,41 @@ main {
 
   y = 535;
 
+  write "1", '$';
+
   a.init(5, 's', 'c');
+
+  write "2", '$';
+
   y = a.edad;
+
+  write "3", '$';
+
   a.Ladrar();
 
+  write "4", '$';
+
   y = a.calculateB(5);
+
+  write "5", '$';
+
   printAlgo();
+
+  write "6", '$';
+
   y = calculateA(5);
 
+  write "7", '$';
+
   printAlgo();
 
+  write "8", '$';
+
   perro.init(6, 'l', 'c');
+
+  write "9", '$';
+
   perro.Ladrar();
 
-
+  write "10", '$';
 }

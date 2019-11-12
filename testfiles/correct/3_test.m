@@ -9,8 +9,8 @@ class Animal {
     edad = e;
   }
 
-  public void PrintNombre() {
-    write nombre, edad;
+  public void PrintAnimal() {
+    write nombre, ' ', edad, '$';
   }
 
   public char GetName() {
@@ -53,9 +53,14 @@ main {
     Perro p;
   }
 
-  p.init('s', 6, 0, 'c');
+  p.init('s', 6, false, 'c');
 
+  write "Debe ser: 6 c: ";
   p.PrintPerro();
 
+  write "Debe ser: c L: ";
   write p.GetName(), ' ', p.nombre, '$';
+
+  write "Debe ser: s 6: ";
+  p.PrintAnimal();
 }

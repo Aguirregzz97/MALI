@@ -30,8 +30,8 @@ operations = [
     op_return,  # 24
     op_endproc,  # 25
     op_end,  # 26
-    op_switch_instance,  # 27
-    op_exit_instances,  # 28
+    op_enter_instance,  # 27
+    op_exit_instance,  # 28
     op_get_return,  # 29
     None,  # 30 (fake bottom)
 ]
@@ -44,7 +44,7 @@ def run(input):
   cont = 100
   while not should_end():
     quadruple = quadruples[get_q()]
-    #print(get_q(), '-', operations[quadruple[0]].__name__, quadruple)
+    print(get_q(), '-', operations[quadruple[0]].__name__, quadruple)
     e = operations[quadruple[0]](quadruple[1], quadruple[2], quadruple[3])
     if e:
       print(e)

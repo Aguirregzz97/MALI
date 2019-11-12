@@ -40,7 +40,7 @@ def new_class_dict(name, parent='#global'):
 
 
 class Available:
-  def __init__(self, begin, limit, types):
+  def __init__(self, begin, limit, types=avail_types):
     self.__begin = begin
     self.__limit = limit
 
@@ -49,7 +49,7 @@ class Available:
     length = int((limit-begin)/len(types))
     for t in types:
       self.__type[t] = {
-          'begin': type_begin,  # TODO: este podria no ser necesario.
+          # 'begin': type_begin,  # TODO: este podria no ser necesario.
           'next': type_begin,
           'limit': (type_begin + length)
       }

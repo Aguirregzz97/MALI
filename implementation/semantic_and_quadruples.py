@@ -15,8 +15,8 @@ current_access = Access.PUBLIC
 current_type = None
 is_param = False
 param_count = 0
-var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
-temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, var_types)
+var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT)
+temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT)
 
 
 def seen_class(class_name):
@@ -37,10 +37,12 @@ def class_parent(class_parent):
 
 
 def finish_class():
-  global current_class, current_function, current_access
+  global current_class, current_function, current_access, var_avail, temp_avail
   current_class = classes['#global']
   current_function = current_class['#funcs']['#attributes']
   current_access = Access.PUBLIC
+  var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT)
+  temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT)
 
 
 def seen_func(func_name):
@@ -51,8 +53,8 @@ def seen_func(func_name):
   else:
     current_class['#funcs'][func_name] = new_func_dict(func_name, current_type)
     current_function = current_class['#funcs'][func_name]
-  var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT, var_types)
-  temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT, var_types)
+  var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT)
+  temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT)
 
 
 def seen_access(new_access):
@@ -78,7 +80,7 @@ def var_name(var_name):
       return 'Too many variables.'
     adjust = 0
     if current_function['#name'] == '#attributes':
-      adjust = INSTANCE_ADJUSTMENT
+      adjust = ATTRIBUTES_ADJUSTMENT
       if current_class['#name'] == '#global':
         adjust = GLOBAL_ADJUSTMENT
 
@@ -113,12 +115,14 @@ jumps = []
 pending_returns = []
 q_count = 1
 const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT,
-                        const_types)
+                        avail_types)
 constant_addresses = {}
 calling_class = current_class
 calling_function = None
 called_attribute = None
 expecting_init = False
+calling_parent = False
+count_enter_instances = 0
 
 
 def address_or_else(operand, is_visual=False):
@@ -287,6 +291,7 @@ def build_temp_operand(op_type):
   current_function['#var_count'] += 1
   operand.set_address(address)
   operand.set_type(op_type)
+  operand.set_raw(operand.get_address())
   return operand
 
 
@@ -305,7 +310,6 @@ def solve_operation_or_continue(ops):
         return f'Expression returns no value.'
       return (f'Type mismatch: Invalid operation {operator} on given operands')
     temp = build_temp_operand(result_type)
-    temp.set_raw(temp.get_address())
     if temp.get_error():
       return temp.get_error()
     generate_quadruple(operator, left_operand, right_operand, temp)
@@ -409,6 +413,7 @@ def register_func_end(is_main=False):
     return f"No return statement on non-void function {current_function['#name']}"
   while len(pending_returns):
     quadruples[pending_returns.pop()][3] = q_count
+
   if is_main:
     generate_quadruple(Operations.END, None, None, None)
   else:
@@ -429,12 +434,13 @@ def register_return():
 
 
 def call_parent(parent):
-  global calling_class, calling_function
+  global calling_class, calling_function, calling_parent
   if not current_class['#parent']:
     return (f"{current_class['#name']} has no parent class but tries "
             + f'to extend {parent} in constructor')
   elif parent != current_class['#parent']:
     return f"{parent} is not {current_class['#name']}'s parent"
+  calling_parent = True
   calling_class = classes[parent]
   calling_function = calling_class['#funcs']['init']
 
@@ -481,11 +487,10 @@ def start_instance_func_call(func_name, is_init=False):
 
 
 def start_param_collection():
-  global param_count
+  global param_count, calling_parent
   param_count = 0
-  size = calling_function['#param_count'] + calling_function['#var_count']
-  generate_quadruple(
-      Operations.ERA, calling_class['#name'], calling_function['#name'], size)
+  generate_quadruple(Operations.ERA, calling_class['#name'],
+                     calling_function['#name'], calling_parent)
 
 
 def pass_param():
@@ -532,8 +537,11 @@ def instance_attribute_call(attribute):
 
 def finish_call():
   global calling_class, calling_function, operands, types
+  global count_enter_instances
 
-  generate_quadruple(Operations.EXIT_INSTANCES, None, None, None)
+  while count_enter_instances > 0:
+    generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
+    count_enter_instances -= 1
 
   if calling_function['#name'] == '#attributes':
     op_type = called_attribute.get_type()
@@ -545,7 +553,6 @@ def finish_call():
     types.append(Types.VOID)
   else:
     operand = build_temp_operand(op_type)
-    operand.set_raw(operand.get_address())
     generate_quadruple(Operations.GET_RETURN, None, None,
                        operand.get_address())
     operands.append(operand)
@@ -561,7 +568,7 @@ def switch_func(func_name):
 
 
 def switch_instance(instance):
-  global calling_class, calling_function
+  global calling_class, calling_function, count_enter_instances
 
   if expecting_init:
     return 'Calling class member before calling init.'
@@ -579,7 +586,8 @@ def switch_instance(instance):
     return operand.get_error()
   elif class_type in var_types:
     return f'{instance} is of type {class_type} and not an instance.'
-  generate_quadruple(Operations.SWITCH_INSTANCE, operand, None, None)
+  generate_quadruple(Operations.ENTER_INSTANCE, operand, None, class_type)
+  count_enter_instances += 1
 
   calling_class = classes[class_type]
   calling_function = calling_class['#funcs']['#attributes']
