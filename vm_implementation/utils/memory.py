@@ -191,18 +191,22 @@ class Memory:
     self.__instance_stack = [InstanceMemory('#global')]
     self.__return = None
 
+    self.__setting_param = False
     self.__depth = 0
     self.prepare_new_procedure('#global', '#main')
     self.push_new_procedure()
     self.__depth = 0
 
-  def set(self, address, value, setting_param=False):
+  def set(self, address, value, assigning_param=False):
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
       self.__data_segment.set(address, value)
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
       self.__constant_segment.set(address, value)
     else:
-      self.__instance_stack[-1].set(address, value, setting_param)
+      if self.__setting_param and not assigning_param:
+        self.__instance_stack[self.__depth-1].set(address, value)
+      else:
+        self.__instance_stack[-1].set(address, value, self.__setting_param)
 
   def get(self, address, setting_param=False):
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
@@ -211,7 +215,7 @@ class Memory:
       value = self.__constant_segment.get(address)
     else:
       if setting_param:
-        value = self.__instance_stack[-self.__depth-1].get(address)
+        value = self.__instance_stack[self.__depth-1].get(address)
       else:
         value = self.__instance_stack[-1].get(address)
     if value is None:
@@ -219,19 +223,22 @@ class Memory:
     return value
 
   def push_instance(self, address, class_name):
-    self.__depth += 1
+    self.__depth -= 1
     self.__instance_stack.append(self.get(address))
     self.__instance_stack[-1].push_attributes(class_name)
 
   def pop_instance(self):
-    self.__depth -= 1
+    if self.__depth < 0:
+      self.__depth += 1
     self.__instance_stack[-1].pop_attributes()
     self.__instance_stack.pop()
 
   def prepare_new_procedure(self, class_name, func_name):
+    self.__setting_param = True
     self.__instance_stack[-1].prepare_new_procedure(class_name, func_name)
 
   def push_new_procedure(self):
+    self.__setting_param = False
     self.__depth = 0
     self.__instance_stack[-1].push_new_procedure()
 

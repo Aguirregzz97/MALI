@@ -154,7 +154,7 @@ def op_gosub(a, b, c):
 
 def op_param(a, b, c):
   address = params[c]['#address']
-  memory.set(address, memory.get(a, setting_param=True), setting_param=True)
+  memory.set(address, memory.get(a, setting_param=True), assigning_param=True)
   next_q()
 
 
@@ -178,6 +178,7 @@ def op_endproc(a, b, c):
 
 
 def op_end(a, b, c):
+  # memory.print_memory()
   global end
   end = True
 

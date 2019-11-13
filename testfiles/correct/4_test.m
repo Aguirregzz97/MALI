@@ -41,7 +41,7 @@ class Student {
 }
 
 var {
-  int x;
+  int x, y, z;
 }
 
 main {
@@ -60,6 +60,8 @@ main {
   write student2.id, ' ', student2.book.cost, ' ', student2.book.page.num, '$';
 
   x = 5;
+  y = 5;
+  z = x + y;
   n = student2.get5();
-  student2.book.page.print(x);
+  student2.book.page.print(x + y);
 }
