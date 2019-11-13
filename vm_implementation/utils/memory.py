@@ -116,11 +116,11 @@ class InstanceMemory:
 
     self.__attributes_stack = [list(self.__attributes.keys())[0]]
 
-  def set(self, address, value, setting_param=False):
+  def set(self, address, value, assigning_param=False):
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
       self.__attributes[self.__attributes_stack[-1]].set(address, value)
     elif PROCEDURE_LOWER_LIMIT <= address <= PROCEDURE_UPPER_LIMIT:
-      if setting_param:
+      if assigning_param:
         self.__next_procedure.set(address, value)
       else:
         self.__procedure_stack[-1].set(address, value)
@@ -208,13 +208,13 @@ class Memory:
       else:
         self.__instance_stack[-1].set(address, value, self.__setting_param)
 
-  def get(self, address, setting_param=False):
+  def get(self, address, assigning_param=False):
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
       value = self.__data_segment.get(address)
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
       value = self.__constant_segment.get(address)
     else:
-      if setting_param:
+      if assigning_param:
         value = self.__instance_stack[self.__depth-1].get(address)
       else:
         value = self.__instance_stack[-1].get(address)
