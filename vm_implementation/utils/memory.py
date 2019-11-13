@@ -22,7 +22,8 @@ class Values:
     self.__instance_pointer_begin = self.__bool_limit + 1
     self.__instance_pointer_limit = self.__instance_pointer_begin + BLOCK_SIZE - 1
 
-  def set(self, address, value):
+  def set(self, address, value, assign=False):
+
     if self.__int_begin <= address <= self.__int_limit:
       self.__int_slots[address] = value
     elif self.__float_begin <= address <= self.__float_limit:
@@ -102,7 +103,7 @@ class InstanceMemory:
       attributes = symbol_table[class_name]['#funcs']['#attributes']['#vars'].values(
       )
       for attribute in attributes:
-        self.set(attribute['#address'], None)
+        self.set(attribute['#address'], attribute['#type'])
 
     curr_class = symbol_table[class_name]['#parent']
     while curr_class:
@@ -110,7 +111,7 @@ class InstanceMemory:
       curr_attributes = symbol_table[curr_class]['#funcs']['#attributes']['#vars'].values(
       )
       for attribute in curr_attributes:
-        self.set(attribute['#address'], None)
+        self.set(attribute['#address'], attribute['#type'])
       curr_class = symbol_table[curr_class]['#parent']
 
     self.__attributes_stack = [list(self.__attributes.keys())[0]]
@@ -142,6 +143,14 @@ class InstanceMemory:
     self.__attributes[class_name] = Values(ATTRIBUTE_LOWER_LIMIT)
     self.__attributes_stack.append(class_name)
 
+  def push_attributes(self, class_name):
+    if top(self.__attributes_stack) != class_name:
+      self.__attributes_stack.append(class_name)
+
+  def pop_attributes(self):
+    if len(self.__attributes_stack) > 1:
+      self.__attributes_stack.pop()
+
   def prepare_new_procedure(self, class_name, func_name):
     self.__next_attributes = class_name
     self.__next_procedure = ProcedureMemory()
@@ -156,7 +165,8 @@ class InstanceMemory:
 
   def pop_procedure(self):
     self.__procedure_stack.pop()
-    self.__attributes_stack.pop()
+    if len(self.__attributes_stack) > 1:
+      self.__attributes_stack.pop()
 
   def print_instance(self, prefix):
     print(prefix, 'attributes > current:', top(self.__attributes_stack), '\n')
@@ -181,8 +191,10 @@ class Memory:
     self.__instance_stack = [InstanceMemory('#global')]
     self.__return = None
 
+    self.__depth = 0
     self.prepare_new_procedure('#global', '#main')
     self.push_new_procedure()
+    self.__depth = 0
 
   def set(self, address, value, setting_param=False):
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
@@ -192,27 +204,35 @@ class Memory:
     else:
       self.__instance_stack[-1].set(address, value, setting_param)
 
-  def get(self, address):
+  def get(self, address, setting_param=False):
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
       value = self.__data_segment.get(address)
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
       value = self.__constant_segment.get(address)
     else:
-      value = self.__instance_stack[-1].get(address)
+      if setting_param:
+        value = self.__instance_stack[-self.__depth-1].get(address)
+      else:
+        value = self.__instance_stack[-1].get(address)
     if value is None:
       raise Exception(f'Value for {address} not found')
     return value
 
-  def push_instance(self, address):
+  def push_instance(self, address, class_name):
+    self.__depth += 1
     self.__instance_stack.append(self.get(address))
+    self.__instance_stack[-1].push_attributes(class_name)
 
   def pop_instance(self):
+    self.__depth -= 1
+    self.__instance_stack[-1].pop_attributes()
     self.__instance_stack.pop()
 
   def prepare_new_procedure(self, class_name, func_name):
     self.__instance_stack[-1].prepare_new_procedure(class_name, func_name)
 
   def push_new_procedure(self):
+    self.__depth = 0
     self.__instance_stack[-1].push_new_procedure()
 
   def pop_procedure(self):

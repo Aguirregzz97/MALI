@@ -347,7 +347,9 @@ def do_write(s=None):
     operand.set_address(s[1:-1])
   else:
     operand = operands.pop()
-    types.pop()
+    op_type = types.pop()
+    if op_type not in var_types:
+      return f'Expression returns no value.'
   generate_quadruple(Operations.WRITE, None, None, operand)
 
 
@@ -595,9 +597,15 @@ def switch_instance(instance):
 
 def generate_output():
   global classes
-  data_segment = (
-      {v['#address']: None for v in
-          classes['#global']['#funcs']['#attributes']['#vars'].values()})
+
+  data_segment = {}
+  for v in classes['#global']['#funcs']['#attributes']['#vars'].values():
+    if type(v['#type']) == str:
+      var_type = v['#type']
+    else:
+      var_type = v['#type'].value
+    data_segment[v['#address']] = var_type
+
   constant_segment = invert_dict(constant_addresses)
 
   # Clean symbol table for use in virtual machine.

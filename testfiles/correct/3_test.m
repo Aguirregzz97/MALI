@@ -58,7 +58,7 @@ main {
   write "Debe ser: 6 c: ";
   p.PrintPerro();
 
-  write "Debe ser: c L: ";
+  write "Debe ser: s L: ";
   write p.GetName(), ' ', p.nombre, '$';
 
   write "Debe ser: s 6: ";

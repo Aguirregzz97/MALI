@@ -214,6 +214,7 @@ def p_param_pass(p):
                 | LEFT_P r_start_params param_pass_aux RIGHT_P r_done_param_pass'''
   add_to_tree('param_pass', p)
 
+
 def p_r_push_fake_bottom(p):
   'r_push_fake_bottom : '
   sq.register_operator(Operations.FAKE_BOTTOM)
@@ -505,7 +506,9 @@ def p_r_do_write_str(p):
 
 def p_r_do_write(p):
   'r_do_write : '
-  sq.do_write()
+  e = sq.do_write()
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_do_read(p):

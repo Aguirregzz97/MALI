@@ -6,6 +6,10 @@ class Page {
   init(int n) {
     num = n;
   }
+
+  public void print(int n) {
+    write n, '$';
+  }
 }
 
 class Book {
@@ -30,6 +34,10 @@ class Student {
     id = i;
     book.init(c, n);
   }
+
+  public int get5() {
+    return 5;
+  }
 }
 
 main {
@@ -40,11 +48,12 @@ main {
   student.init(1, 500, 20);
   student2.init(2, 600, 30);
 
-  write student.id, '$';
-  write student.book.cost, '$';
-  write student.book.page.num, '$';
+  write "Debe ser 1 500 20", '$';
+  write student.id, ' ', student.book.cost, ' ', student.book.page.num, '$';
 
-  write student2.id, '$';
-  write student2.book.cost, '$';
-  write student2.book.page.num, '$';
+  write "Debe ser 2 600 30", '$';
+  write student2.id, ' ', student2.book.cost, ' ', student2.book.page.num, '$';
+
+  n = student2.get5();
+  student2.book.page.print(n);
 }

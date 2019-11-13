@@ -154,7 +154,7 @@ def op_gosub(a, b, c):
 
 def op_param(a, b, c):
   address = params[c]['#address']
-  memory.set(address, memory.get(a), setting_param=True)
+  memory.set(address, memory.get(a, setting_param=True), setting_param=True)
   next_q()
 
 
@@ -166,7 +166,6 @@ def op_era(a, b, c):
 
 
 def op_return(a, b, c):
-  memory.print_memory()
   global q
   memory.set_return(memory.get(a))
   q = c
@@ -184,7 +183,7 @@ def op_end(a, b, c):
 
 
 def op_enter_instance(a, b, c):
-  memory.push_instance(a)
+  memory.push_instance(a, c)
   next_q()
 
 
