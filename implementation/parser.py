@@ -19,6 +19,7 @@ error = False
 
 def p_program(p):
   '''program : classes vars modules main
+             | classes vars main
              | classes modules main
              | modules main
              | vars modules main

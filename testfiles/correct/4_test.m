@@ -40,9 +40,14 @@ class Student {
   }
 }
 
+var {
+  int x;
+}
+
 main {
   var {
     Student student, student2;
+    int n;
   }
 
   student.init(1, 500, 20);
@@ -54,6 +59,7 @@ main {
   write "Debe ser 2 600 30", '$';
   write student2.id, ' ', student2.book.cost, ' ', student2.book.page.num, '$';
 
+  x = 5;
   n = student2.get5();
-  student2.book.page.print(n);
+  student2.book.page.print(x);
 }
