@@ -67,6 +67,16 @@ class Available:
 
     return next_val
 
+  def displace(self, op_type, displace_size):
+    if op_type not in self.__type:
+      op_type = Types.CLASS
+
+    next_val = self.__type[op_type]['next'] + displace_size - 1
+    if next_val > self.__type[op_type]['limit']:
+      return None
+
+    self.__type[op_type]['next'] += displace_size - 1
+    return True
 
 # Intermediate code generation utils
 

@@ -77,6 +77,7 @@ class Operations(IntEnum):
   EXIT_INSTANCE = 28
   GET_RETURN = 29
   FAKE_BOTTOM = 30
+  VER = 31
 
 
 str_operations = {

@@ -83,6 +83,11 @@ main {
 
   w = 5;
   write w, '$';
+  write "Xs", '$';
+  write x[5][2], '$';
+  x[1][2] = 2;
+  write x[1][2], '$';
+  x[2][x[1][2]] = 3;
 
   z = 0;
   y = 0;
@@ -150,4 +155,6 @@ main {
   perro.Ladrar();
 
   write "10", '$';
+
+  write "Calculo del arreglo x[2][", x[1][2], "] = ", x[2][x[1][2]], '$';
 }

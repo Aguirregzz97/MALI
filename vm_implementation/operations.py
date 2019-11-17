@@ -199,3 +199,9 @@ def op_get_return(a, b, c):
     return 'Segmentation fault: missing return.'
   memory.set(c, return_value)
   next_q()
+
+def op_ver(a, b, c):
+  if not memory.get(b) <= memory.get(a) < memory.get(c):
+    print(memory.get(a))
+    return 'Index out of range'
+  next_q()

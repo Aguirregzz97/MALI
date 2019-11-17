@@ -34,6 +34,7 @@ operations = [
     op_exit_instance,  # 28
     op_get_return,  # 29
     None,  # 30 (fake bottom)
+    op_ver, # 31
 ]
 
 

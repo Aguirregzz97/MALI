@@ -35,7 +35,7 @@ class Values:
     elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
       self.__instance_slots[address] = InstanceMemory(value)
     else:
-      raise Exception(f"Values.Set {address}: valor fuera del rango")
+      raise Exception(f"Values.Set {address}: value out of range")
 
   def get(self, address):
     if self.__int_begin <= address <= self.__int_limit:
@@ -49,7 +49,7 @@ class Values:
     elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
       return self.__instance_slots.get(address, None)
     else:
-      raise Exception(f"Values.Get {address}: valor fuera del rango")
+      raise Exception(f"Values.Get {address}: value out of range")
 
   def print_values(self, prefix):
     print(prefix, 'int', self.__int_slots)
@@ -73,7 +73,7 @@ class ProcedureMemory:
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
       self.__temps.set(address, value)
     else:
-      raise Exception(f"ProcedureMemory.Set {address}: valor fuera del rango")
+      raise Exception(f"ProcedureMemory.Set {address}: value out of range")
 
   def get(self, address):
     if VAR_LOWER_LIMIT <= address <= VAR_UPPER_LIMIT:
@@ -81,7 +81,7 @@ class ProcedureMemory:
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
       return self.__temps.get(address)
     else:
-      raise Exception(f"ProcedureMemory.Get {address}: valor fuera del rango")
+      raise Exception(f"ProcedureMemory.Get {address}: value out of range")
 
   def print_procedure(self, prefix):
     print(prefix, 'vars')
@@ -125,7 +125,7 @@ class InstanceMemory:
       else:
         self.__procedure_stack[-1].set(address, value)
     else:
-      raise Exception(f"InstanceMemory.Set {address}: valor fuera del rango")
+      raise Exception(f"InstanceMemory.Set {address}: value out of range")
 
   def get(self, address):
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
@@ -137,7 +137,7 @@ class InstanceMemory:
     elif PROCEDURE_LOWER_LIMIT <= address <= PROCEDURE_UPPER_LIMIT:
       return self.__procedure_stack[-1].get(address)
     else:
-      raise Exception(f"InstanceMemory.Get {address}: valor fuera del rango")
+      raise Exception(f"InstanceMemory.Get {address}: Value out of range")
 
   def set_attributes(self, class_name):
     self.__attributes[class_name] = Values(ATTRIBUTE_LOWER_LIMIT)

@@ -105,14 +105,18 @@ def p_var(p):
 def p_var_aux(p):
   '''var_aux : ID r_var_name COMMA var_aux
              | ID r_var_name
-             | ID r_var_name arr_dim COMMA var_aux
-             | ID r_var_name arr_dim'''
+             | ID r_var_name_arr arr_dim COMMA var_aux
+             | ID r_var_name_arr arr_dim'''
   add_to_tree('var_aux', p)
 
 
 def p_arr_dim(p):
-  '''arr_dim : LEFT_SB CTE_I RIGHT_SB
-             | LEFT_SB CTE_I RIGHT_SB LEFT_SB CTE_I RIGHT_SB'''
+  '''arr_dim : LEFT_SB CTE_I r_arr_dim RIGHT_SB arr_dim_2 r_arr_dim_complete'''
+
+
+def p_arr_dim_2(p):
+  '''arr_dim_2 : LEFT_SB CTE_I r_arr_dim_2 RIGHT_SB arr_dim_2
+               | empty '''
 
 
 def p_type(p):
@@ -158,8 +162,8 @@ def p_param(p):
 def p_params(p):
   '''params : complex_type ID r_var_name COMMA params
             | complex_type ID r_var_name
-            | complex_type ID r_var_name arr_index COMMA params
-            | complex_type ID r_var_name arr_index'''
+            | complex_type ID r_var_name_arr arr_index COMMA params
+            | complex_type ID r_var_name_arr arr_index'''
   add_to_tree('params', p)
 
 
@@ -268,14 +272,17 @@ def p_while(p):
 
 
 def p_arraccess(p):
-  '''arraccess : ID arr_index'''
+  '''arraccess : ID r_seen_operand r_arr_access_2 arr_index '''
   add_to_tree('arraccess', p)
 
 
 def p_arr_index(p):
-  '''arr_index : LEFT_SB expression RIGHT_SB
-               | LEFT_SB expression RIGHT_SB LEFT_SB expression RIGHT_SB'''
+  '''arr_index : LEFT_SB expression r_arr_access_3 RIGHT_SB arr_index_aux'''
   add_to_tree('arr_index', p)
+
+def p_arr_index_aux(p):
+  '''arr_index_aux : r_arr_access_4 arr_index 
+                   | r_arr_access_5'''
 
 
 def p_block(p):
@@ -401,6 +408,12 @@ def p_r_seen_type(p):
 def p_r_var_name(p):
   'r_var_name : '
   e = sq.var_name(var_name=p[-1])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_var_name_arr(p):
+  'r_var_name_arr : '
+  e = sq.var_name(var_name=p[-1], assigned=True)
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
@@ -633,6 +646,56 @@ def p_r_switch_instance(p):
   e = sq.switch_instance(p[-1])
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_arr_dim(p):
+  'r_arr_dim : '
+  e = sq.add_arr_dim(p[-1])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_arr_dim_2(p):
+  'r_arr_dim_2 : '
+  e = sq.add_arr_dim_2(p[-1])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_arr_dim_complete(p):
+  'r_arr_dim_complete : '
+  e = sq.arr_dim_complete()
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_arr_access_2(p):
+  'r_arr_access_2 : '
+  e = sq.arr_access_2()
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_arr_access_3(p):
+  'r_arr_access_3 : '
+  e = sq.arr_access_3()
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_arr_access_4(p):
+  'r_arr_access_4 : '
+  e = sq.arr_access_4()
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_arr_access_5(p):
+  'r_arr_access_5 : '
+  e = sq.arr_access_5()
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
 
 
 # Syntax error detection rules.
