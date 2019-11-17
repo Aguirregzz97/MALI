@@ -231,7 +231,7 @@ def get_or_create_cte_address(value, val_type):
     return address
 
 
-def find_and_build_operand(raw_operand):
+def find_and_build_operand(raw_operand, mark_assigned=False):
   t = type(raw_operand)
   operand = Operand(raw_operand)
   if t == int:
@@ -262,13 +262,13 @@ def find_and_build_operand(raw_operand):
       operand.set_address(address)
       operand.set_raw(raw_operand[1:-1])
     else:
-      populate_local_var(operand)
+      populate_local_var(operand, mark_assigned)
   return operand
 
 
-def register_operand(raw_operand):
+def register_operand(raw_operand, mark_assigned=False):
   global operands, types
-  operand = find_and_build_operand(raw_operand)
+  operand = find_and_build_operand(raw_operand, mark_assigned)
   if operand.get_error():
     return operand.get_error()
   operands.append(operand)
@@ -280,7 +280,7 @@ def register_operator(operator):
   operators.append(operator)
 
 
-def build_temp_operand(op_type):
+def build_temp_operand(op_type, assignable=False):
   global current_function
   operand = Operand()
   address = temp_avail.next(op_type)
@@ -322,21 +322,19 @@ def pop_fake_bottom():
   operators.pop()
 
 
-def do_assign(result):
+def do_assign():
   global operators, operands, types
   left_operand = operands.pop()
   left_type = types.pop()
-  result_operand = Operand(result)
-  populate_local_var(result_operand, mark_assigned=True)
-  if result_operand.get_error():
-    return result_operand.get_error()
-  result_type = result_operand.get_type()
-  if not semantic_cube[result_type][left_type][Operations.EQUAL]:
+  assigning_operand = operands.pop()
+  assigning_type = types.pop()
+  if not semantic_cube[assigning_type][left_type][Operations.EQUAL]:
     if left_type == Types.VOID:
       return f'Expression returns no value.'
-    return (f'Type mismatch: expression cannot be assigned to {result}')
-  generate_quadruple(Operations.EQUAL, left_operand, None, result_operand)
-  types.append(result_type)
+    return (f'Type mismatch: expression cannot be assigned')
+  generate_quadruple(Operations.EQUAL, left_operand, None, assigning_operand)
+  operands.append(assigning_operand)
+  types.append(assigning_type)
 
 
 def do_write(s=None):

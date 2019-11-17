@@ -180,11 +180,11 @@ def p_statement(p):
 
 
 def p_assign(p):
-  '''assign : ID arr_index EQUAL expression
-            | ID arr_index EQUAL READ r_do_read
-            | ID EQUAL expression
-            | ID EQUAL READ r_do_read'''
-  e = sq.do_assign(p[1])
+  '''assign : ID r_seen_assigning_operand EQUAL expression
+            | arraccess EQUAL expression
+            | ID r_seen_assigning_operand EQUAL READ r_do_read
+            | arraccess EQUAL READ r_do_read'''
+  e = sq.do_assign()
   if e:
     handle_error(p.lineno(1), p.lexpos(1), e)
   add_to_tree('assign', p)
@@ -459,6 +459,12 @@ def p_r_seen_main(p):
 def p_r_seen_operand(p):
   'r_seen_operand : '
   e = sq.register_operand(p[-1])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_seen_assigning_operand(p):
+  'r_seen_assigning_operand : '
+  e = sq.register_operand(p[-1], mark_assigned=True)
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
