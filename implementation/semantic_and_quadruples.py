@@ -123,7 +123,6 @@ passing_params = False
 called_attribute = None
 expecting_init = False
 calling_parent = False
-count_enter_instances = 0
 
 
 def address_or_else(operand, is_visual=False):
@@ -523,7 +522,7 @@ def prepare_upcoming_param():
 
 def done_param_pass():
   global passing_params
-  calling_class.pop() # Pop fake bottom
+  calling_class.pop()  # Pop fake bottom
   passing_params = False
   expected = calling_function[-1]['#param_count']
   if param_count+1 != expected and not param_count == 0 and not expected == 0:
@@ -546,12 +545,12 @@ def instance_attribute_call(attribute):
 
 
 def finish_call():
-  global calling_class, calling_function, operands, types
-  global count_enter_instances
+  global calling_class, calling_function, operands, types, calling_class
 
-  while count_enter_instances > 0:
+  while top(calling_class) and top(calling_class) != Operations.FAKE_BOTTOM:
+    print(calling_class[-1]['#name'])
     generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
-    count_enter_instances -= 1
+    calling_class.pop()
 
   if calling_function[-1]['#name'] == '#attributes':
     op_type = called_attribute.get_type()
@@ -568,7 +567,6 @@ def finish_call():
     operands.append(operand)
     types.append(operand.get_type())
 
-  calling_class.pop()
   calling_function.pop()
 
 
@@ -578,7 +576,7 @@ def switch_func(func_name):
 
 
 def switch_instance(instance):
-  global calling_class, calling_function, count_enter_instances, passing_params
+  global calling_class, calling_function, passing_params
 
   if expecting_init:
     return 'Calling class member before calling init.'
@@ -596,12 +594,8 @@ def switch_instance(instance):
   elif class_type in var_types:
     return f'{instance} is of type {class_type} and not an instance.'
   generate_quadruple(Operations.ENTER_INSTANCE, operand, None, class_type)
-  count_enter_instances += 1
 
-  if len(calling_class) == 0 or calling_class[-1] == Operations.FAKE_BOTTOM:
-    calling_class.append(classes[class_type])
-  else:
-    calling_class[-1] = classes[class_type]
+  calling_class.append(classes[class_type])
 
 
 def generate_output():
