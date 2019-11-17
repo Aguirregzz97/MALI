@@ -40,14 +40,14 @@ class Student {
   }
 }
 
-var {
-  int x, y, z;
-}
+#var {
+  #int x, y, z;
+#}
 
 main {
   var {
     Student student, student2;
-    int n;
+    int n, m, o, p, q, r;
   }
 
   student.init(1, 500, 20);
@@ -59,9 +59,13 @@ main {
   write "Debe ser 2 600 30", '$';
   write student2.id, ' ', student2.book.cost, ' ', student2.book.page.num, '$';
 
-  x = 5;
-  y = 5;
-  z = x + y;
+  #x = 5;
+  #y = 5;
+  #z = x + y;
   n = student2.get5();
-  student2.book.page.print(x + y);
+  m = student2.get5();
+  o = student2.get5();
+  r = m + o;
+
+  student2.book.page.print(m + o + student.get5());
 }

@@ -462,12 +462,6 @@ def p_r_seen_operand(p):
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
-def p_r_seen_assigning_operand(p):
-  'r_seen_assigning_operand : '
-  e = sq.register_operand(p[-1], mark_assigned=True)
-  if e:
-    handle_error(p.lineno(-1), p.lexpos(-1), e)
-
 
 def p_r_seen_operator(p):
   'r_seen_operator : '
@@ -631,6 +625,13 @@ def p_r_done_param_pass(p):
 def p_r_switch_instance(p):
   'r_switch_instance : '
   e = sq.switch_instance(p[-1])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_seen_assigning_operand(p):
+  'r_seen_assigning_operand : '
+  e = sq.register_operand(p[-1], mark_assigned=True)
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
 

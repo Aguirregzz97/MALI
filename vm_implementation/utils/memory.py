@@ -98,23 +98,17 @@ class InstanceMemory:
     self.__next_procedure = None
     self.__next_attributes = None
 
-    self.set_attributes(class_name)
     if class_name != '#global':
-      attributes = symbol_table[class_name]['#funcs']['#attributes']['#vars'].values(
-      )
-      for attribute in attributes:
-        self.set(attribute['#address'], attribute['#type'])
+      curr_class = class_name
+      while curr_class:
+        self.set_attributes(curr_class)
+        curr_attributes = symbol_table[curr_class]['#funcs']['#attributes']['#vars'].values(
+        )
+        for attribute in curr_attributes:
+          self.set(attribute['#address'], attribute['#type'])
+        curr_class = symbol_table[curr_class]['#parent']
 
-    curr_class = symbol_table[class_name]['#parent']
-    while curr_class:
-      self.set_attributes(curr_class)
-      curr_attributes = symbol_table[curr_class]['#funcs']['#attributes']['#vars'].values(
-      )
-      for attribute in curr_attributes:
-        self.set(attribute['#address'], attribute['#type'])
-      curr_class = symbol_table[curr_class]['#parent']
-
-    self.__attributes_stack = [list(self.__attributes.keys())[0]]
+      self.__attributes_stack = [list(self.__attributes.keys())[0]]
 
   def set(self, address, value, assigning_param=False):
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
@@ -214,7 +208,8 @@ class Memory:
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
       value = self.__constant_segment.get(address)
     else:
-      if assigning_param:
+      #print(self.__setting_param, assigning_param)
+      if self.__setting_param:
         value = self.__instance_stack[self.__depth-1].get(address)
       else:
         value = self.__instance_stack[-1].get(address)

@@ -117,8 +117,9 @@ q_count = 1
 const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT,
                         avail_types)
 constant_addresses = {}
-calling_class = current_class
-calling_function = None
+calling_class = []
+calling_function = []
+passing_params = False
 called_attribute = None
 expecting_init = False
 calling_parent = False
@@ -181,7 +182,7 @@ def find_and_populate(operand, prefix, access, check_assigned_var=False,
 
 def populate_call(operand, check_init_called=True):
   # Search for var in the attributes of the class and its parents.
-  curr_class = calling_class['#name']
+  curr_class = calling_class[-1]['#name']
   while curr_class:
     class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
     if find_and_populate(operand, class_attributes, [Access.PUBLIC], False,
@@ -441,30 +442,33 @@ def call_parent(parent):
   elif parent != current_class['#parent']:
     return f"{parent} is not {current_class['#name']}'s parent"
   calling_parent = True
-  calling_class = classes[parent]
-  calling_function = calling_class['#funcs']['init']
+  calling_class.append(classes[parent])
+  calling_function.append(calling_class[-1]['#funcs']['init'])
 
 
 def finish_parent_call():
   global calling_class, calling_function, operands, types
-  calling_class = current_class
-  calling_function = None
+  calling_class.pop()
+  calling_function.pop()
+  # TODO: Verificar que lo siguiente es necesario
   operands.append(Types.VOID)
   types.append(Types.VOID)
 
 
 def start_func_call(func_name):
   global calling_class, calling_function
-  if func_name in calling_class['#funcs']:
-    calling_function = calling_class['#funcs'][func_name]
+  if len(calling_class) == 0:
+    calling_class.append(current_class)
+  if func_name in calling_class[-1]['#funcs']:
+    calling_function.append(calling_class[-1]['#funcs'][func_name])
     return
-  curr_class = calling_class['#parent']
+  curr_class = calling_class[-1]['#parent']
   while curr_class:
     if func_name in classes[curr_class]['#funcs']:
-      calling_class = classes[curr_class]
-      calling_function = calling_class['#funcs'][func_name]
-      if calling_function['#access'] not in [Access.PUBLIC, Access.PROTECTED]:
-        return f"Cannot access {calling_function['#name']}."
+      calling_class.append(classes[curr_class])
+      calling_function.append(calling_class[-1]['#funcs'][func_name])
+      if calling_function[-1]['#access'] not in [Access.PUBLIC, Access.PROTECTED]:
+        return f"Cannot access {calling_function[-1]['#name']}."
       return
     curr_class = classes[curr_class]['#parent']
   return f'{func_name} not defined in scope.'
@@ -474,33 +478,36 @@ def start_instance_func_call(func_name, is_init=False):
   global calling_class, calling_function, expecting_init
   if is_init:
     expecting_init = False
-  curr_class = calling_class['#name']
+  curr_class = calling_class[-1]['#name']
+  calling_class.pop()
   while curr_class:
     if func_name in classes[curr_class]['#funcs']:
-      calling_class = classes[curr_class]
-      calling_function = calling_class['#funcs'][func_name]
-      if calling_function['#access'] != Access.PUBLIC:
-        return f"Cannot access {calling_function['#name']}."
+      calling_class.append(classes[curr_class])
+      calling_function.append(calling_class[-1]['#funcs'][func_name])
+      if calling_function[-1]['#access'] != Access.PUBLIC:
+        return f"Cannot access {calling_function[-1]['#name']}."
       return
     curr_class = classes[curr_class]['#parent']
   return f'{func_name} not defined in scope.'
 
 
 def start_param_collection():
-  global param_count, calling_parent
+  global param_count, calling_parent, passing_params
   param_count = 0
-  generate_quadruple(Operations.ERA, calling_class['#name'],
-                     calling_function['#name'], calling_parent)
+  generate_quadruple(Operations.ERA, calling_class[-1]['#name'],
+                     calling_function[-1]['#name'], calling_parent)
+  passing_params = True
+  calling_class.append(Operations.FAKE_BOTTOM)
 
 
 def pass_param():
   global operands, types
-  param = list(calling_function['#vars'].values())[param_count]
+  param = list(calling_function[-1]['#vars'].values())[param_count]
   param_type = param['#type']
   argument = operands.pop()
   arg_type = types.pop()
   if not semantic_cube[arg_type][param_type][Operations.EQUAL]:
-    return (f"{calling_function['#name']} expecting type {param_type.value} "
+    return (f"{calling_function[-1]['#name']} expecting type {param_type.value} "
             + f'for parameter {param_count+1}')
   generate_quadruple(Operations.PARAM, argument, None, param_count)
 
@@ -508,26 +515,29 @@ def pass_param():
 def prepare_upcoming_param():
   global param_count
   param_count += 1
-  expected = calling_function['#param_count']
+  expected = calling_function[-1]['#param_count']
   if param_count+1 > expected:
-    return (f"{calling_function['#name']} expects {expected} parameters, " +
+    return (f"{calling_function[-1]['#name']} expects {expected} parameters, " +
             'but more were given')
 
 
 def done_param_pass():
-  expected = calling_function['#param_count']
+  global passing_params
+  calling_class.pop() # Pop fake bottom
+  passing_params = False
+  expected = calling_function[-1]['#param_count']
   if param_count+1 != expected and not param_count == 0 and not expected == 0:
-    return (f"{calling_function['#name']} expects {expected} parameters, " +
+    return (f"{calling_function[-1]['#name']} expects {expected} parameters, " +
             f'but {param_count+1} were given')
   generate_quadruple(
-      Operations.GOSUB, calling_class['#name'], calling_function['#name'], None)
+      Operations.GOSUB, calling_class[-1]['#name'], calling_function[-1]['#name'], None)
 
 
 def instance_attribute_call(attribute):
   global calling_function, called_attribute
   if expecting_init:
     return 'Calling class member before calling init.'
-  calling_function = calling_class['#funcs']['#attributes']
+  calling_function.append(calling_class[-1]['#funcs']['#attributes'])
   called_attribute = Operand(attribute)
   populate_call(called_attribute)
   if called_attribute.get_error():
@@ -543,10 +553,10 @@ def finish_call():
     generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
     count_enter_instances -= 1
 
-  if calling_function['#name'] == '#attributes':
+  if calling_function[-1]['#name'] == '#attributes':
     op_type = called_attribute.get_type()
   else:
-    op_type = calling_function['#type']
+    op_type = calling_function[-1]['#type']
 
   if op_type == Types.VOID:
     operands.append(Types.VOID)
@@ -558,28 +568,27 @@ def finish_call():
     operands.append(operand)
     types.append(operand.get_type())
 
-  calling_class = current_class
-  calling_function = None
+  calling_class.pop()
+  calling_function.pop()
 
 
 def switch_func(func_name):
   global calling_function
-  calling_function = calling_class['#funcs'][func_name]
+  calling_function.append(calling_class[-1]['#funcs'][func_name])
 
 
 def switch_instance(instance):
-  global calling_class, calling_function, count_enter_instances
+  global calling_class, calling_function, count_enter_instances, passing_params
 
   if expecting_init:
     return 'Calling class member before calling init.'
 
   operand = Operand(instance)
 
-  if not calling_function:
-    calling_function = current_function
-    populate_local_var(operand,  is_instance=True)
-  else:
+  if len(calling_class) > 0 and not passing_params:
     populate_call(operand)
+  else:
+    populate_local_var(operand, is_instance=True)
 
   class_type = operand.get_type()
   if operand.get_error():
@@ -589,8 +598,10 @@ def switch_instance(instance):
   generate_quadruple(Operations.ENTER_INSTANCE, operand, None, class_type)
   count_enter_instances += 1
 
-  calling_class = classes[class_type]
-  calling_function = calling_class['#funcs']['#attributes']
+  if len(calling_class) == 0 or calling_class[-1] == Operations.FAKE_BOTTOM:
+    calling_class.append(classes[class_type])
+  else:
+    calling_class[-1] = classes[class_type]
 
 
 def generate_output():
