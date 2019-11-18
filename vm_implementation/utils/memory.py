@@ -57,7 +57,7 @@ class Values:
     elif self.__bool_begin <= address <= self.__bool_limit:
       return self.__bool_slots.get(address, None)
     elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
-      return self.__instance_slots.get(address, None)
+      return self.__instance_slots[address]
     elif self.__pointer_begin <= address <= self.__pointer_limit:
       global is_pointer
       is_pointer = True
@@ -258,6 +258,7 @@ class Memory:
   def push_instance(self, address, class_name):
     self.__depth -= 1
     self.__instance_stack.append(self.get(address))
+    #print(address, class_name)
     self.__instance_stack[-1].push_attributes(class_name)
 
   def pop_instance(self):

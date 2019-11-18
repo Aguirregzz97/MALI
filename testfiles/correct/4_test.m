@@ -63,5 +63,5 @@ main {
   y = 5;
   z = x + y;
   n = student2.get5();
-  student2.book.page.print(x + y);
+  student2.book.page.print(z);
 }
