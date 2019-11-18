@@ -189,44 +189,100 @@ def p_assign(p):
     handle_error(p.lineno(1), p.lexpos(1), e)
   add_to_tree('assign', p)
 
-
 def p_call(p):
-  '''call : path'''
-  sq.finish_call()
-  add_to_tree('call', p)
-
-
-def p_path(p):
-  '''path : ID r_switch_instance DOT path_aux
-          | ID r_start_local_func_call param_pass'''
-  add_to_tree('path', p)
-
-
-def p_path_aux(p):
-  '''path_aux : ID r_switch_instance DOT path_aux
-              | ID r_start_instance_func_call param_pass
-              | INIT r_start_init_call param_pass
-              | ID r_attribute_call'''
-  add_to_tree('path_aux', p)
-
+  '''call : ID r_switch_instance DOT call
+          | ID r_switch_instance ARROW ID r_seen_instance_attribute
+          | ID r_switch_instance ARROW ID r_seen_instance_func LEFT_P \
+            r_start_passing_params param_pass RIGHT_P r_done_passing_params
+          | ID r_switch_instance ARROW INIT r_seen_instance_init LEFT_P \
+            r_start_passing_params param_pass RIGHT_P r_done_passing_params
+          | ID LEFT_P r_start_passing_params param_pass RIGHT_P \
+            r_done_passing_params'''
 
 def p_param_pass(p):
-  '''param_pass : LEFT_P r_start_params RIGHT_P r_done_param_pass
-                | LEFT_P r_start_params param_pass_aux RIGHT_P r_done_param_pass'''
-  add_to_tree('param_pass', p)
-
-
-def p_r_push_fake_bottom(p):
-  'r_push_fake_bottom : '
-  sq.register_operator(Operations.FAKE_BOTTOM)
-
+  '''param_pass : param_pass_aux
+                | empty'''
 
 def p_param_pass_aux(p):
-  '''param_pass_aux : r_push_fake_bottom expression r_pass_param \
-                      r_pop_fake_bottom COMMA r_next_param_pass param_pass_aux
-                    | r_push_fake_bottom expression r_pass_param \
-                      r_pop_fake_bottom'''
-  add_to_tree('param_pass_aux', p)
+  '''param_pass_aux : expression r_register_param COMMA param_pass
+                    | expression r_register_param'''
+
+def p_r_switch_instance(p):
+  '''r_switch_instance : '''
+  e = sq.switch_instance(p[-1])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_seen_instance_attribute(p):
+  '''r_seen_instance_attribute : '''
+  e = sq.seen_instance_attribute(p[-1])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_seen_instance_func(p):
+  '''r_seen_instance_func : '''
+  e = sq.seen_instance_func(p[-1])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_seen_instance_init(p):
+  '''r_seen_instance_init : '''
+  e = sq.seen_instance_func(p[-1], is_init=True)
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+def p_r_start_passing_params(p):
+  '''r_start_passing_params : '''
+  sq.start_passing_params()
+
+def p_r_register_param(p):
+  '''r_register_param : '''
+  sq.register_param()
+
+def p_r_done_passing_params(p):
+  '''r_done_passing_params : '''
+  sq.done_passing_params()
+
+
+# '''
+# def p_call(p):
+#   '''call : path'''
+#   sq.finish_call()
+#   add_to_tree('call', p)
+
+
+# def p_path(p):
+#   '''path : ID r_switch_instance DOT path_aux
+#           | ID r_start_local_func_call param_pass'''
+#   add_to_tree('path', p)
+
+
+# def p_path_aux(p):
+#   '''path_aux : ID r_switch_instance DOT path_aux
+#               | ID r_start_instance_func_call param_pass
+#               | INIT r_start_init_call param_pass
+#               | ID r_attribute_call'''
+#   add_to_tree('path_aux', p)
+
+
+# def p_param_pass(p):
+#   '''param_pass : LEFT_P r_start_params RIGHT_P r_done_param_pass
+#                 | LEFT_P r_start_params param_pass_aux RIGHT_P r_done_param_pass'''
+#   add_to_tree('param_pass', p)
+
+
+# def p_param_pass_aux(p):
+#   '''param_pass_aux : r_push_fake_bottom expression r_pass_param \
+#                       r_pop_fake_bottom COMMA r_next_param_pass param_pass_aux
+#                     | r_push_fake_bottom expression r_pass_param \
+#                       r_pop_fake_bottom'''
+#   add_to_tree('param_pass_aux', p)
+
+
+# def p_r_push_fake_bottom(p):
+#   'r_push_fake_bottom : '
+#   sq.register_operator(Operations.FAKE_BOTTOM)
+# '''
 
 
 def p_return(p):
@@ -568,65 +624,65 @@ def p_r_seen_return(p):
   sq.register_return()
 
 
-def p_r_start_local_func_call(p):
-  'r_start_local_func_call : '
-  e = sq.start_func_call(p[-1])
-  if e:
-    handle_error(p.lineno(-1), p.lexpos(-1), e)
+# def p_r_start_local_func_call(p):
+#   'r_start_local_func_call : '
+#   e = sq.start_func_call(p[-1])
+#   if e:
+#     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
-def p_r_start_instance_func_call(p):
-  'r_start_instance_func_call : '
-  e = sq.start_instance_func_call(p[-1])
-  if e:
-    handle_error(p.lineno(-1), p.lexpos(-1), e)
+# def p_r_start_instance_func_call(p):
+#   'r_start_instance_func_call : '
+#   e = sq.start_instance_func_call(p[-1])
+#   if e:
+#     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
-def p_r_start_init_call(p):
-  'r_start_init_call : '
-  e = sq.start_instance_func_call(p[-1], is_init=True)
-  if e:
-    handle_error(p.lineno(-1), p.lexpos(-1), e)
+# def p_r_start_init_call(p):
+#   'r_start_init_call : '
+#   e = sq.start_instance_func_call(p[-1], is_init=True)
+#   if e:
+#     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
-def p_r_attribute_call(p):
-  'r_attribute_call : '
-  e = sq.instance_attribute_call(p[-1])
-  if e:
-    handle_error(p.lineno(-1), p.lexpos(-1), e)
+# def p_r_attribute_call(p):
+#   'r_attribute_call : '
+#   e = sq.instance_attribute_call(p[-1])
+#   if e:
+#     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
-def p_r_start_params(p):
-  'r_start_params : '
-  sq.start_param_collection()
+# def p_r_start_params(p):
+#   'r_start_params : '
+#   sq.start_param_collection()
 
 
-def p_r_pass_param(p):
-  'r_pass_param : '
-  e = sq.pass_param()
-  if e:
-    handle_error(p.lineno(-1), p.lexpos(-1), e)
+# def p_r_pass_param(p):
+#   'r_pass_param : '
+#   e = sq.pass_param()
+#   if e:
+#     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
-def p_r_next_param_pass(p):
-  'r_next_param_pass : '
-  e = sq.prepare_upcoming_param()
-  if e:
-    handle_error(p.lineno(-1), p.lexpos(-1), e)
+# def p_r_next_param_pass(p):
+#   'r_next_param_pass : '
+#   e = sq.prepare_upcoming_param()
+#   if e:
+#     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
-def p_r_done_param_pass(p):
-  'r_done_param_pass : '
-  e = sq.done_param_pass()
-  if e:
-    handle_error(p.lineno(-1), p.lexpos(-1), e)
+# def p_r_done_param_pass(p):
+#   'r_done_param_pass : '
+#   e = sq.done_param_pass()
+#   if e:
+#     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
-def p_r_switch_instance(p):
-  'r_switch_instance : '
-  e = sq.switch_instance(p[-1])
-  if e:
-    handle_error(p.lineno(-1), p.lexpos(-1), e)
+# def p_r_switch_instance(p):
+#   'r_switch_instance : '
+#   e = sq.switch_instance(p[-1])
+#   if e:
+#     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_assigning_operand(p):

@@ -5,63 +5,64 @@ import math
 
 # Language's reserved keywords.
 reserved = {
-  'class' : 'CLASS',
-  'extends' : 'EXTENDS',
-  'int' : 'INT',
-  'float' : 'FLOAT',
-  'char' : 'CHAR',
-  'bool' : 'BOOL',
-  'public' : 'PUBLIC',
-  'private' : 'PRIVATE',
-  'protected' : 'PROTECTED',
-  'void' : 'VOID',
-  'main' : 'MAIN',
-  'func' : 'FUNCTION',
-  'init' : 'INIT',
-  'return' : 'RETURN',
-  'and' : 'AND',
-  'or' : 'OR',
-  'not' : 'NOT',
-  'true' : 'TRUE',
-  'false' : 'FALSE',
-  'read' : 'READ',
-  'write' : 'WRITE',
-  'if' : 'IF',
-  'elif' : 'ELIF',
-  'else' : 'ELSE',
-  'while' : 'WHILE',
-  'var' : 'VAR',
-  'attr' : 'ATTR'
+    'class': 'CLASS',
+    'extends': 'EXTENDS',
+    'int': 'INT',
+    'float': 'FLOAT',
+    'char': 'CHAR',
+    'bool': 'BOOL',
+    'public': 'PUBLIC',
+    'private': 'PRIVATE',
+    'protected': 'PROTECTED',
+    'void': 'VOID',
+    'main': 'MAIN',
+    'func': 'FUNCTION',
+    'init': 'INIT',
+    'return': 'RETURN',
+    'and': 'AND',
+    'or': 'OR',
+    'not': 'NOT',
+    'true': 'TRUE',
+    'false': 'FALSE',
+    'read': 'READ',
+    'write': 'WRITE',
+    'if': 'IF',
+    'elif': 'ELIF',
+    'else': 'ELSE',
+    'while': 'WHILE',
+    'var': 'VAR',
+    'attr': 'ATTR'
 }
 
 # Declaration of tokens accepted by the language.
 tokens = [
-  'ID',
-  'CTE_I',
-  'CTE_F',
-  'CTE_CH',
-  'CTE_STR',
-  'SC',
-  'COLON',
-  'COMMA',
-  'DOT',
-  'LEFT_P',
-  'RIGHT_P',
-  'LEFT_B',
-  'RIGHT_B',
-  'LEFT_SB',
-  'RIGHT_SB',
-  'PLUS',
-  'MINUS',
-  'TIMES',
-  'DIV',
-  'EQUAL',
-  'ISEQUAL',
-  'LESS_T',
-  'MORE_T',
-  'DIFFERENT',
-  'LESS_ET',
-  'MORE_ET'
+    'ID',
+    'CTE_I',
+    'CTE_F',
+    'CTE_CH',
+    'CTE_STR',
+    'SC',
+    'COLON',
+    'COMMA',
+    'DOT',
+    'LEFT_P',
+    'RIGHT_P',
+    'LEFT_B',
+    'RIGHT_B',
+    'LEFT_SB',
+    'RIGHT_SB',
+    'PLUS',
+    'MINUS',
+    'TIMES',
+    'DIV',
+    'EQUAL',
+    'ISEQUAL',
+    'LESS_T',
+    'MORE_T',
+    'DIFFERENT',
+    'LESS_ET',
+    'MORE_ET',
+    'ARROW'
 ] + list(reserved.values())
 
 # Regular expressions associated with language's tokens.
@@ -88,11 +89,13 @@ t_LESS_ET = r'<='
 t_MORE_ET = r'>='
 t_CTE_STR = r'("[^"]*")'
 t_CTE_CH = r'\'.\''
+t_ARROW = r'->'
+
 
 def t_ID(t):
   r'[a-zA-Z_][a-zA-Z_0-9]*'
   # Check if matched id is a reserved keyword.
-  t.type = reserved.get(t.value,'ID')
+  t.type = reserved.get(t.value, 'ID')
   if t.type == 'TRUE':
     t.value = 1
     t.type = 'CTE_I'
@@ -100,6 +103,7 @@ def t_ID(t):
     t.value = 0
     t.type = 'CTE_I'
   return t
+
 
 def t_CTE_F(t):
   r'[+-]?([0-9]*[.])?[0-9]+'
@@ -110,21 +114,26 @@ def t_CTE_F(t):
     t.value = float(t.value)
   return t
 
+
 def t_newline(t):
   r'[\n]+'
   t.lexer.lineno += len(t.value)
+
 
 def t_comment(t):
   r'\#.*\n'
   t.lexer.lineno += 1
   pass
 
+
 # Ignore space and tab characters.
 t_ignore = ' \t'
+
 
 def t_error(t):
   print("SCAN ERROR ", t)
   t.lexer.skip(1)
+
 
 # Build scanner.
 lexer = lex.lex()

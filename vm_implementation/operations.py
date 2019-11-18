@@ -154,7 +154,7 @@ def op_gosub(a, b, c):
 
 def op_param(a, b, c):
   address = params[c]['#address']
-  memory.set(address, memory.get(a, assigning_param=True), assigning_param=True)
+  memory.set(address, memory.get(a), assigning_param=True)
   next_q()
 
 

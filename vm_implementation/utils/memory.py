@@ -175,6 +175,9 @@ class InstanceMemory:
       print(prefix, 'next procedure')
       self.__next_procedure.print_procedure(prefix)
 
+  def get_name(self):
+    return list(self.__attributes.keys())[0]
+
 
 class Memory:
   def __init__(self, st):
@@ -202,13 +205,12 @@ class Memory:
       else:
         self.__instance_stack[-1].set(address, value, self.__setting_param)
 
-  def get(self, address, assigning_param=False):
+  def get(self, address):
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
       value = self.__data_segment.get(address)
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
       value = self.__constant_segment.get(address)
     else:
-      #print(self.__setting_param, assigning_param)
       if self.__setting_param:
         value = self.__instance_stack[self.__depth-1].get(address)
       else:
@@ -219,14 +221,18 @@ class Memory:
 
   def push_instance(self, address, class_name):
     self.__depth -= 1
+    print(self.__depth, class_name)
     self.__instance_stack.append(self.get(address))
     self.__instance_stack[-1].push_attributes(class_name)
+    print('append', self.__instance_stack[-1].get_name())
 
   def pop_instance(self):
     if self.__depth < 0:
       self.__depth += 1
+      print(self.__depth)
     self.__instance_stack[-1].pop_attributes()
-    self.__instance_stack.pop()
+    popped = self.__instance_stack.pop()
+    print('popped', popped.get_name())
 
   def prepare_new_procedure(self, class_name, func_name):
     self.__setting_param = True
@@ -235,6 +241,7 @@ class Memory:
   def push_new_procedure(self):
     self.__setting_param = False
     self.__depth = 0
+    print(self.__depth)
     self.__instance_stack[-1].push_new_procedure()
 
   def pop_procedure(self):
