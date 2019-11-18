@@ -1,6 +1,7 @@
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
 symbol_table = None
+pending_set = None
 is_pointer = False
 
 
@@ -38,7 +39,11 @@ class Values:
     elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
       self.__instance_slots[address] = InstanceMemory(value)
     elif self.__pointer_begin <= address <= self.__pointer_limit:
-      self.__pointer_slots[address] = value
+      if address in self.__pointer_slots.keys() and self.__pointer_slots[address]:
+        global pending_set
+        pending_set = self.__pointer_slots[address]
+      else:
+        self.__pointer_slots[address] = value
     else:
       raise Exception(f"Values.Set {address}: value out of range")
 
@@ -225,6 +230,12 @@ class Memory:
         self.__instance_stack[self.__depth-1].set(address, value)
       else:
         self.__instance_stack[-1].set(address, value, self.__setting_param)
+      global pending_set
+      if pending_set:
+        new_address = pending_set
+        pending_set = None
+        self.set(new_address, value, assigning_param)
+
 
   def get(self, address, assigning_param=False):
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
