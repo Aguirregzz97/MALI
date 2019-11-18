@@ -638,6 +638,8 @@ def generate_output():
 
 
 def add_arr_dim(dimension_size):
+  if current_type not in var_types:
+    return 'An array can store only primitive types'
   if dimension_size < 1:
     return 'Size must be a positive integer'
   var = current_function['#vars'][last_declared_var]

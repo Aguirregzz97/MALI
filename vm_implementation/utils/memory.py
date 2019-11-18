@@ -248,11 +248,10 @@ class Memory:
       else:
         value = self.__instance_stack[-1].get(address)
     global is_pointer
-    if is_pointer and value:
+    if is_pointer:
       is_pointer = False
-      value = self.get(value, assigning_param)
-    elif is_pointer:
-      is_pointer = False
+      if value:
+        value = self.get(value, assigning_param)
     return value
 
   def push_instance(self, address, class_name):
