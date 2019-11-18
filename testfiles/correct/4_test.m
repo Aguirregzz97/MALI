@@ -7,8 +7,8 @@ class Page {
     num = n;
   }
 
-  public void print(int n) {
-    write n, '$';
+  public void print(int n, int m) {
+    write n, ' ', m, '$';
   }
 }
 
@@ -71,5 +71,6 @@ main {
   o = student2->get5();
   r = m + o;
 
-  student2.book.page->print(m + o + student->get5());
+  write "Debe ser 20 5", '$';
+  student2.book.page->print(m + o + student->get5() + student2->get5(), student->get5());
 }

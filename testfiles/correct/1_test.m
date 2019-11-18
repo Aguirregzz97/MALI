@@ -55,7 +55,7 @@ func void printAnimal(Animal a) {
     int x1, y2;
   }
 
-  write a.edad;
+  write a->edad;
   #write a.anios_captivo;
 }
 

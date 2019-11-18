@@ -152,8 +152,6 @@ def generate_quadruple(a, b, c, d):
   v_result = address_or_else(d, True)
   visual_quadruples.append([a.name, v_left_operand, v_right_operand, v_result])
 
-  print(q_count-1, quadruples[q_count-1], visual_quadruples[q_count-1])
-
 
 def find_and_populate(operand, prefix, access, check_assigned_var=False,
                       mark_assigned=False, check_init_called=False):
@@ -212,7 +210,7 @@ def populate_instance_func_call(func_data, is_init=False):
       return
     curr_class = classes[curr_class]['#parent']
 
-  if not operand.get_error():
+  if not func_data.error:
     func_data.error = f'{func_name} not defined in scope.'
 
 
@@ -352,7 +350,6 @@ def do_assign():
   assigning_operand = operands.pop()
   assigning_type = types.pop()
   if not semantic_cube[assigning_type][left_type][Operations.EQUAL]:
-    print(assigning_type, left_type)
     if left_type == Types.VOID:
       return f'Expression returns no value.'
     return (f'Type mismatch: expression cannot be assigned')
@@ -512,7 +509,6 @@ def seen_instance_func(func_name, is_init=False):
   if func_data.error:
     return func_data.error
 
-  print(class_call_stack[-1][-1].get_type(), func_name)
   func_call_stack.append(func_data)
 
 
@@ -562,7 +558,6 @@ def seen_local_func(func_name):
   class_op.set_type(current_class['#name'])
   class_call_stack.append([class_op])
 
-  print('append', func_name)
   func_call_stack.append(func_data)
 
 
@@ -580,8 +575,8 @@ def done_passing_params(is_local=False):
     for instance in class_call_stack[-1]:
       generate_quadruple(Operations.ENTER_INSTANCE, instance,
                         None, instance.get_type())
-  generate_quadruple(Operations.ERA, class_call_stack[-1][-1].get_type(),
-                    func_call_stack[-1].func_name, None)
+  generate_quadruple(Operations.ERA, func_call_stack[-1].class_name,
+                     func_call_stack[-1].func_name, None)
 
   func = classes[func_call_stack[-1].class_name]['#funcs'][func_call_stack[-1].func_name]
 
@@ -599,7 +594,7 @@ def done_passing_params(is_local=False):
     count += 1
   params_stack.pop()
 
-  generate_quadruple(Operations.GOSUB, class_call_stack[-1][-1].get_type(),
+  generate_quadruple(Operations.GOSUB, func_call_stack[-1].class_name,
                      func_call_stack[-1].func_name, None)
 
   if not is_local:
