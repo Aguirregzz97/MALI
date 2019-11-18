@@ -466,12 +466,14 @@ def switch_instance(instance_name):
     populate_local_var(instance, is_instance=True)
   else:
     calling_class = classes[class_call_stack[-1][-1]]
+    print(class_call_stack, instance_name)
     populate_call(instance)
 
   if instance.get_error():
     return instance.get_error()
 
   class_call_stack[-1].append(instance.get_type())
+  print(instance.get_type())
 
 
 def seen_instance_attribute(attribute_name):
@@ -482,6 +484,10 @@ def seen_instance_attribute(attribute_name):
 
   if attribute.get_error():
     return attribute.get_error()
+
+  for instance in class_call_stack[-1]:
+    generate_quadruple(Operations.ENTER_INSTANCE, instance,
+                       None, class_call_stack[-1][-1])
 
   generate_quadruple(Operations.RETURN, attribute, None, None)
 
@@ -502,7 +508,7 @@ def populate_func_call(operand, is_init=False):
   func_name = operand.get_raw()
 
   if is_init:
-    expecting_int = False
+    expecting_init = False
   curr_class = calling_class['#name']
   while curr_class:
     if func_name in classes[curr_class]['#funcs']:
@@ -522,7 +528,7 @@ def seen_instance_func(func_name, is_init=False):
   if func.get_error():
     return func.get_error()
 
-  func_call_stack.append(func)
+  func_call_stack.append(classes[class_call_stack[-1][-1]]['#funcs'][func_name])
 
 
 def start_passing_params():
@@ -538,22 +544,26 @@ def register_param():
 def done_passing_params():
   global pending_returns
 
-  for instance in class_call_stack[-1]:
-    generate_quadruple(Operations.ENTER_INSTANCE, instance,
-                       None, class_call_stack[-1][-1])
-
-  generate_quadruple(Operations.ERA, class_call_stack[-1][-1],
-                     func_call_stack[-1], None)
+  if len(class_call_stack[-1]) > 0:
+    for instance in class_call_stack[-1]:
+      generate_quadruple(Operations.ENTER_INSTANCE, instance,
+                        None, class_call_stack[-1][-1])
+    calling = class_call_stack[-1][-1]
+  else:
+    calling = current_class['#name']
+  generate_quadruple(Operations.ERA, calling,
+                    func_call_stack[-1]['#name'], None)
 
   expecting_params = func_call_stack[-1]['#param_count']
   assigning_params = list(func_call_stack[-1]['#vars'].values())
   if len(params_stack[-1])+1 != expecting_params:
     return (f"{func_call_stack[-1]['#name']} expects {expecting_params}, but "
-        + f'{len(params_stack[-1])+1} were given')
+            + f'{len(params_stack[-1])+1} were given')
   count = 0
   for sending_param in params_stack[-1]:
     if not semantic_cube[assigning_params[count]][sending_param.get_type()][Operations.EQUAL]:
-      return f"Incompatible param {count+1} on call to {func['#name']}"
+      return (f'Incompatible param {count+1} on call to ' +
+          f"{func_call_stack[-1]['#name']}")
     generate_quadruple(Operations.PARAM, sending_param, None, count)
     count += 1
   params_stack.pop()
@@ -563,10 +573,14 @@ def done_passing_params():
   while len(class_call_stack[-1]) > 0:
     generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
     class_call_stack[-1].pop()
+  class_call_stack.pop()
+  print(class_call_stack)
 
   temp = build_temp_operand(func_call_stack[-1]['#type'])
   pending_returns.append(q_count+1)
-  generate_quadruple(Operations.GET_RETURN, None, None, None)
+  generate_quadruple(Operations.GET_RETURN, temp, None, None)
+  Operands.append(temp)
+  types.append(temp)
 
 # def start_func_call(func_name):
 #   global calling_class, calling_function
