@@ -197,5 +197,5 @@ def op_get_return(a, b, c):
   return_value = memory.get_return()
   if return_value is None:
     return 'Segmentation fault: missing return.'
-  memory.set(c, return_value)
+  memory.set(a, return_value)
   next_q()

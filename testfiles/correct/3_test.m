@@ -23,7 +23,7 @@ class Mamifero extends Animal {
     private bool oviparo;
   }
 
-  init (char n, int e, bool o) : Animal(n, e) {
+  init(char n, int e, bool o) : Animal(n, e) {
     oviparo = o;
   }
 
@@ -38,7 +38,7 @@ class Perro extends Mamifero {
     public char nombre;
   }
 
-  init (char n, int e, bool o, char r) : Mamifero(n, e, o) {
+  init(char n, int e, bool o, char r) : Mamifero(n, e, o) {
     raza = r;
     nombre = 'L';
   }
@@ -53,14 +53,14 @@ main {
     Perro p;
   }
 
-  p.init('s', 6, false, 'c');
+  p->init('s', 6, false, 'c');
 
   write "Debe ser: 6 c: ";
-  p.PrintPerro();
+  p->PrintPerro();
 
   write "Debe ser: s L: ";
-  write p.GetName(), ' ', p.nombre, '$';
+  write p->GetName(), ' ', p->nombre, '$';
 
   write "Debe ser: s 6: ";
-  p.PrintAnimal();
+  p->PrintAnimal();
 }

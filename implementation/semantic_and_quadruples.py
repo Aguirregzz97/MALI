@@ -118,11 +118,11 @@ const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT,
                         avail_types)
 constant_addresses = {}
 calling_class = current_class
-calling_function = []
-passing_params = False
-called_attribute = None
 expecting_init = False
 calling_parent = False
+class_call_stack = []
+func_call_stack = []
+params_stack = []
 
 
 def address_or_else(operand, is_visual=False):
@@ -152,6 +152,8 @@ def generate_quadruple(a, b, c, d):
   v_result = address_or_else(d, True)
   visual_quadruples.append([a.name, v_left_operand, v_right_operand, v_result])
 
+  print(q_count-1, quadruples[q_count-1], visual_quadruples[q_count-1])
+
 
 def find_and_populate(operand, prefix, access, check_assigned_var=False,
                       mark_assigned=False, check_init_called=False):
@@ -179,7 +181,7 @@ def find_and_populate(operand, prefix, access, check_assigned_var=False,
     return True
 
 
-def populate_call(operand, check_init_called=True):
+def populate_instance_call(operand, check_init_called=True):
   # Search for var in the attributes of the class and its parents.
   curr_class = calling_class['#name']
   while curr_class:
@@ -191,6 +193,27 @@ def populate_call(operand, check_init_called=True):
 
   if not operand.get_error():
     operand.set_error(f'{operand.get_raw()} not in scope.')
+
+
+def populate_instance_func_call(func_data, is_init=False):
+  global expecting_init
+  func_name = func_data.func_name
+
+  if is_init:
+    expecting_init = False
+  curr_class = calling_class['#name']
+  while curr_class:
+    if func_name in classes[curr_class]['#funcs']:
+      if classes[curr_class]['#funcs'][func_name]['#access'] != Access.PUBLIC:
+        func_data.error = f"Cannot access {func_name}."
+        return
+      func_data.func_type = classes[curr_class]['#funcs'][func_name]['#type']
+      func_data.class_name = curr_class
+      return
+    curr_class = classes[curr_class]['#parent']
+
+  if not operand.get_error():
+    func_data.error = f'{func_name} not defined in scope.'
 
 
 def populate_local_var(operand, mark_assigned=False, is_instance=False):
@@ -329,6 +352,7 @@ def do_assign():
   assigning_operand = operands.pop()
   assigning_type = types.pop()
   if not semantic_cube[assigning_type][left_type][Operations.EQUAL]:
+    print(assigning_type, left_type)
     if left_type == Types.VOID:
       return f'Expression returns no value.'
     return (f'Type mismatch: expression cannot be assigned')
@@ -413,7 +437,6 @@ def register_func_end(is_main=False):
     return f"No return statement on non-void function {current_function['#name']}"
   while len(pending_returns):
     quadruples[pending_returns.pop()][3] = q_count
-
   if is_main:
     generate_quadruple(Operations.END, None, None, None)
   else:
@@ -433,8 +456,68 @@ def register_return():
   generate_quadruple(Operations.RETURN, return_val, None, None)
 
 
+def switch_instance(instance_name, is_first=False):
+  global calling_class
+
+  if is_first:
+    class_call_stack.append([])
+
+  instance = Operand(instance_name)
+  if len(class_call_stack[-1]) == 0:
+    populate_local_var(instance, is_instance=True)
+  else:
+    calling_class = classes[class_call_stack[-1][-1].get_type()]
+    populate_instance_call(instance)
+
+  if instance.get_error():
+    return instance.get_error()
+
+  class_call_stack[-1].append(instance)
+
+
+def seen_instance_attribute(attribute_name):
+  global calling_class
+  attribute = Operand(attribute_name)
+  calling_class = classes[class_call_stack[-1][-1].get_type()]
+  populate_instance_call(attribute)
+
+  if attribute.get_error():
+    return attribute.get_error()
+
+  for instance in class_call_stack[-1]:
+    generate_quadruple(Operations.ENTER_INSTANCE, instance,
+                       None, instance.get_type())
+
+  generate_quadruple(Operations.RETURN, attribute, None, q_count+1)
+
+  while len(class_call_stack[-1]) > 0:
+    generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
+    class_call_stack[-1].pop()
+
+  if attribute.get_type() in var_types:
+    temp = build_temp_operand(attribute.get_type())
+    generate_quadruple(Operations.GET_RETURN, temp, None, None)
+    operands.append(temp)
+    types.append(temp.get_type())
+  else:
+    return f'Invalid return type on expression.'
+
+
+def seen_instance_func(func_name, is_init=False):
+  global calling_class
+  func_data = FuncData(func_name)
+  calling_class = classes[class_call_stack[-1][-1].get_type()]
+  populate_instance_func_call(func_data, is_init=is_init)
+
+  if func_data.error:
+    return func_data.error
+
+  print(class_call_stack[-1][-1].get_type(), func_name)
+  func_call_stack.append(func_data)
+
+
 def call_parent(parent):
-  global calling_class, calling_function, calling_parent
+  global calling_class, calling_parent
   if not current_class['#parent']:
     return (f"{current_class['#name']} has no parent class but tries "
             + f'to extend {parent} in constructor')
@@ -442,287 +525,101 @@ def call_parent(parent):
     return f"{parent} is not {current_class['#name']}'s parent"
   calling_parent = True
   calling_class = classes[parent]
-  calling_function.append(calling_class['#funcs']['init'])
+
+  class_op = Operand(classes[parent]['#name'])
+  class_op.set_type(classes[parent]['#name'])
+  class_call_stack.append([class_op])
+
+  classes[classes[parent]['#name']]['#funcs']['init']
+
+  func_data = FuncData('init')
+  func_data.func_type = Types.VOID
+  func_data.class_name = classes[parent]['#name']
+
+  func_call_stack.append(func_data)
 
 
-def finish_parent_call():
-  global calling_class, calling_function, operands, types
+def populate_local_func_call(func_data):
+  func_name = func_data.func_name
+  if func_name in calling_class['#funcs']:
+    if calling_class['#funcs'][func_name]['#access'] != Access.PUBLIC:
+      func_data.error = f'{func_name} not in scope.'
+  func_data.func_type = calling_class['#funcs'][func_name]['#type']
+
+
+def seen_local_func(func_name):
+  global calling_class
+
+  func_data = FuncData(func_name)
   calling_class = current_class
-  calling_function.pop()
-  # TODO: Verificar que lo siguiente es necesario
-  operands.append(Types.VOID)
-  types.append(Types.VOID)
+  populate_local_func_call(func_data)
+  func_data.class_name = current_class['#name']
 
+  if func_data.error:
+    return func_data.error
 
-class_call_stack = [[]]
-func_call_stack = []
-params_stack = []
+  class_op = Operand(current_class['#name'])
+  class_op.set_type(current_class['#name'])
+  class_call_stack.append([class_op])
 
-
-def switch_instance(instance_name):
-  global calling_class
-  instance = Operand(instance_name)
-  if len(class_call_stack[-1]) == 0:
-    populate_local_var(instance, is_instance=True)
-  else:
-    calling_class = classes[class_call_stack[-1][-1]]
-    print(class_call_stack, instance_name)
-    populate_call(instance)
-
-  if instance.get_error():
-    return instance.get_error()
-
-  class_call_stack[-1].append(instance.get_type())
-  print(instance.get_type())
-
-
-def seen_instance_attribute(attribute_name):
-  global calling_class
-  attribute = Operand(attribute_name)
-  calling_class = classes[class_call_stack[-1][-1]]
-  populate_call(attribute)
-
-  if attribute.get_error():
-    return attribute.get_error()
-
-  for instance in class_call_stack[-1]:
-    generate_quadruple(Operations.ENTER_INSTANCE, instance,
-                       None, class_call_stack[-1][-1])
-
-  generate_quadruple(Operations.RETURN, attribute, None, None)
-
-  while len(class_call_stack[-1]) > 0:
-    generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
-    class_call_stack[-1].pop()
-
-  temp = build_temp_operand(attribute.get_type())
-  generate_quadruple(Operations.GET_RETURN, temp, None, q_count+1)
-
-  operands.append(attribute)
-  types.append(attribute.get_type())
-
-
-# TODO: Llevar arriba donde estan las demas busquedas
-def populate_func_call(operand, is_init=False):
-  global expecting_init
-  func_name = operand.get_raw()
-
-  if is_init:
-    expecting_init = False
-  curr_class = calling_class['#name']
-  while curr_class:
-    if func_name in classes[curr_class]['#funcs']:
-      if classes[curr_class]['#funcs'][func_name]['#access'] != Access.PUBLIC:
-        return f"Cannot access {calling_function[-1]['#name']}."
-      operand.set_type(classes[curr_class]['#funcs'][func_name]['#type'])
-      return
-  return f'{func_name} not defined in scope.'
-
-
-def seen_instance_func(func_name, is_init=False):
-  global calling_class
-  func = Operand(func_name)
-  calling_class = classes[class_call_stack[-1][-1]]
-  populate_func_call(func, is_init=is_init)
-
-  if func.get_error():
-    return func.get_error()
-
-  func_call_stack.append(classes[class_call_stack[-1][-1]]['#funcs'][func_name])
+  print('append', func_name)
+  func_call_stack.append(func_data)
 
 
 def start_passing_params():
+  operators.append(Operations.FAKE_BOTTOM)
   params_stack.append([])
-  class_call_stack.append([])
 
 
 def register_param():
-  # print(top(operands).get_raw())
   params_stack[-1].append(operands.pop())
 
 
-def done_passing_params():
-  global pending_returns
-
-  if len(class_call_stack[-1]) > 0:
+def done_passing_params(is_local=False):
+  if not is_local:
     for instance in class_call_stack[-1]:
       generate_quadruple(Operations.ENTER_INSTANCE, instance,
-                        None, class_call_stack[-1][-1])
-    calling = class_call_stack[-1][-1]
-  else:
-    calling = current_class['#name']
-  generate_quadruple(Operations.ERA, calling,
-                    func_call_stack[-1]['#name'], None)
+                        None, instance.get_type())
+  generate_quadruple(Operations.ERA, class_call_stack[-1][-1].get_type(),
+                    func_call_stack[-1].func_name, None)
 
-  expecting_params = func_call_stack[-1]['#param_count']
-  assigning_params = list(func_call_stack[-1]['#vars'].values())
-  if len(params_stack[-1])+1 != expecting_params:
-    return (f"{func_call_stack[-1]['#name']} expects {expecting_params}, but "
-            + f'{len(params_stack[-1])+1} were given')
+  func = classes[func_call_stack[-1].class_name]['#funcs'][func_call_stack[-1].func_name]
+
+  expecting_params = func['#param_count']
+  assigning_params = list(func['#vars'].values())
+  if len(params_stack[-1]) != expecting_params:
+    return (f"{func['#name']} expects {expecting_params}, but "
+            + f'{len(params_stack[-1])} were given')
   count = 0
   for sending_param in params_stack[-1]:
-    if not semantic_cube[assigning_params[count]][sending_param.get_type()][Operations.EQUAL]:
+    if not semantic_cube[assigning_params[count]['#type']][sending_param.get_type()][Operations.EQUAL]:
       return (f'Incompatible param {count+1} on call to ' +
-          f"{func_call_stack[-1]['#name']}")
+          f"{func['#name']}")
     generate_quadruple(Operations.PARAM, sending_param, None, count)
     count += 1
   params_stack.pop()
 
-  generate_quadruple(Operations.GOSUB, None, None, None)
+  generate_quadruple(Operations.GOSUB, class_call_stack[-1][-1].get_type(),
+                     func_call_stack[-1].func_name, None)
 
-  while len(class_call_stack[-1]) > 0:
-    generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
-    class_call_stack[-1].pop()
+  if not is_local:
+    while len(class_call_stack[-1]) > 0:
+      generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
+      class_call_stack[-1].pop()
   class_call_stack.pop()
-  print(class_call_stack)
-
-  temp = build_temp_operand(func_call_stack[-1]['#type'])
-  pending_returns.append(q_count+1)
-  generate_quadruple(Operations.GET_RETURN, temp, None, None)
-  Operands.append(temp)
-  types.append(temp)
-
-# def start_func_call(func_name):
-#   global calling_class, calling_function
-#   if len(calling_class) == 0:
-#     calling_class.append(current_class)
-#   if func_name in calling_class[-1]['#funcs']:
-#     calling_function.append(calling_class[-1]['#funcs'][func_name])
-#     return
-#   curr_class = calling_class[-1]['#parent']
-#   while curr_class:
-#     if func_name in classes[curr_class]['#funcs']:
-#       calling_class.append(classes[curr_class])
-#       calling_function.append(calling_class[-1]['#funcs'][func_name])
-#       if calling_function[-1]['#access'] not in [Access.PUBLIC, Access.PROTECTED]:
-#         return f"Cannot access {calling_function[-1]['#name']}."
-#       return
-#     curr_class = classes[curr_class]['#parent']
-#   return f'{func_name} not defined in scope.'
 
 
-# def start_instance_func_call(func_name, is_init=False):
-#   global calling_class, calling_function, expecting_init
-#   if is_init:
-#     expecting_init = False
-#   curr_class = calling_class[-1]['#name']
-#   calling_class.pop()
-#   while curr_class:
-#     if func_name in classes[curr_class]['#funcs']:
-#       calling_class.append(classes[curr_class])
-#       calling_function.append(calling_class[-1]['#funcs'][func_name])
-#       if calling_function[-1]['#access'] != Access.PUBLIC:
-#         return f"Cannot access {calling_function[-1]['#name']}."
-#       return
-#     curr_class = classes[curr_class]['#parent']
-#   return f'{func_name} not defined in scope.'
+  if func_call_stack[-1].func_type in var_types:
+    temp = build_temp_operand(func_call_stack[-1].func_type)
+    generate_quadruple(Operations.GET_RETURN, temp, None, None)
+    operands.append(temp)
+    types.append(temp.get_type())
+  else:
+    operands.append(Types.VOID)
+    types.append(Types.VOID)
+  func_call_stack.pop()
 
-
-# def start_param_collection():
-#   global param_count, calling_parent, passing_params
-#   param_count = 0
-#   generate_quadruple(Operations.ERA, calling_class[-1]['#name'],
-#                      calling_function[-1]['#name'], calling_parent)
-#   passing_params = True
-#   calling_class.append(Operations.FAKE_BOTTOM)
-
-
-# def pass_param():
-#   global operands, types
-#   param = list(calling_function[-1]['#vars'].values())[param_count]
-#   param_type = param['#type']
-#   argument = operands.pop()
-#   arg_type = types.pop()
-#   if not semantic_cube[arg_type][param_type][Operations.EQUAL]:
-#     return (f"{calling_function[-1]['#name']} expecting type {param_type.value} "
-#             + f'for parameter {param_count+1}')
-#   generate_quadruple(Operations.PARAM, argument, None, param_count)
-
-
-# def prepare_upcoming_param():
-#   global param_count
-#   param_count += 1
-#   expected = calling_function[-1]['#param_count']
-#   if param_count+1 > expected:
-#     return (f"{calling_function[-1]['#name']} expects {expected} parameters, " +
-#             'but more were given')
-
-
-# def done_param_pass():
-#   global passing_params
-#   calling_class.pop()  # Pop fake bottom
-#   passing_params = False
-#   expected = calling_function[-1]['#param_count']
-#   if param_count+1 != expected and not param_count == 0 and not expected == 0:
-#     return (f"{calling_function[-1]['#name']} expects {expected} parameters, " +
-#             f'but {param_count+1} were given')
-#   generate_quadruple(
-#       Operations.GOSUB, calling_class[-1]['#name'], calling_function[-1]['#name'], None)
-
-
-# def instance_attribute_call(attribute):
-#   global calling_function, called_attribute
-#   if expecting_init:
-#     return 'Calling class member before calling init.'
-#   calling_function.append(calling_class[-1]['#funcs']['#attributes'])
-#   called_attribute = Operand(attribute)
-#   populate_call(called_attribute)
-#   if called_attribute.get_error():
-#     return called_attribute.get_error()
-#   generate_quadruple(Operations.RETURN, called_attribute, None, q_count+1)
-
-
-# def finish_call():
-#   global calling_class, calling_function, operands, types, calling_class
-
-#   while top(calling_class) and top(calling_class) != Operations.FAKE_BOTTOM:
-#     generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
-#     calling_class.pop()
-
-#   if calling_function[-1]['#name'] == '#attributes':
-#     op_type = called_attribute.get_type()
-#   else:
-#     op_type = calling_function[-1]['#type']
-
-#   if op_type == Types.VOID:
-#     operands.append(Types.VOID)
-#     types.append(Types.VOID)
-#   else:
-#     operand = build_temp_operand(op_type)
-#     generate_quadruple(Operations.GET_RETURN, None, None,
-#                        operand.get_address())
-#     operands.append(operand)
-#     types.append(operand.get_type())
-
-#   calling_function.pop()
-
-
-# def switch_func(func_name):
-#   global calling_function
-#   calling_function.append(calling_class[-1]['#funcs'][func_name])
-
-
-# def switch_instance(instance):
-#   global calling_class, calling_function, passing_params
-
-#   if expecting_init:
-#     return 'Calling class member before calling init.'
-
-#   operand = Operand(instance)
-
-#   if len(calling_class) > 0 and not passing_params:
-#     populate_call(operand)
-#   else:
-#     populate_local_var(operand, is_instance=True)
-
-#   class_type = operand.get_type()
-#   if operand.get_error():
-#     return operand.get_error()
-#   elif class_type in var_types:
-#     return f'{instance} is of type {class_type} and not an instance.'
-#   generate_quadruple(Operations.ENTER_INSTANCE, operand, None, class_type)
-
-#   calling_class.append(classes[class_type])
+  operators.pop()
 
 
 def generate_output():

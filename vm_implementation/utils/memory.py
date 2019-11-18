@@ -221,18 +221,18 @@ class Memory:
 
   def push_instance(self, address, class_name):
     self.__depth -= 1
-    print(self.__depth, class_name)
+    #print(self.__depth, class_name)
     self.__instance_stack.append(self.get(address))
     self.__instance_stack[-1].push_attributes(class_name)
-    print('append', self.__instance_stack[-1].get_name())
+    #print('append', self.__instance_stack[-1].get_name())
 
   def pop_instance(self):
     if self.__depth < 0:
       self.__depth += 1
-      print(self.__depth)
+      #print(self.__depth)
     self.__instance_stack[-1].pop_attributes()
     popped = self.__instance_stack.pop()
-    print('popped', popped.get_name())
+    #print('popped', popped.get_name())
 
   def prepare_new_procedure(self, class_name, func_name):
     self.__setting_param = True
@@ -241,7 +241,7 @@ class Memory:
   def push_new_procedure(self):
     self.__setting_param = False
     self.__depth = 0
-    print(self.__depth)
+    #print(self.__depth)
     self.__instance_stack[-1].push_new_procedure()
 
   def pop_procedure(self):

@@ -10,6 +10,6 @@ main {
   var {
     int n;
   }
-  n = 20;
+  n = 10;
   write fib(n), '$';
 }

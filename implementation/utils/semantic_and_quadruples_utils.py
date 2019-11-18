@@ -69,7 +69,6 @@ class Available:
 
 
 # Intermediate code generation utils
-
 class Operand:
   def __init__(self, raw=None):
     self.__raw = raw
@@ -93,3 +92,11 @@ class Operand:
   def get_address(self): return self.__addr
   def get_type(self): return self.__type
   def get_error(self): return self.__err
+
+
+class FuncData:
+  def __init__(self, func_name):
+    self.func_name = func_name
+    self.class_name = None
+    self.func_type = None
+    self.error = None
