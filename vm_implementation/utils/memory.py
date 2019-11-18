@@ -1,6 +1,7 @@
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
 symbol_table = None
+is_pointer = False
 
 
 class Values:
@@ -10,6 +11,7 @@ class Values:
     self.__char_slots = {}
     self.__bool_slots = {}
     self.__instance_slots = {}
+    self.__pointer_slots = {}
 
     self.__int_begin = begin
     self.__int_limit = self.__int_begin + BLOCK_SIZE - 1
@@ -21,19 +23,22 @@ class Values:
     self.__bool_limit = self.__bool_begin + BLOCK_SIZE - 1
     self.__instance_pointer_begin = self.__bool_limit + 1
     self.__instance_pointer_limit = self.__instance_pointer_begin + BLOCK_SIZE - 1
+    self.__pointer_begin = self.__instance_pointer_limit + 1
+    self.__pointer_limit = self.__pointer_begin + BLOCK_SIZE - 1
 
   def set(self, address, value, assign=False):
-
     if self.__int_begin <= address <= self.__int_limit:
-      self.__int_slots[address] = value
+      self.__int_slots[address] = int(value or 0)
     elif self.__float_begin <= address <= self.__float_limit:
-      self.__float_slots[address] = value
+      self.__float_slots[address] = float(value or 0)
     elif self.__char_begin <= address <= self.__char_limit:
-      self.__char_slots[address] = value
+      self.__char_slots[address] = str(value or '\0')
     elif self.__bool_begin <= address <= self.__bool_limit:
-      self.__bool_slots[address] = value
+      self.__bool_slots[address] = bool(value)
     elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
       self.__instance_slots[address] = InstanceMemory(value)
+    elif self.__pointer_begin <= address <= self.__pointer_limit:
+      self.__pointer_slots[address] = value
     else:
       raise Exception(f"Values.Set {address}: value out of range")
 
@@ -48,6 +53,10 @@ class Values:
       return self.__bool_slots.get(address, None)
     elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
       return self.__instance_slots.get(address, None)
+    elif self.__pointer_begin <= address <= self.__pointer_limit:
+      global is_pointer
+      is_pointer = True
+      return self.__pointer_slots[address]
     else:
       raise Exception(f"Values.Get {address}: value out of range")
 
@@ -56,6 +65,7 @@ class Values:
     print(prefix, 'float', self.__float_slots)
     print(prefix, 'char', self.__char_slots)
     print(prefix, 'bool', self.__bool_slots)
+    print(prefix, "pointer", self.__pointer_slots)
     for address, instance in self.__instance_slots.items():
       print(prefix, 'class', address)
       instance.print_instance(prefix + '\t')
@@ -98,23 +108,24 @@ class InstanceMemory:
     self.__next_procedure = None
     self.__next_attributes = None
 
-    self.set_attributes(class_name)
     if class_name != '#global':
-      attributes = symbol_table[class_name]['#funcs']['#attributes']['#vars'].values(
-      )
-      for attribute in attributes:
-        self.set(attribute['#address'], attribute['#type'])
+      curr_class = class_name
+      while curr_class:
+        self.set_attributes(curr_class)
+        curr_attributes = symbol_table[curr_class]['#funcs']['#attributes']['#vars'].values(
+        )
+        for attribute in curr_attributes:
+          value = None
+          if attribute['#type'] not in types:
+            value = attribute['#type']
+          if '#r' in attribute:
+            for i in range(attribute['#r']):
+              self.set(attribute['#address'] + i, value)
+          else:
+            self.set(attribute['#address'], value)
+        curr_class = symbol_table[curr_class]['#parent']
 
-    curr_class = symbol_table[class_name]['#parent']
-    while curr_class:
-      self.set_attributes(curr_class)
-      curr_attributes = symbol_table[curr_class]['#funcs']['#attributes']['#vars'].values(
-      )
-      for attribute in curr_attributes:
-        self.set(attribute['#address'], attribute['#type'])
-      curr_class = symbol_table[curr_class]['#parent']
-
-    self.__attributes_stack = [list(self.__attributes.keys())[0]]
+      self.__attributes_stack.append(list(self.__attributes.keys())[0])
 
   def set(self, address, value, assigning_param=False):
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
@@ -156,7 +167,14 @@ class InstanceMemory:
     self.__next_procedure = ProcedureMemory()
     var = symbol_table[class_name]['#funcs'][func_name]['#vars'].values()
     for v in var:
-      self.__next_procedure.set(v['#address'], v['#type'])
+      value = None
+      if v['#type'] not in types:
+        value = v['#type']
+      if '#r' in v:
+        for i in range(v['#r']):
+          self.__next_procedure.set(v['#address'] + i, value)
+      else:
+        self.__next_procedure.set(v['#address'], value)
 
   def push_new_procedure(self):
     if top(self.__attributes_stack) != self.__next_attributes:
@@ -218,8 +236,12 @@ class Memory:
         value = self.__instance_stack[self.__depth-1].get(address)
       else:
         value = self.__instance_stack[-1].get(address)
-    if value is None:
-      raise Exception(f'Value for {address} not found')
+    global is_pointer
+    if is_pointer and value:
+      is_pointer = False
+      value = self.get(value, assigning_param)
+    elif is_pointer:
+      is_pointer = False
     return value
 
   def push_instance(self, address, class_name):

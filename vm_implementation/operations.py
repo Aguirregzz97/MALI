@@ -1,5 +1,5 @@
 from vm_implementation.utils.memory import Memory  # pylint: disable=unused-wildcard-import
-
+from vm_implementation.utils.constants import *
 
 memory: Memory
 symbol_table = None
@@ -7,6 +7,13 @@ q = 0
 aux_q = []
 end = False
 params = None
+
+def get_address(address):
+  if POINTER_LOWER_LIMIT <= address <= POINTER_UPPER_LIMIT:
+    val = memory.get(address)
+    if val:
+      address = val
+  return address
 
 
 def set_input(input):
@@ -59,7 +66,8 @@ def op_div(a, b, c):
 
 
 def op_plus(a, b, c):
-  memory.set(c, memory.get(a) + memory.get(b))
+  # print('suma get address de ', c, ':  ', get_address(c))
+  memory.set(get_address(c), memory.get(a) + memory.get(b))
   next_q()
 
 
@@ -114,9 +122,9 @@ def op_equal(a, b, c):
   if a == 'read':
     read = input()
     # TODO: validar tipo.
-    memory.set(c, read)
+    memory.set(get_address(c), read)
   else:
-    memory.set(c, memory.get(a))
+    memory.set(get_address(c), memory.get(a))
   next_q()
 
 
@@ -178,7 +186,7 @@ def op_endproc(a, b, c):
 
 
 def op_end(a, b, c):
-  # memory.print_memory()
+  memory.print_memory()
   global end
   end = True
 
@@ -201,7 +209,6 @@ def op_get_return(a, b, c):
   next_q()
 
 def op_ver(a, b, c):
-  if not memory.get(b) <= memory.get(a) < memory.get(c):
-    print(memory.get(a))
-    return 'Index out of range'
+  if not b <= memory.get(a) <= c:
+    return f'Index {memory.get(a)} out of range'
   next_q()

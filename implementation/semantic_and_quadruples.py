@@ -605,10 +605,10 @@ def generate_output():
   data_segment = {}
   for v in classes['#global']['#funcs']['#attributes']['#vars'].values():
     if type(v['#type']) == str:
-      var_type = v['#type']
+      value = v['#type']
     else:
-      var_type = v['#type'].value
-    data_segment[v['#address']] = var_type
+      value = None
+    data_segment[v['#address']] = value
 
   constant_segment = invert_dict(constant_addresses)
 
@@ -658,11 +658,13 @@ def add_arr_dim_2(dimension_size):
 
 
 def arr_dim_complete():
-  dims = current_function['#vars'][last_declared_var]['#dims']
+  var = current_function['#vars'][last_declared_var]
+  dims = var['#dims']
   global r
   address = var_avail.displace(current_type, r)
   if not address:
     return 'Not enough space.'
+  var['#r'] = r
   for dim in dims:
     r //= dim['#limsup'] + 1
     dim['#m'] = r
@@ -687,8 +689,9 @@ def arr_access_2():
 def arr_access_3():
   var, dim = pila_dimensionada[-1]
   index = operands[-1]
-  print(index.get_raw())
-  generate_quadruple(Operations.VER, index, get_or_create_cte_address(0, Types.INT), get_or_create_cte_address(var['#dims'][dim - 1]['#limsup'], Types.INT))
+  if index.get_type() != Types.INT and index.get_type() != Types.POINTER:
+    return 'Index has to be an integer'
+  generate_quadruple(Operations.VER, index, 0, var['#dims'][dim - 1]['#limsup'])
   if len(var['#dims']) > dim:
     aux = operands.pop()
     op_type = types.pop()
@@ -715,7 +718,7 @@ def arr_access_4():
 def arr_access_5():
   var, _ = pila_dimensionada.pop()
   aux = operands.pop()
-  t = build_temp_operand(Types.INT)
+  t = build_temp_operand(Types.POINTER)
   generate_quadruple(Operations.PLUS, aux, get_or_create_cte_address(var['#address'], Types.INT), t)
   operands.append(t)
   operators.pop()
