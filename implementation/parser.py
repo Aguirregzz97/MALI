@@ -484,29 +484,39 @@ def p_r_seen_operator(p):
 
 def p_r_seen_factor(p):
   'r_seen_factor : '
-  sq.solve_operation_or_continue([Operations.TIMES, Operations.DIV])
+  e = sq.solve_operation_or_continue([Operations.TIMES, Operations.DIV])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_term(p):
   'r_seen_term : '
-  sq.solve_operation_or_continue([Operations.PLUS, Operations.MINUS])
+  e = sq.solve_operation_or_continue([Operations.PLUS, Operations.MINUS])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seenX(p):
   'r_seen_x : '
-  sq.solve_operation_or_continue(
+  e = sq.solve_operation_or_continue(
       [Operations.MORE_THAN, Operations.LESS_THAN, Operations.DIFFERENT,
        Operations.IS_EQUAL, Operations.LESS_EQUAL, Operations.MORE_EQUAL])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_xp(p):
   'r_seen_xp : '
-  sq.solve_operation_or_continue([Operations.OR])
+  e = sq.solve_operation_or_continue([Operations.OR])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_seen_exp(p):
   'r_seen_exp : '
-  sq.solve_operation_or_continue([Operations.AND])
+  e = sq.solve_operation_or_continue([Operations.AND])
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_pop_fake_bottom(p):
@@ -633,7 +643,9 @@ def p_r_start_passing_params(p):
 
 def p_r_register_param(p):
   '''r_register_param : '''
-  sq.register_param()
+  e = sq.register_param()
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_r_done_passing_params(p):

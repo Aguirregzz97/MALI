@@ -101,8 +101,7 @@ str_operations = {
 }
 
 
-semantic_cube = defaultdict(lambda : defaultdict(lambda : defaultdict(
-    lambda : defaultdict(None))))
+semantic_cube = defaultdict(lambda : defaultdict(lambda : defaultdict(lambda : None)))
 
 semantic_cube[Types.INT][Types.INT][Operations.AND] = Types.BOOL
 semantic_cube[Types.INT][Types.INT][Operations.OR] = Types.BOOL

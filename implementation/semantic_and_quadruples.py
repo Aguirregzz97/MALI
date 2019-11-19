@@ -574,7 +574,10 @@ def start_passing_params():
 
 
 def register_param():
-  params_stack[-1].append(operands.pop())
+  param = operands.pop()
+  if param == Types.VOID:
+    return 'Expression returns no value.'
+  params_stack[-1].append(param)
 
 
 def done_passing_params(is_local=False):
@@ -622,44 +625,6 @@ def done_passing_params(is_local=False):
   func_call_stack.pop()
 
   operators.pop()
-
-
-def generate_output():
-  global classes
-
-  data_segment = {}
-  for v in classes['#global']['#funcs']['#attributes']['#vars'].values():
-    if type(v['#type']) == str:
-      value = v['#type']
-    else:
-      value = None
-    data_segment[v['#address']] = value
-
-  constant_segment = invert_dict(constant_addresses)
-
-  # Clean symbol table for use in virtual machine.
-  for v1 in classes.values():
-    if v1['#parent'] == '#global':
-      v1['#parent'] = None
-    for v2 in v1['#funcs'].values():
-      v2['#type'] = v2['#type'].value
-      if '#access' in v2:
-        del v2['#access']
-      for v3 in v2['#vars'].values():
-        del v3['#assigned']
-        if type(v3['#type']) != str:
-          v3['#type'] = v3['#type'].value
-        if '#access' in v3:
-          del v3['#access']
-
-  del classes['#global']['#funcs']['#attributes']
-
-  return {
-      'symbol_table': classes,
-      'data_segment': data_segment,
-      'constant_segment': constant_segment,
-      'quadruples': quadruples
-  }
 
 
 def add_arr_dim(dimension_size):
@@ -749,3 +714,41 @@ def arr_access_5():
   generate_quadruple(Operations.PLUS, aux, get_or_create_cte_address(var['#address'], Types.INT), t)
   operands.append(t)
   operators.pop()
+
+
+def generate_output():
+  global classes
+
+  data_segment = {}
+  for v in classes['#global']['#funcs']['#attributes']['#vars'].values():
+    if type(v['#type']) == str:
+      value = v['#type']
+    else:
+      value = None
+    data_segment[v['#address']] = value
+
+  constant_segment = invert_dict(constant_addresses)
+
+  # Clean symbol table for use in virtual machine.
+  for v1 in classes.values():
+    if v1['#parent'] == '#global':
+      v1['#parent'] = None
+    for v2 in v1['#funcs'].values():
+      v2['#type'] = v2['#type'].value
+      if '#access' in v2:
+        del v2['#access']
+      for v3 in v2['#vars'].values():
+        del v3['#assigned']
+        if type(v3['#type']) != str:
+          v3['#type'] = v3['#type'].value
+        if '#access' in v3:
+          del v3['#access']
+
+  del classes['#global']['#funcs']['#attributes']
+
+  return {
+      'symbol_table': classes,
+      'data_segment': data_segment,
+      'constant_segment': constant_segment,
+      'quadruples': quadruples
+  }

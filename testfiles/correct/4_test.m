@@ -48,6 +48,14 @@ var {
   int x, y, z;
 }
 
+func int get5() {
+  return 10;
+}
+
+func void doesNothing() {
+  write "";
+}
+
 main {
   var {
     Student student, student2;
@@ -65,7 +73,7 @@ main {
 
   x = 5;
   y = 5;
-  z = x + y;
+  z = x + y + doesNothing();
   n = student2->get5();
   m = student2->get5();
   o = student2->get5();
@@ -74,5 +82,6 @@ main {
   write "Debe ser 25 5", '$';
   student2.book.page->print(m + z + student->get5() + student2->get5(), student->get5());
 
-  #student2.book.page.print(z);
+  write "Debe ser 10 10", '$';
+  student2.book.page->print(z, get5());
 }
