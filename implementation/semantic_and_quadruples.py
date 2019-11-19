@@ -17,6 +17,9 @@ is_param = False
 param_count = 0
 var_avail = Available(VAR_LOWER_LIMIT, VAR_UPPER_LIMIT)
 temp_avail = Available(TEMP_LOWER_LIMIT, TEMP_UPPER_LIMIT)
+last_declared_var = None
+r = None
+arr_address = None
 
 
 def seen_class(class_name):
@@ -70,7 +73,7 @@ def seen_type(new_type):
   current_type = new_type
 
 
-def var_name(var_name):
+def var_name(var_name, assigned=False):
   global param_count
   if var_name in current_function['#vars']:
     return f"Redeclared variable: {var_name}"
@@ -85,13 +88,15 @@ def var_name(var_name):
         adjust = GLOBAL_ADJUSTMENT
 
     current_function['#vars'][var_name] = (
-        new_var_dict(current_type, address-adjust, current_access))
+        new_var_dict(current_type, address-adjust, current_access, assigned=assigned))
 
     if is_param:
       current_function['#param_count'] += 1
       current_function['#vars'][var_name]['#assigned'] = True
     else:
       current_function['#var_count'] += 1
+    global last_declared_var
+    last_declared_var = var_name
 
 
 def switch_param(reading_params):
@@ -123,6 +128,8 @@ calling_parent = False
 class_call_stack = []
 func_call_stack = []
 params_stack = []
+count_enter_instances = 0
+pila_dimensionada = []
 
 
 def address_or_else(operand, is_visual=False):
@@ -623,10 +630,10 @@ def generate_output():
   data_segment = {}
   for v in classes['#global']['#funcs']['#attributes']['#vars'].values():
     if type(v['#type']) == str:
-      var_type = v['#type']
+      value = v['#type']
     else:
-      var_type = v['#type'].value
-    data_segment[v['#address']] = var_type
+      value = None
+    data_segment[v['#address']] = value
 
   constant_segment = invert_dict(constant_addresses)
 
@@ -653,3 +660,92 @@ def generate_output():
       'constant_segment': constant_segment,
       'quadruples': quadruples
   }
+
+
+def add_arr_dim(dimension_size):
+  if current_type not in var_types:
+    return 'An array can store only primitive types'
+  if dimension_size < 1:
+    return 'Size must be a positive integer'
+  var = current_function['#vars'][last_declared_var]
+  dim1 = {'#limsup': dimension_size - 1}
+  global r
+  r = dimension_size
+  var['#dims'] = [dim1]
+
+
+def add_arr_dim_2(dimension_size):
+  if dimension_size < 1:
+    return 'Size must be a positive integer'
+  dims = current_function['#vars'][last_declared_var]['#dims']
+  dimn = {'#limsup': dimension_size - 1}
+  global r
+  r *= dimension_size
+  dims.append(dimn)
+
+
+def arr_dim_complete():
+  var = current_function['#vars'][last_declared_var]
+  dims = var['#dims']
+  global r
+  address = var_avail.displace(current_type, r)
+  if not address:
+    return 'Not enough space.'
+  var['#r'] = r
+  for dim in dims:
+    r //= dim['#limsup'] + 1
+    dim['#m'] = r
+  dims[-1]['#m'] = 0
+
+
+
+def arr_access_2():
+  id = operands.pop().get_raw()
+  types.pop()
+  if id in current_function['#vars']:
+    var = current_function['#vars'][id]
+  elif id in classes['#global']['#funcs']['#attributes']['#vars']:
+    var = classes['#global']['#funcs']['#attributes']['#vars'][id]
+  else:
+    return f'Variable {id} does not exist'
+  if '#dims' not in var:
+    return f'Variable {id} has no dimensions'
+  pila_dimensionada.append((var, 1))
+  operators.append(Operations.FAKE_BOTTOM)
+
+def arr_access_3():
+  var, dim = pila_dimensionada[-1]
+  index = operands[-1]
+  if index.get_type() != Types.INT and index.get_type() != Types.POINTER:
+    return 'Index has to be an integer'
+  generate_quadruple(Operations.VER, index, 0, var['#dims'][dim - 1]['#limsup'])
+  if len(var['#dims']) > dim:
+    aux = operands.pop()
+    types.pop()
+    t = build_temp_operand(Types.INT)
+    generate_quadruple(Operations.TIMES, aux, get_or_create_cte_address(var['#dims'][dim - 1]['#m'], Types.INT), t)
+    operands.append(t)
+    types.append(t.get_type())
+  if dim > 1:
+    aux2 = operands.pop()
+    types.pop()
+    aux1 = operands.pop()
+    types.pop()
+    t = build_temp_operand(Types.INT)
+    generate_quadruple(Operations.PLUS, aux1, aux2, t)
+    operands.append(t)
+    types.append(t.get_type())
+
+
+def arr_access_4():
+  var, dim = pila_dimensionada.pop()
+  pila_dimensionada.append((var, dim + 1))
+
+
+def arr_access_5():
+  var, _ = pila_dimensionada.pop()
+  aux = operands.pop()
+  t = build_temp_operand(Types.POINTER)
+  generate_quadruple(Operations.PLUS, aux, get_or_create_cte_address(var['#address'], Types.INT), t)
+  operands.append(t)
+  operators.pop()

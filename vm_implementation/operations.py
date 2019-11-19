@@ -1,5 +1,5 @@
 from vm_implementation.utils.memory import Memory  # pylint: disable=unused-wildcard-import
-
+from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
 memory: Memory
 symbol_table = None
@@ -178,7 +178,6 @@ def op_endproc(a, b, c):
 
 
 def op_end(a, b, c):
-  # memory.print_memory()
   global end
   end = True
 
@@ -198,4 +197,10 @@ def op_get_return(a, b, c):
   if return_value is None:
     return 'Segmentation fault: missing return.'
   memory.set(a, return_value)
+  next_q()
+
+
+def op_ver(a, b, c):
+  if not b <= memory.get(a) <= c:
+    return f'Index {memory.get(a)} out of range'
   next_q()

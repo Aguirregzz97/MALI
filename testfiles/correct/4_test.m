@@ -44,9 +44,9 @@ class Student {
   }
 }
 
-#var {
-  #int x, y, z;
-#}
+var {
+  int x, y, z;
+}
 
 main {
   var {
@@ -63,14 +63,16 @@ main {
   write "Debe ser 2 600 30", '$';
   write student2->id, ' ', student2.book->cost, ' ', student2.book.page->num, '$';
 
-  #x = 5;
-  #y = 5;
-  #z = x + y;
+  x = 5;
+  y = 5;
+  z = x + y;
   n = student2->get5();
   m = student2->get5();
   o = student2->get5();
   r = m + o;
 
-  write "Debe ser 20 5", '$';
-  student2.book.page->print(m + o + student->get5() + student2->get5(), student->get5());
+  write "Debe ser 25 5", '$';
+  student2.book.page->print(m + z + student->get5() + student2->get5(), student->get5());
+
+  #student2.book.page.print(z);
 }

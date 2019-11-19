@@ -1,6 +1,8 @@
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
 symbol_table = None
+pending_set = None
+is_pointer = False
 
 
 class Values:
@@ -10,6 +12,7 @@ class Values:
     self.__char_slots = {}
     self.__bool_slots = {}
     self.__instance_slots = {}
+    self.__pointer_slots = {}
 
     self.__int_begin = begin
     self.__int_limit = self.__int_begin + BLOCK_SIZE - 1
@@ -21,21 +24,28 @@ class Values:
     self.__bool_limit = self.__bool_begin + BLOCK_SIZE - 1
     self.__instance_pointer_begin = self.__bool_limit + 1
     self.__instance_pointer_limit = self.__instance_pointer_begin + BLOCK_SIZE - 1
+    self.__pointer_begin = self.__instance_pointer_limit + 1
+    self.__pointer_limit = self.__pointer_begin + BLOCK_SIZE - 1
 
   def set(self, address, value, assign=False):
-
     if self.__int_begin <= address <= self.__int_limit:
-      self.__int_slots[address] = value
+      self.__int_slots[address] = int(value or 0)
     elif self.__float_begin <= address <= self.__float_limit:
-      self.__float_slots[address] = value
+      self.__float_slots[address] = float(value or 0)
     elif self.__char_begin <= address <= self.__char_limit:
-      self.__char_slots[address] = value
+      self.__char_slots[address] = str(value or '\0')
     elif self.__bool_begin <= address <= self.__bool_limit:
-      self.__bool_slots[address] = value
+      self.__bool_slots[address] = bool(value)
     elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
       self.__instance_slots[address] = InstanceMemory(value)
+    elif self.__pointer_begin <= address <= self.__pointer_limit:
+      if address in self.__pointer_slots.keys() and self.__pointer_slots[address]:
+        global pending_set
+        pending_set = self.__pointer_slots[address]
+      else:
+        self.__pointer_slots[address] = value
     else:
-      raise Exception(f"Values.Set {address}: valor fuera del rango")
+      raise Exception(f"Values.Set {address}: value out of range")
 
   def get(self, address):
     if self.__int_begin <= address <= self.__int_limit:
@@ -47,15 +57,20 @@ class Values:
     elif self.__bool_begin <= address <= self.__bool_limit:
       return self.__bool_slots.get(address, None)
     elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
-      return self.__instance_slots.get(address, None)
+      return self.__instance_slots[address]
+    elif self.__pointer_begin <= address <= self.__pointer_limit:
+      global is_pointer
+      is_pointer = True
+      return self.__pointer_slots[address]
     else:
-      raise Exception(f"Values.Get {address}: valor fuera del rango")
+      raise Exception(f"Values.Get {address}: value out of range")
 
   def print_values(self, prefix):
     print(prefix, 'int', self.__int_slots)
     print(prefix, 'float', self.__float_slots)
     print(prefix, 'char', self.__char_slots)
     print(prefix, 'bool', self.__bool_slots)
+    print(prefix, "pointer", self.__pointer_slots)
     for address, instance in self.__instance_slots.items():
       print(prefix, 'class', address)
       instance.print_instance(prefix + '\t')
@@ -73,7 +88,7 @@ class ProcedureMemory:
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
       self.__temps.set(address, value)
     else:
-      raise Exception(f"ProcedureMemory.Set {address}: valor fuera del rango")
+      raise Exception(f"ProcedureMemory.Set {address}: value out of range")
 
   def get(self, address):
     if VAR_LOWER_LIMIT <= address <= VAR_UPPER_LIMIT:
@@ -81,7 +96,7 @@ class ProcedureMemory:
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
       return self.__temps.get(address)
     else:
-      raise Exception(f"ProcedureMemory.Get {address}: valor fuera del rango")
+      raise Exception(f"ProcedureMemory.Get {address}: value out of range")
 
   def print_procedure(self, prefix):
     print(prefix, 'vars')
@@ -105,10 +120,17 @@ class InstanceMemory:
         curr_attributes = symbol_table[curr_class]['#funcs']['#attributes']['#vars'].values(
         )
         for attribute in curr_attributes:
-          self.set(attribute['#address'], attribute['#type'])
+          value = None
+          if attribute['#type'] not in types:
+            value = attribute['#type']
+          if '#r' in attribute:
+            for i in range(attribute['#r']):
+              self.set(attribute['#address'] + i, value)
+          else:
+            self.set(attribute['#address'], value)
         curr_class = symbol_table[curr_class]['#parent']
 
-      self.__attributes_stack = [list(self.__attributes.keys())[0]]
+      # self.__attributes_stack.append(list(self.__attributes.keys())[0])
 
   def set(self, address, value, assigning_param=False):
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
@@ -119,7 +141,7 @@ class InstanceMemory:
       else:
         self.__procedure_stack[-1].set(address, value)
     else:
-      raise Exception(f"InstanceMemory.Set {address}: valor fuera del rango")
+      raise Exception(f"InstanceMemory.Set {address}: value out of range")
 
   def get(self, address):
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
@@ -127,11 +149,11 @@ class InstanceMemory:
         value = attribute.get(address)
         if value is not None:
           return value
-      return
+      raise Exception(f"InstanceMemory.Get {address}: Value not found")
     elif PROCEDURE_LOWER_LIMIT <= address <= PROCEDURE_UPPER_LIMIT:
       return self.__procedure_stack[-1].get(address)
     else:
-      raise Exception(f"InstanceMemory.Get {address}: valor fuera del rango")
+      raise Exception(f"InstanceMemory.Get {address}: Value out of range")
 
   def set_attributes(self, class_name):
     self.__attributes[class_name] = Values(ATTRIBUTE_LOWER_LIMIT)
@@ -150,7 +172,14 @@ class InstanceMemory:
     self.__next_procedure = ProcedureMemory()
     var = symbol_table[class_name]['#funcs'][func_name]['#vars'].values()
     for v in var:
-      self.__next_procedure.set(v['#address'], v['#type'])
+      value = None
+      if v['#type'] not in types:
+        value = v['#type']
+      if '#r' in v:
+        for i in range(v['#r']):
+          self.__next_procedure.set(v['#address'] + i, value)
+      else:
+        self.__next_procedure.set(v['#address'], value)
 
   def push_new_procedure(self):
     if top(self.__attributes_stack) != self.__next_attributes:
@@ -159,8 +188,7 @@ class InstanceMemory:
 
   def pop_procedure(self):
     self.__procedure_stack.pop()
-    if len(self.__attributes_stack) > 1:
-      self.__attributes_stack.pop()
+    self.pop_attributes()
 
   def print_instance(self, prefix):
     print(prefix, 'attributes > current:', top(self.__attributes_stack), '\n')
@@ -204,6 +232,11 @@ class Memory:
         self.__instance_stack[self.__depth-1].set(address, value)
       else:
         self.__instance_stack[-1].set(address, value, self.__setting_param)
+      global pending_set
+      if pending_set:
+        new_address = pending_set
+        pending_set = None
+        self.set(new_address, value, assigning_param)
 
   def get(self, address):
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
@@ -215,24 +248,23 @@ class Memory:
         value = self.__instance_stack[self.__depth-1].get(address)
       else:
         value = self.__instance_stack[-1].get(address)
-    if value is None:
-      raise Exception(f'Value for {address} not found')
+    global is_pointer
+    if is_pointer:
+      is_pointer = False
+      if value:
+        value = self.get(value)
     return value
 
   def push_instance(self, address, class_name):
     self.__depth -= 1
-    #print(self.__depth, class_name)
     self.__instance_stack.append(self.get(address))
     self.__instance_stack[-1].push_attributes(class_name)
-    #print('append', self.__instance_stack[-1].get_name())
 
   def pop_instance(self):
     if self.__depth < 0:
       self.__depth += 1
-      #print(self.__depth)
     self.__instance_stack[-1].pop_attributes()
-    popped = self.__instance_stack.pop()
-    #print('popped', popped.get_name())
+    self.__instance_stack.pop()
 
   def prepare_new_procedure(self, class_name, func_name):
     self.__setting_param = True
@@ -241,7 +273,6 @@ class Memory:
   def push_new_procedure(self):
     self.__setting_param = False
     self.__depth = 0
-    #print(self.__depth)
     self.__instance_stack[-1].push_new_procedure()
 
   def pop_procedure(self):
@@ -260,9 +291,9 @@ class Memory:
     self.__data_segment.print_values('\t')
     print('Constant segment')
     self.__constant_segment.print_values('\t')
-    print('Instance stack')
-    for instance in self.__instance_stack:
-      instance.print_instance('\t')
+    print('CURRENT INSTANCE ***********')
+    if len(self.__instance_stack):
+      self.__instance_stack[-1].print_instance('\t')
 
 
 def top(l):
