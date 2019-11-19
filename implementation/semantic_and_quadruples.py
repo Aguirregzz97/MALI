@@ -463,6 +463,9 @@ def register_return():
 def switch_instance(instance_name, is_first=False):
   global calling_class
 
+  if expecting_init:
+    return 'Calling class member before calling init.'
+
   if is_first:
     class_call_stack.append([])
 
@@ -481,6 +484,10 @@ def switch_instance(instance_name, is_first=False):
 
 def seen_instance_attribute(attribute_name):
   global calling_class
+
+  if expecting_init:
+    return 'Calling class member before calling init.'
+
   attribute = Operand(attribute_name)
   calling_class = classes[class_call_stack[-1][-1].get_type()]
   populate_instance_call(attribute)

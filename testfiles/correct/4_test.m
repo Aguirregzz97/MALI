@@ -73,7 +73,7 @@ main {
 
   x = 5;
   y = 5;
-  z = x + y + doesNothing();
+  z = x + y;
   n = student2->get5();
   m = student2->get5();
   o = student2->get5();
