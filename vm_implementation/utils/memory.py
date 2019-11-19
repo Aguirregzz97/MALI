@@ -1,4 +1,5 @@
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
+import sys
 
 symbol_table = None
 pending_set = None
@@ -29,13 +30,13 @@ class Memory:
 
   def set(self, address, value, assign=False):
     if self.__int_begin <= address <= self.__int_limit:
-      self.__int_slots[address] = cast_value('int', value)
+      self.__int_slots[address] = cast_value(Types.INT, value)
     elif self.__float_begin <= address <= self.__float_limit:
-      self.__float_slots[address] = cast_value('float', value)
+      self.__float_slots[address] = cast_value(Types.FLOAT, value)
     elif self.__char_begin <= address <= self.__char_limit:
-      self.__char_slots[address] = cast_value('char', value)
+      self.__char_slots[address] = cast_value(Types.CHAR, value)
     elif self.__bool_begin <= address <= self.__bool_limit:
-      self.__bool_slots[address] = cast_value('bool', value)
+      self.__bool_slots[address] = cast_value(Types.BOOL, value)
     elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
       self.__instance_slots[address] = Instance(value)
     elif self.__pointer_begin <= address <= self.__pointer_limit:
@@ -45,7 +46,7 @@ class Memory:
       else:
         self.__pointer_slots[address] = value
     else:
-      raise Exception(f"Memory.Set {address}: value out of range")
+      raise Exception(f"Memory.Set {address}: value out of range.")
 
   def get(self, address):
     if self.__int_begin <= address <= self.__int_limit:
@@ -63,7 +64,7 @@ class Memory:
       is_pointer = True
       return self.__pointer_slots[address]
     else:
-      raise Exception(f"Memory.Get {address}: value out of range")
+      raise Exception(f"Memory.Get {address}: value out of range.")
 
   def print_values(self, prefix):
     print(prefix, 'int', self.__int_slots)
@@ -88,7 +89,7 @@ class Procedure:
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
       self.__temps.set(address, value)
     else:
-      raise Exception(f"Procedure.Set {address}: value out of range")
+      raise Exception(f"Procedure.Set {address}: value out of range.")
 
   def get(self, address):
     if VAR_LOWER_LIMIT <= address <= VAR_UPPER_LIMIT:
@@ -96,7 +97,7 @@ class Procedure:
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
       return self.__temps.get(address)
     else:
-      raise Exception(f"Procedure.Get {address}: value out of range")
+      raise Exception(f"Procedure.Get {address}: value out of range.")
 
   def print_procedure(self, prefix):
     print(prefix, 'vars')
@@ -121,7 +122,7 @@ class Instance:
         )
         for attribute in curr_attributes:
           value = None
-          if attribute['#type'] not in types:
+          if attribute['#type'] not in raw_var_types:
             value = attribute['#type']
           if '#r' in attribute:
             for i in range(attribute['#r']):
@@ -141,7 +142,7 @@ class Instance:
       else:
         self.__procedure_stack[-1].set(address, value)
     else:
-      raise Exception(f"Instance.Set {address}: value out of range")
+      raise Exception(f"Instance.Set {address}: value out of range.")
 
   def get(self, address):
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
@@ -152,7 +153,7 @@ class Instance:
     elif PROCEDURE_LOWER_LIMIT <= address <= PROCEDURE_UPPER_LIMIT:
       return self.__procedure_stack[-1].get(address)
     else:
-      raise Exception(f"Instance.Get {address}: Value out of range")
+      raise Exception(f"Instance.Get {address}: Value out of range.")
 
   def set_attributes(self, class_name):
     self.__attributes[class_name] = Memory(ATTRIBUTE_LOWER_LIMIT)
@@ -172,7 +173,7 @@ class Instance:
     var = symbol_table[class_name]['#funcs'][func_name]['#vars'].values()
     for v in var:
       value = None
-      if v['#type'] not in types:
+      if v['#type'] not in raw_var_types:
         value = v['#type']
       if '#r' in v:
         for i in range(v['#r']):
@@ -242,18 +243,20 @@ class MemoryManager:
       value = self.__data_segment.get(address)
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
       value = self.__constant_segment.get(address)
-    else:
+    elif INSTANCE_LOWER_LIMIT <= address <= INSTANCE_UPPER_LIMIT:
       if self.__setting_param:
         value = self.__instance_stack[self.__depth-1].get(address)
       else:
         value = self.__instance_stack[-1].get(address)
+    else:
+      raise Error(f'Invalid address {address}.')
     global is_pointer
     if is_pointer:
       is_pointer = False
       if value:
         value = self.get(value)
     if value is None:
-      raise Exception('Segmentation Fault.')
+      raise Error('Segmentation Fault.')
     return value
 
   def push_instance(self, address, class_name):
@@ -292,9 +295,15 @@ class MemoryManager:
     self.__data_segment.print_values('\t')
     print('Constant segment')
     self.__constant_segment.print_values('\t')
-    print('CURRENT INSTANCE ***********')
+    print('CURRENT INSTANCE')
     if len(self.__instance_stack):
       self.__instance_stack[-1].print_instance('\t')
+
+
+class Error:
+  def __init__(self, message):
+    print("Error:", message)
+    sys.exit()
 
 
 def top(l):
@@ -306,13 +315,56 @@ def top(l):
 def cast_value(cast_type, value):
   if value is None:
     return None
-  if cast_type == 'int':
-    return int(value)
-  elif cast_type == 'float':
-    return float(value)
-  elif cast_type == 'char':
-    return str(value)
-  elif cast_type == 'bool':
-    return bool(value)
+  if cast_type == Types.INT:
+    try:
+      return int(value)
+    except:
+      raise Error('Cannot cast int.')
+  elif cast_type == Types.FLOAT:
+    try:
+      return float(value)
+    except:
+      raise Error('Cannot cast float.')
+  elif cast_type == Types.CHAR:
+    try:
+      assert len(value) == 1
+      return str(value)
+    except:
+      raise Error('Cannot cast char.')
+  elif cast_type == Types.BOOL:
+    try:
+      return bool(value)
+    except:
+      raise Error('Cannot cast bool.')
   else:
-    raise Exception(f'Unrecognized type {cast_type}')
+    raise Error(f'Unrecognized type {cast_type}.')
+
+
+def get_type(address):
+  if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
+    adjusted_address = address - DATA_LOWER_LIMIT
+  elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
+    adjusted_address = address - CTE_LOWER_LIMIT
+  elif ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
+    adjusted_address = address - ATTRIBUTE_LOWER_LIMIT
+  elif VAR_LOWER_LIMIT <= address <= VAR_UPPER_LIMIT:
+    adjusted_address = address - VAR_LOWER_LIMIT
+  elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
+    adjusted_address = address - TEMP_LOWER_LIMIT
+  else:
+    raise Error('Invalid address.')
+
+  if ADJUSTED_INT_BEGIN <= adjusted_address <= ADJUSTED_INT_LIMIT:
+    return Types.INT
+  elif ADJUSTED_FLOAT_BEGIN <= adjusted_address <= ADJUSTED_FLOAT_LIMIT:
+    return Types.FLOAT
+  elif ADJUSTED_CHAR_BEGIN <= adjusted_address <= ADJUSTED_CHAR_LIMIT:
+    return Types.CHAR
+  elif ADJUSTED_BOOL_BEGIN <= adjusted_address <= ADJUSTED_BOOL_LIMIT:
+    return Types.BOOL
+  elif ADJUSTE_INSTANCE_BEGIN <= adjusted_address <= ADJUSTED_INSTANCE_LIMIT:
+    return Types.CLASS
+  elif ADJUSTED_POINTER_BEGIN <= adjusted_address <= ADJUSTED_POINTER_LIMIT:
+    return Types.POINTER
+  else:
+    raise Error('Invalid address.')

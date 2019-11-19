@@ -49,7 +49,6 @@ class Available:
     length = int((limit-begin)/len(types))
     for t in types:
       self.__type[t] = {
-          # 'begin': type_begin,  # TODO: este podria no ser necesario.
           'next': type_begin,
           'limit': (type_begin + length)
       }

@@ -756,7 +756,6 @@ def handle_error(line, lexpos, mssg):
   error = True
   error_prefix(line, lexpos, input_str)
   print(mssg)
-  recover_parser(parser)
 
 
 def p_error(p):
@@ -764,6 +763,7 @@ def p_error(p):
   error = True
   error_prefix(p.lineno, p.lexpos, input_str)
   print(f'Unexpected token {p.value}.')
+  recover_parser(parser)
 
 
 # Generate parser.
@@ -776,10 +776,14 @@ parser.defaulted_states = {}
 def parse_string(s):
   global input_str
   input_str = s
-  parser.parse(s, tracking=True)
+  try:
+    parser.parse(s, tracking=True)
+  except:
+    pass
 
 
 def generate_output():
+  '''
   if not error:
     pp.pprint(sq.classes)
     q_count = 0
@@ -787,6 +791,7 @@ def generate_output():
       print('{0:<5} {1:<40} {2:<40}'.format(
           str(q_count) + ':', str(q), str(vq)))
       q_count += 1
+  '''
 
   if error:
     return

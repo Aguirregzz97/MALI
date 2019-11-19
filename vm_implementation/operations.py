@@ -1,4 +1,4 @@
-from vm_implementation.utils.memory import MemoryManager  # pylint: disable=unused-wildcard-import
+from vm_implementation.utils.memory import MemoryManager, get_type  # pylint: disable=unused-wildcard-import
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
 memory: MemoryManager
@@ -110,10 +110,8 @@ def op_and(a, b, c):
 
 
 def op_equal(a, b, c):
-  # TODO: Enum de operaciones
   if a == 'read':
     read = input()
-    # TODO: validar tipo.
     memory.set(c, read)
   else:
     memory.set(c, memory.get(a))
