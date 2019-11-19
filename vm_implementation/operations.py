@@ -1,7 +1,7 @@
-from vm_implementation.utils.memory import Memory  # pylint: disable=unused-wildcard-import
+from vm_implementation.utils.memory import MemoryManager  # pylint: disable=unused-wildcard-import
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
-memory: Memory
+memory: MemoryManager
 symbol_table = None
 q = 0
 aux_q = []
@@ -12,7 +12,7 @@ params = None
 def set_input(input):
   global memory, symbol_table
   symbol_table = input['symbol_table']
-  memory = Memory(symbol_table)
+  memory = MemoryManager(symbol_table)
   for address, value in input['data_segment'].items():
     memory.set(address, value)
   for address, value in input['constant_segment'].items():
@@ -193,10 +193,7 @@ def op_exit_instance(a, b, c):
 
 
 def op_get_return(a, b, c):
-  return_value = memory.get_return()
-  if return_value is None:
-    return 'Segmentation fault: missing return.'
-  memory.set(a, return_value)
+  memory.set(a, memory.get_return())
   next_q()
 
 
