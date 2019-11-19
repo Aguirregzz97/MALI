@@ -13,9 +13,9 @@ def set_input(input):
   global memory, symbol_table
   symbol_table = input['symbol_table']
   memory = MemoryManager(symbol_table)
-  for address, value in input['data_segment'].items():
+  for address, value in input['data'].items():
     memory.set(address, value)
-  for address, value in input['constant_segment'].items():
+  for address, value in input['constants'].items():
     memory.set(address, value)
   memory.push_new_procedure()
 

@@ -726,15 +726,15 @@ def arr_access_5():
 def generate_output():
   global classes
 
-  data_segment = {}
+  data = {}
   for v in classes['#global']['#funcs']['#attributes']['#vars'].values():
     if type(v['#type']) == str:
       value = v['#type']
     else:
       value = None
-    data_segment[v['#address']] = value
+    data[v['#address']] = value
 
-  constant_segment = invert_dict(constant_addresses)
+  constants = invert_dict(constant_addresses)
 
   # Clean symbol table for use in virtual machine.
   for v1 in classes.values():
@@ -755,7 +755,7 @@ def generate_output():
 
   return {
       'symbol_table': classes,
-      'data_segment': data_segment,
-      'constant_segment': constant_segment,
+      'data': data,
+      'constants': constants,
       'quadruples': quadruples
   }
