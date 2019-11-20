@@ -195,7 +195,7 @@ operator_stack = []
 
 # TODO: remove types stack, since operand_stack receives Operand class
 # instances, which track data type.
-types_stack = []
+type_stack = []
 '''Types stack used for expression parsing.'''
 
 operand_stack = []
@@ -495,12 +495,12 @@ def register_operand(raw_operand, mark_assigned=False):
 
   Return error if Operand was populated with error.
   '''
-  global operand_stack, types_stack
+  global operand_stack, type_stack
   operand = find_and_build_operand(raw_operand, mark_assigned)
   if operand.get_error():
     return operand.get_error()
   operand_stack.append(operand)
-  types_stack.append(operand.get_type())
+  type_stack.append(operand.get_type())
 
 
 def register_operator(operator: str):
@@ -536,13 +536,13 @@ def solve_operation_or_continue(ops: [Operations]):
   Returns error if operation cannot be performed on the given operands.
   Returns error if trying to perform an operation on a call to a void function.
   '''
-  global operator_stack, operand_stack, types_stack
+  global operator_stack, operand_stack, type_stack
   operator = top(operator_stack)
   if operator in ops:
     right_operand = operand_stack.pop()
-    right_type = types_stack.pop()
+    right_type = type_stack.pop()
     left_operand = operand_stack.pop()
-    left_type = types_stack.pop()
+    left_type = type_stack.pop()
     operator = operator_stack.pop()
     result_type = semantic_cube[left_type][right_type][operator]
     if not result_type:
@@ -554,7 +554,27 @@ def solve_operation_or_continue(ops: [Operations]):
       return temp.get_error()
     generate_quadruple(operator, left_operand, right_operand, temp)
     operand_stack.append(temp)
-    types_stack.append(result_type)
+    type_stack.append(result_type)
+
+
+def solve_if_unary_operation():
+  operator = top(operator_stack)
+  if (operator in
+      (Operations.PLUS_UNARY, Operations.MINUS_UNARY, Operations.NOT)):
+    operand = operand_stack.pop()
+    op_type = type_stack.pop()
+    result_type = semantic_cube[op_type][operator]
+    operator = operator_stack.pop()
+    if not result_type:
+      if op_type == Types.VOID:
+        return f'Expression returns no value.'
+      return f'Type mismatch: Invalid operation \'{operator.name}\' on given operand'
+    temp = build_temp_operand(result_type)
+    if temp.get_error():
+      return temp.get_error()
+    generate_quadruple(operator, operand, None, temp)
+    operand_stack.append(temp)
+    type_stack.append(result_type)
 
 
 def pop_fake_bottom():
@@ -569,18 +589,18 @@ def do_assign():
   Returns error if expression cannot be assigned to variable.
   Returns error if trying to assign a call to a void function.
   '''
-  global operator_stack, operand_stack, types_stack
+  global operator_stack, operand_stack, type_stack
   left_operand = operand_stack.pop()
-  left_type = types_stack.pop()
+  left_type = type_stack.pop()
   assigning_operand = operand_stack.pop()
-  assigning_type = types_stack.pop()
+  assigning_type = type_stack.pop()
   if not semantic_cube[assigning_type][left_type][Operations.EQUAL]:
     if left_type == Types.VOID:
       return f'Expression returns no value.'
     return f'Type mismatch: expression cannot be assigned'
   generate_quadruple(Operations.EQUAL, left_operand, None, assigning_operand)
   operand_stack.append(assigning_operand)
-  types_stack.append(assigning_type)
+  type_stack.append(assigning_type)
 
 
 def do_write(s=None):
@@ -590,14 +610,14 @@ def do_write(s=None):
 
   Returns error if trying to print a call to a void function.
   '''
-  global operand_stack, types_stack
+  global operand_stack, type_stack
   if s:
     operand = Operand(s[1:-1])
     operand.set_type(Types.CTE_STRING)
     operand.set_address(s[1:-1])
   else:
     operand = operand_stack.pop()
-    op_type = types_stack.pop()
+    op_type = type_stack.pop()
     if op_type not in var_types:
       return f'Expression returns no value.'
   generate_quadruple(Operations.WRITE, None, None, operand)
@@ -608,12 +628,12 @@ def do_read():
 
   This operand will trigger the virtual machine to read from terminal.
   '''
-  global operand_stack, types_stack
+  global operand_stack, type_stack
   operand = Operand('#read')
   operand.set_address('#read')
   operand.set_type(Types.READ)
   operand_stack.append(operand)
-  types_stack.append(Types.READ)
+  type_stack.append(Types.READ)
 
 
 def register_condition():
@@ -621,9 +641,9 @@ def register_condition():
 
   Returns error if the operand is not boolean.
   '''
-  global operand_stack, types_stack
-  exp_type = types_stack.pop()
-  if exp_type != Types.BOOL:
+  global operand_stack, type_stack
+  exp_type = type_stack.pop()
+  if exp_type != Types.BOOL and exp_type != Types.INT:
     return 'Evaluated expression is not boolean'
   result = operand_stack.pop()
   generate_quadruple(Operations.GOTOF, result, None, None)
@@ -717,12 +737,12 @@ def register_return():
   Returns error if returning value type cannot be assigned to function's return
   type.
   '''
-  global operand_stack, types_stack, pending_returns
+  global operand_stack, type_stack, pending_returns
   function_type = current_function['#type']
   if function_type == Types.VOID:
     return 'Void function cannot return a value'
   return_val = operand_stack.pop()
-  return_type = types_stack.pop()
+  return_type = type_stack.pop()
   if not semantic_cube[function_type][return_type][Operations.EQUAL]:
     return f'Cannot return type \'{return_type}\' as \'{function_type}\''
   pending_returns.append(q_count)
@@ -799,7 +819,7 @@ def seen_instance_attribute(attribute_name):
     temp = build_temp_operand(attribute.get_type())
     generate_quadruple(Operations.GET_RETURN, temp, None, None)
     operand_stack.append(temp)
-    types_stack.append(temp.get_type())
+    type_stack.append(temp.get_type())
   else:
     return f'Invalid return type on expression.'
 
@@ -942,10 +962,10 @@ def done_passing_params(is_local=False):
     temp = build_temp_operand(func_call_stack[-1].func_type)
     generate_quadruple(Operations.GET_RETURN, temp, None, None)
     operand_stack.append(temp)
-    types_stack.append(temp.get_type())
+    type_stack.append(temp.get_type())
   else:
     operand_stack.append(Types.VOID)
-    types_stack.append(Types.VOID)
+    type_stack.append(Types.VOID)
   func_call_stack.pop()
 
   operator_stack.pop()
@@ -953,7 +973,7 @@ def done_passing_params(is_local=False):
 
 def add_arr_dim(dimension_size):
   if current_type not in var_types:
-    return 'An array can store only primitive types_stack'
+    return 'An array can store only primitive type_stack'
   if dimension_size < 1:
     return 'Size must be a positive integer'
   var = current_function['#vars'][last_declared_var]
@@ -989,7 +1009,7 @@ def arr_dim_complete():
 
 def arr_access_2():
   id = operand_stack.pop().get_raw()
-  types_stack.pop()
+  type_stack.pop()
   if id in current_function['#vars']:
     var = current_function['#vars'][id]
   elif id in classes['#global']['#funcs']['#attributes']['#vars']:
@@ -1010,21 +1030,21 @@ def arr_access_3():
   generate_quadruple(Operations.VER, index, 0, var['#dims'][dim - 1]['#limsup'])
   if len(var['#dims']) > dim:
     aux = operand_stack.pop()
-    types_stack.pop()
+    type_stack.pop()
     t = build_temp_operand(Types.INT)
     generate_quadruple(Operations.TIMES, aux, get_or_create_cte_address(
         var['#dims'][dim - 1]['#m'], Types.INT), t)
     operand_stack.append(t)
-    types_stack.append(t.get_type())
+    type_stack.append(t.get_type())
   if dim > 1:
     aux2 = operand_stack.pop()
-    types_stack.pop()
+    type_stack.pop()
     aux1 = operand_stack.pop()
-    types_stack.pop()
+    type_stack.pop()
     t = build_temp_operand(Types.INT)
     generate_quadruple(Operations.PLUS, aux1, aux2, t)
     operand_stack.append(t)
-    types_stack.append(t.get_type())
+    type_stack.append(t.get_type())
 
 
 def arr_access_4():

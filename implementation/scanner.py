@@ -107,7 +107,7 @@ def t_ID(t):
 
 
 def t_CTE_F(t):
-  r'[+-]?([0-9]*[.])?[0-9]+'
+  r'([0-9]*[.])?[0-9]+'
   if int(math.floor(float(t.value))) == float(t.value):
     t.value = int(t.value)
     t.type = 'CTE_I'

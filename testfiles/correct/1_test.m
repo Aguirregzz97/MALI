@@ -77,6 +77,7 @@ main {
     Perro a;
     int x[5][10];
     int z,y,w,b,c;
+    bool flag;
   }
 
   cont = 5;
@@ -88,8 +89,9 @@ main {
   write x[1][2], '$';
   x[2][x[1][2]] = 3;
 
-  z = 0;
-  y = 0;
+  z = -1;
+  y = +2;
+  flag = not true;
   w = 0;
   b = 0;
   c = 0;

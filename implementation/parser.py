@@ -304,17 +304,20 @@ def p_term(p):
 def p_factor(p):
   '''factor : not LEFT_P r_seen_operator expression RIGHT_P r_pop_fake_bottom
             | not sign cte'''
+  e = sq.solve_if_unary_operation()
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_not(p):
-  '''not : NOT
+  '''not : NOT r_seen_unary_operator
          | empty'''
 
 
 def p_sign(p):
-  '''sign : PLUS
-         | MINUS
-         | empty'''
+  '''sign : PLUS r_seen_unary_operator
+          | MINUS r_seen_unary_operator
+          | empty'''
 
 
 def p_cte(p):
@@ -438,6 +441,18 @@ def p_r_seen_operand(p):
 def p_r_seen_operator(p):
   'r_seen_operator : '
   sq.register_operator(str_operations[p[-1]])
+
+
+def p_r_seen_unary_operator(p):
+  '''r_seen_unary_operator : '''
+  raw_operator = p[-1]
+  if raw_operator == '+':
+    operator = Operations.PLUS_UNARY
+  elif raw_operator == '-':
+    operator = Operations.MINUS_UNARY
+  else:
+    operator = Operations.NOT
+  sq.register_operator(operator)
 
 
 def p_r_seen_factor(p):
@@ -743,13 +758,13 @@ def parse_and_generate_object_code(s):
   parser.parse(s, tracking=True)
 
   # Quadruples printing for debugging
-  # if not error:
-  #   pp.pprint(sq.classes)
-  #   q_count = 0
-  #   for q, vq in zip(sq.quadruples, sq.visual_quadruples):
-  #     print('{0:<5} {1:<40} {2:<40}'.format(
-  #         str(q_count) + ':', str(q), str(vq)))
-  #     q_count += 1
+  if not error:
+    pp.pprint(sq.classes)
+    q_count = 0
+    for q, vq in zip(sq.quadruples, sq.visual_quadruples):
+      print('{0:<5} {1:<40} {2:<40}'.format(
+          str(q_count) + ':', str(q), str(vq)))
+      q_count += 1
 
   if error:
     return

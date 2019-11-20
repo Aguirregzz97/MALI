@@ -119,6 +119,9 @@ semantic_cube[Types.INT][Types.INT][Operations.TIMES] = Types.INT
 semantic_cube[Types.INT][Types.INT][Operations.DIV] = Types.INT
 semantic_cube[Types.INT][Types.INT][Operations.EQUAL] = Types.INT
 semantic_cube[Types.INT][Types.READ][Operations.EQUAL] = Types.INT
+semantic_cube[Types.INT][Operations.PLUS_UNARY] = Types.INT
+semantic_cube[Types.INT][Operations.MINUS_UNARY] = Types.INT
+semantic_cube[Types.INT][Operations.NOT] = Types.BOOL
 
 semantic_cube[Types.FLOAT][Types.FLOAT][Operations.AND] = Types.BOOL
 semantic_cube[Types.FLOAT][Types.FLOAT][Operations.OR] = Types.BOOL
@@ -134,6 +137,9 @@ semantic_cube[Types.FLOAT][Types.FLOAT][Operations.TIMES] = Types.FLOAT
 semantic_cube[Types.FLOAT][Types.FLOAT][Operations.DIV] = Types.FLOAT
 semantic_cube[Types.FLOAT][Types.FLOAT][Operations.EQUAL] = Types.FLOAT
 semantic_cube[Types.FLOAT][Types.READ][Operations.EQUAL] = Types.FLOAT
+semantic_cube[Types.FLOAT][Operations.PLUS_UNARY] = Types.FLOAT
+semantic_cube[Types.FLOAT][Operations.MINUS_UNARY] = Types.FLOAT
+semantic_cube[Types.FLOAT][Operations.NOT] = Types.BOOL
 
 semantic_cube[Types.CHAR][Types.CHAR][Operations.AND] = Types.BOOL
 semantic_cube[Types.CHAR][Types.CHAR][Operations.OR] = Types.BOOL
@@ -149,6 +155,9 @@ semantic_cube[Types.CHAR][Types.CHAR][Operations.TIMES] = Types.CHAR
 semantic_cube[Types.CHAR][Types.CHAR][Operations.DIV] = Types.CHAR
 semantic_cube[Types.CHAR][Types.CHAR][Operations.EQUAL] = Types.CHAR
 semantic_cube[Types.CHAR][Types.READ][Operations.EQUAL] = Types.CHAR
+semantic_cube[Types.CHAR][Operations.PLUS_UNARY] = None
+semantic_cube[Types.CHAR][Operations.MINUS_UNARY] = None
+semantic_cube[Types.CHAR][Operations.NOT] = None
 
 semantic_cube[Types.BOOL][Types.BOOL][Operations.AND] = Types.BOOL
 semantic_cube[Types.BOOL][Types.BOOL][Operations.OR] = Types.BOOL
@@ -164,6 +173,9 @@ semantic_cube[Types.BOOL][Types.BOOL][Operations.TIMES] = Types.INT
 semantic_cube[Types.BOOL][Types.BOOL][Operations.DIV] = Types.INT
 semantic_cube[Types.BOOL][Types.BOOL][Operations.EQUAL] = Types.BOOL
 semantic_cube[Types.BOOL][Types.READ][Operations.EQUAL] = Types.BOOL
+semantic_cube[Types.BOOL][Operations.PLUS_UNARY] = Types.BOOL
+semantic_cube[Types.BOOL][Operations.MINUS_UNARY] = Types.BOOL
+semantic_cube[Types.BOOL][Operations.NOT] = Types.BOOL
 
 semantic_cube[Types.INT][Types.FLOAT][Operations.AND] = semantic_cube[Types.FLOAT][Types.INT][Operations.AND] = Types.BOOL
 semantic_cube[Types.INT][Types.FLOAT][Operations.OR] = semantic_cube[Types.FLOAT][Types.INT][Operations.OR] = Types.BOOL
