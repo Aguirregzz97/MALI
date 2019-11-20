@@ -4,18 +4,36 @@ from vm_implementation.utils.constants import *  # pylint: disable=unused-wildca
 import sys
 
 symbol_table = None
-pending_set = None
+'''Symbol table from the object code.'''
+
+pending_to_set = None
+'''Used to assign pointers.'''
+
 is_pointer = False
+'''True when get returns a pointer.'''
 
 
 class Memory:
-  def __init__(self, begin):
+  '''Stores values with their address.'''
+
+  def __init__(self, begin: int):
     self.__int_slots = {}
+    '''Memory slots for int values.'''
+
     self.__float_slots = {}
+    '''Memory slots for float values.'''
+
     self.__char_slots = {}
+    '''Memory slots for char values.'''
+
     self.__bool_slots = {}
+    '''Memory slots for bool values.'''
+
     self.__instance_slots = {}
+    '''Memory slots for instance values.'''
+
     self.__pointer_slots = {}
+    '''Memory slots for pointer values.'''
 
     self.__int_begin = begin
     self.__int_limit = self.__int_begin + BLOCK_SIZE - 1
@@ -29,8 +47,14 @@ class Memory:
     self.__instance_pointer_limit = self.__instance_pointer_begin + BLOCK_SIZE - 1
     self.__pointer_begin = self.__instance_pointer_limit + 1
     self.__pointer_limit = self.__pointer_begin + BLOCK_SIZE - 1
+    '''Assigns available addresses starting form begin parameter.'''
 
-  def set(self, address, value, assign=False):
+  def set(self, address: int, value, assign=False):
+    '''Set given address with given value.
+
+    Find value type by the address and save it in the corresponding slot.
+    '''
+
     if self.__int_begin <= address <= self.__int_limit:
       self.__int_slots[address] = cast_value(Types.INT, value)
     elif self.__float_begin <= address <= self.__float_limit:
@@ -43,14 +67,22 @@ class Memory:
       self.__instance_slots[address] = Instance(value)
     elif self.__pointer_begin <= address <= self.__pointer_limit:
       if address in self.__pointer_slots.keys() and self.__pointer_slots[address]:
-        global pending_set
-        pending_set = self.__pointer_slots[address]
+        global pending_to_set
+        pending_to_set = self.__pointer_slots[address]
       else:
         self.__pointer_slots[address] = value
     else:
       raise Exception(f"Memory.Set {address}: value out of range.")
 
-  def get(self, address):
+  def get(self, address: int):
+    '''Get value stored in given address
+
+    Finds value type by the address and searches for the value in the
+    corresponding type slot.
+
+    Returns value.
+    '''
+
     if self.__int_begin <= address <= self.__int_limit:
       return self.__int_slots.get(address, None)
     elif self.__float_begin <= address <= self.__float_limit:
@@ -68,7 +100,9 @@ class Memory:
     else:
       raise Exception(f"Memory.Get {address}: value out of range.")
 
-  def print_values(self, prefix):
+  def print_memory(self, prefix):
+    '''Print memory for debugging.'''
+
     print(prefix, 'int', self.__int_slots)
     print(prefix, 'float', self.__float_slots)
     print(prefix, 'char', self.__char_slots)
@@ -81,11 +115,22 @@ class Memory:
 
 
 class Procedure:
+  '''Structure of a function/method.'''
+
   def __init__(self):
     self.__vars = Memory(VAR_LOWER_LIMIT)
-    self.__temps = Memory(TEMP_LOWER_LIMIT)
+    '''Stores procedure variables.'''
 
-  def set(self, address, value):
+    self.__temps = Memory(TEMP_LOWER_LIMIT)
+    '''Stores procedure temporals.'''
+
+  def set(self, address: int, value):
+    '''Set given address to given value.
+
+    Determines wheter the address is a variable or a temporal, and calls set on
+    the corresponding memory.
+    '''
+
     if VAR_LOWER_LIMIT <= address <= VAR_UPPER_LIMIT:
       self.__vars.set(address, value)
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
@@ -93,7 +138,13 @@ class Procedure:
     else:
       raise Exception(f"Procedure.Set {address}: value out of range.")
 
-  def get(self, address):
+  def get(self, address: int):
+    '''Get value stored on a given address.
+
+    Determines wheter the address is a variable or a temporal, and calls get on
+    the corresponding memory.
+    '''
+
     if VAR_LOWER_LIMIT <= address <= VAR_UPPER_LIMIT:
       return self.__vars.get(address)
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
@@ -103,25 +154,41 @@ class Procedure:
 
   def print_procedure(self, prefix):
     print(prefix, 'vars')
-    self.__vars.print_values(prefix + '\t')
+    self.__vars.print_memory(prefix + '\t')
     print(prefix, 'temps')
-    self.__temps.print_values(prefix + '\t')
+    self.__temps.print_memory(prefix + '\t')
 
 
 class Instance:
-  def __init__(self, class_name):
-    self.__attributes = {}
-    self.__attributes_stack = []
-    self.__procedure_stack = []
-    self.__next_procedure = None
-    self.__next_attributes = None
+  '''Structure of a class intance.'''
 
+  def __init__(self, class_name: str):
+    self.__attributes = {}
+    '''Stores instances of Memory annotated with the class name. There is a key
+       for the instance class type, and for every parent class.'''
+
+    self.__attributes_stack = []
+    '''Stores keys of the attributes dictionary. Every procedure call inserts
+       its belonging class.'''
+
+    self.__procedure_stack = []
+    '''Instance of Procdure. Keep track of procedure calls.'''
+
+    self.__next_procedure = None
+    '''Instance of the next Procedure. Assigned on ERA and pushed to
+       procedure_stack on GOSUB.'''
+
+    self.__next_attributes = None
+    '''String of the class name that declared the next procedure to be pushed.
+       Assigned on ERA and pushed to attributes_stack on GOSUB.'''
+
+    # Prepare all the attributes that will be used by the instance.
     if class_name != '#global':
       curr_class = class_name
       while curr_class:
         self.set_attributes(curr_class)
-        curr_attributes = symbol_table[curr_class]['#funcs']['#attributes']['#vars'].values(
-        )
+        curr_attributes = (symbol_table[curr_class]['#funcs']['#attributes']
+                                       ['#vars'].values())
         for attribute in curr_attributes:
           value = None
           if attribute['#type'] not in raw_var_types:
@@ -135,7 +202,13 @@ class Instance:
 
       # self.__attributes_stack.append(list(self.__attributes.keys())[0])
 
-  def set(self, address, value, assigning_param=False):
+  def set(self, address: int, value, assigning_param=False):
+    '''Set given address to given value.
+
+    Determines wheter the address is an attribute or a variable from a
+    procedure, and calls set on the corresponding memory.
+    '''
+
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
       self.__attributes[self.__attributes_stack[-1]].set(address, value)
     elif PROCEDURE_LOWER_LIMIT <= address <= PROCEDURE_UPPER_LIMIT:
@@ -146,7 +219,13 @@ class Instance:
     else:
       raise Exception(f"Instance.Set {address}: value out of range.")
 
-  def get(self, address):
+  def get(self, address: int):
+    '''Get value stored on a given address.
+
+    Determines wheter the address is an attribute or a variable from a
+    procedure, and calls get on the corresponding memory.
+    '''
+
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
       for attribute in list(self.__attributes.values())[len(self.__attributes_stack)-1:]:
         value = attribute.get(address)
@@ -157,19 +236,30 @@ class Instance:
     else:
       raise Exception(f"Instance.Get {address}: Value out of range.")
 
-  def set_attributes(self, class_name):
+  def set_attributes(self, class_name: str):
+    '''Registers attributes of given class on attributes dictionary.'''
+
     self.__attributes[class_name] = Memory(ATTRIBUTE_LOWER_LIMIT)
     self.__attributes_stack.append(class_name)
 
-  def push_attributes(self, class_name):
+  def push_attributes(self, class_name: str):
+    '''Pushes given class name to attributes stack.'''
+
     if top(self.__attributes_stack) != class_name:
       self.__attributes_stack.append(class_name)
 
   def pop_attributes(self):
+    '''Pops attributes stack.'''
+
     if len(self.__attributes_stack) > 1:
       self.__attributes_stack.pop()
 
-  def prepare_new_procedure(self, class_name, func_name):
+  def prepare_new_procedure(self, class_name: str, func_name: str):
+    '''Creates a new procedure and prepares its variables.
+
+    Called by ERA. Keeps procedure on aux var until GOSUB is called.
+    '''
+
     self.__next_attributes = class_name
     self.__next_procedure = Procedure()
     var = symbol_table[class_name]['#funcs'][func_name]['#vars'].values()
@@ -184,19 +274,31 @@ class Instance:
         self.__next_procedure.set(v['#address'], value)
 
   def push_new_procedure(self):
+    '''Pushes next procedure to procedure stack.
+
+    Called by GOSUB.
+    '''
+
     if top(self.__attributes_stack) != self.__next_attributes:
       self.__attributes_stack.append(self.__next_attributes)
     self.__procedure_stack.append(self.__next_procedure)
 
   def pop_procedure(self):
+    '''Pops procedure from procedure stack.
+
+    Called by ENDPROC.
+    '''
+
     self.__procedure_stack.pop()
     self.pop_attributes()
 
   def print_instance(self, prefix):
+    '''Print Instance for debugging.'''
+
     print(prefix, 'attributes > current:', top(self.__attributes_stack), '\n')
     for class_name, attribute in self.__attributes.items():
       print(prefix + '\t', class_name)
-      attribute.print_values(prefix + '\t')
+      attribute.print_memory(prefix + '\t')
     print(prefix, 'procedures')
     prefix += '\t'
     for procedure in self.__procedure_stack:
@@ -205,26 +307,45 @@ class Instance:
       print(prefix, 'next procedure')
       self.__next_procedure.print_procedure(prefix)
 
-  def get_name(self):
-    return list(self.__attributes.keys())[0]
-
 
 class MemoryManager:
-  def __init__(self, st):
+  '''Provides methods for Memory management'''
+
+  def __init__(self, st: dict):
     global symbol_table
     symbol_table = st
+
     self.__data_segment = Memory(DATA_LOWER_LIMIT)
+    '''Instance of Memory with global variables.'''
+
     self.__constant_segment = Memory(CTE_LOWER_LIMIT)
+    '''Instance of Memory with constant values'''
+
     self.__instance_stack = [Instance('#global')]
+    '''Stack of Instance instances.'''
+
     self.__return = None
+    '''Saves value returned by function.'''
 
     self.__setting_param = False
+    '''If true, sets values on next_procedure.'''
+
     self.__depth = 0
+    '''Counter. Accumulates on ENTER_INSTANCE and decreases on EXIT_INSTANCE.
+       Used to check which instance originated the call.'''
+
+    # Prepare memory to begin running program.
     self.prepare_new_procedure('#global', '#main')
     self.push_new_procedure()
     self.__depth = 0
 
-  def set(self, address, value, assigning_param=False):
+  def set(self, address: int, value, assigning_param=False):
+    '''Set given address to given value.
+
+    Determines wheter the address is a global variable, constant value, or
+    comes from an instance, and calls set on the corresponding memory.
+    '''
+
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
       self.__data_segment.set(address, value)
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
@@ -234,13 +355,19 @@ class MemoryManager:
         self.__instance_stack[self.__depth-1].set(address, value)
       else:
         self.__instance_stack[-1].set(address, value, self.__setting_param)
-      global pending_set
-      if pending_set:
-        new_address = pending_set
-        pending_set = None
+      global pending_to_set
+      if pending_to_set:
+        new_address = pending_to_set
+        pending_to_set = None
         self.set(new_address, value, assigning_param)
 
-  def get(self, address):
+  def get(self, address: int):
+    '''Get value stored on a given address.
+
+    Determines wheter the address is a global variable, constant value, or
+    comes from an instance, and calls get on the corresponding memory.
+    '''
+
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
       value = self.__data_segment.get(address)
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
@@ -261,60 +388,75 @@ class MemoryManager:
       Error('Segmentation Fault.')
     return value
 
-  def push_instance(self, address, class_name):
+  def push_instance(self, address: int, class_name: str):
+    '''Appends a new instance to the instance stack.'''
     self.__depth -= 1
     self.__instance_stack.append(self.get(address))
     self.__instance_stack[-1].push_attributes(class_name)
 
   def pop_instance(self):
+    '''Pops instance from the instance stack.'''
     if self.__depth < 0:
       self.__depth += 1
     self.__instance_stack[-1].pop_attributes()
     self.__instance_stack.pop()
 
-  def prepare_new_procedure(self, class_name, func_name):
+  def prepare_new_procedure(self, class_name: str, func_name: str):
+    '''Calls prepare_new_procedure() on current instance.'''
     self.__setting_param = True
     self.__instance_stack[-1].prepare_new_procedure(class_name, func_name)
 
   def push_new_procedure(self):
+    '''Calls push_new_procedure() on current instance.'''
     self.__setting_param = False
     self.__depth = 0
     self.__instance_stack[-1].push_new_procedure()
 
   def pop_procedure(self):
+    '''Calls pop_new_procedure() on current instance.'''
     self.__instance_stack[-1].pop_procedure()
 
   def set_return(self, value):
+    '''Sets return to given value.'''
     self.__return = value
 
   def get_return(self):
+    '''Returns last returned value.'''
     return_val = self.__return
     self.__return = None
     return return_val
 
-  def print_memory(self):
+  def print(self):
+    '''Print MemoryManager for debugging.'''
+
     print('Data segment')
-    self.__data_segment.print_values('\t')
+    self.__data_segment.print_memory('\t')
     print('Constant segment')
-    self.__constant_segment.print_values('\t')
+    self.__constant_segment.print_memory('\t')
     print('CURRENT INSTANCE')
     if len(self.__instance_stack):
       self.__instance_stack[-1].print_instance('\t')
 
 
 class Error:
-  def __init__(self, message):
+  '''Prints error message and stops execution.'''
+
+  def __init__(self, message: str):
     print("Error:", message)
     sys.exit()
 
 
 def top(l):
+  '''Gets the top element on a stack without crashing if stack is empty.'''
+
   if len(l) > 0:
     return l[-1]
   return None
 
 
-def cast_value(cast_type, value):
+def cast_value(cast_type: Types, value):
+  '''Casts raw value to given type.'''
+
   value_type = type(value)
   if value is None:
     return None
