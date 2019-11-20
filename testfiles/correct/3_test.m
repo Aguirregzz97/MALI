@@ -42,7 +42,7 @@ class Perro extends Mamifero {
     raza = r;
     #write r, ' ', raza, '$';
     nombre = 'L';
-    edad = 0;
+    #edad = 0;
     #write oviparo, '$';
   }
 

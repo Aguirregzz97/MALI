@@ -74,8 +74,8 @@ def class_parent(class_parent: str):
         classes[class_parent]['#funcs']['#attributes']['#vars'])
 
     for var in current_class['#funcs']['#attributes']['#vars'].values():
-      var['#inherited'] = True
       var_avail.next(var['#type'])
+      var['#inherited'] = True
 
 
 def finish_class():
@@ -135,9 +135,11 @@ def var_name(var_name: str, assigned=False):
   '''
 
   adjust = 0
-  if var_name in current_function['#vars']:
-    if not current_function['#vars'][var_name]['#inherited']:
-      return f"Redeclared variable: {var_name}"
+  if (var_name in current_function['#vars'] and
+      not current_function['#vars'][var_name]['#inherited']):
+    return f"Redeclared variable: {var_name}"
+  if (var_name in current_function['#vars'] and
+      current_function['#vars'][var_name]['#access'] != Access.PRIVATE):
     address = current_function['#vars'][var_name]['#address']
   else:
     address = var_avail.next(current_type)
