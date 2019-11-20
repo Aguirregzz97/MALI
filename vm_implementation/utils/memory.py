@@ -100,7 +100,6 @@ class Memory:
 
   def print_memory(self, prefix):
     '''Print memory for debugging.'''
-
     print(prefix, 'int', self.__int_slots)
     print(prefix, 'float', self.__float_slots)
     print(prefix, 'char', self.__char_slots)
@@ -176,14 +175,8 @@ class Instance:
         curr_attributes = (symbol_table[curr_class]['#funcs']['#attributes']
                                        ['#vars'].values())
         for attribute in curr_attributes:
-          value = None
           if attribute['#type'] not in raw_var_types:
-            value = attribute['#type']
-          if '#r' in attribute:
-            for i in range(attribute['#r']):
-              self.set(attribute['#address'] + i, value)
-          else:
-            self.set(attribute['#address'], value)
+            self.set(attribute['#address'], attribute['#type'])
         curr_class = symbol_table[curr_class]['#parent']
 
   def set(self, address: int, value, assigning_param=False):
@@ -223,14 +216,8 @@ class Instance:
     self.__next_procedure = Procedure()
     var = symbol_table[class_name]['#funcs'][func_name]['#vars'].values()
     for v in var:
-      value = None
       if v['#type'] not in raw_var_types:
-        value = v['#type']
-      if '#r' in v:
-        for i in range(v['#r']):
-          self.__next_procedure.set(v['#address'] + i, value)
-      else:
-        self.__next_procedure.set(v['#address'], value)
+        self.__next_procedure.set(v['#address'], v['#type'])
 
   def push_new_procedure(self):
     '''Pushes next procedure to procedure stack.
@@ -258,7 +245,7 @@ class Instance:
 
 
 class MemoryManager:
-  '''Provides methods for Memory management'''
+  '''Provides methods for Memory management.'''
 
   def __init__(self, st: dict):
     global symbol_table
@@ -384,6 +371,7 @@ class MemoryManager:
 
 class Error:
   '''Prints error message and stops execution.'''
+
   def __init__(self, message: str):
     print("Error:", message)
     sys.exit()
