@@ -129,11 +129,11 @@ def var_name(var_name: str, assigned=False):
   '''
   adjust = 0
   if (var_name in current_function['#vars'] and
-      not current_function['#vars'][var_name]['#inherited']):
+          not current_function['#vars'][var_name]['#inherited']):
     return f"Redeclared variable: {var_name}"
   if (var_name in current_function['#vars'] and
       current_function['#vars'][var_name]['#inherited'] and
-      current_function['#vars'][var_name]['#access'] != Access.PRIVATE):
+          current_function['#vars'][var_name]['#access'] != Access.PRIVATE):
     address = current_function['#vars'][var_name]['#address']
   else:
     address = var_avail.next(current_type)
@@ -409,7 +409,7 @@ def populate_local_func_call(func_data: FuncData):
   curr_class = owner_class['#parent']
   while curr_class:
     if (func_name in classes[curr_class]['#funcs'] and
-        classes[curr_class]['#funcs'][func_name]['#access'] != Access.PRIVATE):
+            classes[curr_class]['#funcs'][func_name]['#access'] != Access.PRIVATE):
       func_data.func_type = classes[curr_class]['#funcs'][func_name]['#type']
       func_data.class_name = curr_class
       return
@@ -913,10 +913,8 @@ def done_passing_params(is_local=False):
   generate_quadruple(Operations.ERA, func_call_stack[-1].class_name,
                      func_call_stack[-1].func_name, None)
 
-  print(func_call_stack[-1].class_name, func_call_stack[-1].func_name)
   func = (classes[func_call_stack[-1].class_name]['#funcs']
                  [func_call_stack[-1].func_name])
-
   expecting_params = func['#param_count']
   assigning_params = list(func['#vars'].values())
   if len(param_stack[-1]) != expecting_params:
