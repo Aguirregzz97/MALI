@@ -17,7 +17,8 @@ def new_var_dict(var_type: Types, address: int, access=Access.PUBLIC,
       '#assigned': assigned,
       '#type': var_type,
       '#address': address,
-      '#access': access
+      '#access': access,
+      '#inherited': False
   }
   return var_dict
 

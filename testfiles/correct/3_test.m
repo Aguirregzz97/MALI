@@ -40,7 +40,10 @@ class Perro extends Mamifero {
 
   init(char n, int e, bool o, char r) : Mamifero(n, e, o) {
     raza = r;
+    #write r, ' ', raza, '$';
     nombre = 'L';
+    edad = 0;
+    #write oviparo, '$';
   }
 
   public void PrintPerro() {

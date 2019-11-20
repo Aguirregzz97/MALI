@@ -4,6 +4,7 @@ from implementation.utils.semantic_and_quadruples_utils import *  # pylint: disa
 from implementation.utils.generic_utils import *
 from implementation.utils.constants import *
 import re
+import copy
 
 # Semantic table filling.
 
@@ -69,6 +70,13 @@ def class_parent(class_parent: str):
   else:
     current_class['#parent'] = class_parent
 
+    current_class['#funcs']['#attributes']['#vars'] = copy.deepcopy(
+        classes[class_parent]['#funcs']['#attributes']['#vars'])
+
+    for var in current_class['#funcs']['#attributes']['#vars'].values():
+      var['#inherited'] = True
+      var_avail.next(var['#type'])
+
 
 def finish_class():
   '''Prepares variables for the next class to be parsed.'''
@@ -126,29 +134,31 @@ def var_name(var_name: str, assigned=False):
   Returns error if function runs out of variable addresses.
   '''
 
+  adjust = 0
   if var_name in current_function['#vars']:
-    return f"Redeclared variable: {var_name}"
+    if not current_function['#vars'][var_name]['#inherited']:
+      return f"Redeclared variable: {var_name}"
+    address = current_function['#vars'][var_name]['#address']
   else:
     address = var_avail.next(current_type)
     if not address:
       return 'Too many variables.'
-    adjust = 0
     if current_function['#name'] == '#attributes':
       adjust = ATTRIBUTES_ADJUSTMENT
       if current_class['#name'] == '#global':
         adjust = GLOBAL_ADJUSTMENT
 
-    current_function['#vars'][var_name] = (
-        new_var_dict(current_type, address-adjust, current_access,
-                     assigned=assigned))
+  current_function['#vars'][var_name] = (
+      new_var_dict(current_type, address-adjust, current_access,
+                   assigned=assigned))
 
-    if is_param:
-      current_function['#param_count'] += 1
-      current_function['#vars'][var_name]['#assigned'] = True
-    else:
-      current_function['#var_count'] += 1
-    global last_declared_var
-    last_declared_var = var_name
+  if is_param:
+    current_function['#param_count'] += 1
+    current_function['#vars'][var_name]['#assigned'] = True
+  else:
+    current_function['#var_count'] += 1
+  global last_declared_var
+  last_declared_var = var_name
 
 
 def switch_param(reading_params: bool):
@@ -306,6 +316,8 @@ def find_and_populate(operand: Operand, prefix: dict, access: [Access],
   if var['#access'] not in access:
     operand.set_error(f'Variable \'{raw_operand}\' cannot be accessed.')
     return True
+  elif var['#inherited']:
+    return False
   else:
     operand.set_type(var['#type'])
     operand.set_address(var['#address'])
@@ -1075,6 +1087,7 @@ def generate_output():
   constants = invert_dict(constants_with_addresses)
 
   # Clean symbol table for use in virtual machine.
+  # TODO: delete inherited and info from arrays.
   for v1 in classes.values():
     if v1['#parent'] == '#global':
       v1['#parent'] = None

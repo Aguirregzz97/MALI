@@ -215,6 +215,7 @@ def op_endproc(n1: None, n2: None, n3: None):
 
 def op_end(n1: None, n2: None, n3: None):
   '''Perform execution end.'''
+  memory.print()
   global end
   end = True
 
