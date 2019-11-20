@@ -1,7 +1,8 @@
 # Memomry structure used by the MALI language's VM.
 
+from vm_implementation.utils.memory_utils import *  # pylint: disable=unused-wildcard-import
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
-import sys
+
 
 symbol_table = None
 '''Symbol table from the object code.'''
@@ -73,7 +74,7 @@ class Memory:
     else:
       raise Exception(f"Memory.Set {address}: value out of range.")
 
-  def get(self, address: int):
+  def get(self, address: int, printable=False):
     '''Get value stored in given address
 
     Finds value type by the address and searches for the value in the
@@ -86,8 +87,12 @@ class Memory:
     elif self.__float_begin <= address <= self.__float_limit:
       return self.__float_slots.get(address, None)
     elif self.__char_begin <= address <= self.__char_limit:
+      if printable:
+        return chr(self.__char_slots.get(address, 0))
       return self.__char_slots.get(address, None)
     elif self.__bool_begin <= address <= self.__bool_limit:
+      if printable:
+        return bool(self.__bool_slots.get(address, None))
       return self.__bool_slots.get(address, None)
     elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
       return self.__instance_slots[address]
@@ -134,16 +139,16 @@ class Procedure:
     else:
       raise Exception(f"Procedure.Set {address}: value out of range.")
 
-  def get(self, address: int):
+  def get(self, address: int, printable=False):
     '''Get value stored on a given address.
 
     Determines wheter the address is a variable or a temporal, and calls get on
     the corresponding memory.
     '''
     if VAR_LOWER_LIMIT <= address <= VAR_UPPER_LIMIT:
-      return self.__vars.get(address)
+      return self.__vars.get(address, printable)
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
-      return self.__temps.get(address)
+      return self.__temps.get(address, printable)
     else:
       raise Exception(f"Procedure.Get {address}: value out of range.")
 
@@ -195,16 +200,16 @@ class Instance:
     else:
       raise Exception(f"Instance.Set {address}: value out of range.")
 
-  def get(self, address: int):
+  def get(self, address: int, printable=False):
     '''Get value stored on a given address.
 
     Determines wheter the address is an attribute or a variable from a
     procedure, and calls get on the corresponding memory.
     '''
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
-      return self.__attributes.get(address)
+      return self.__attributes.get(address, printable)
     elif PROCEDURE_LOWER_LIMIT <= address <= PROCEDURE_UPPER_LIMIT:
-      return self.__procedure_stack[-1].get(address)
+      return self.__procedure_stack[-1].get(address, printable)
     else:
       raise Exception(f"Instance.Get {address}: Value out of range.")
 
@@ -296,21 +301,21 @@ class MemoryManager:
         pending_to_set = None
         self.set(new_address, value, assigning_param)
 
-  def get(self, address: int):
+  def get(self, address: int, printable=False):
     '''Get value stored on a given address.
 
     Determines wheter the address is a global variable, constant value, or
     comes from an instance, and calls get on the corresponding memory.
     '''
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
-      value = self.__data_segment.get(address)
+      value = self.__data_segment.get(address, printable)
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
-      value = self.__constant_segment.get(address)
+      value = self.__constant_segment.get(address, printable)
     elif INSTANCE_LOWER_LIMIT <= address <= INSTANCE_UPPER_LIMIT:
       if self.__setting_param:
-        value = self.__instance_stack[self.__depth-1].get(address)
+        value = self.__instance_stack[self.__depth-1].get(address, printable)
       else:
-        value = self.__instance_stack[-1].get(address)
+        value = self.__instance_stack[-1].get(address, printable)
     else:
       Error(f'Invalid address {address}.')
     global is_pointer
@@ -367,50 +372,3 @@ class MemoryManager:
     print('CURRENT INSTANCE')
     if len(self.__instance_stack):
       self.__instance_stack[-1].print_instance('\t')
-
-
-class Error:
-  '''Prints error message and stops execution.'''
-
-  def __init__(self, message: str):
-    print("Error:", message)
-    sys.exit()
-
-
-def top(l):
-  '''Gets the top element on a stack without crashing if stack is empty.'''
-  if len(l) > 0:
-    return l[-1]
-  return None
-
-
-def cast_value(cast_type: Types, value):
-  '''Casts raw value to given type.'''
-  value_type = type(value)
-  if value is None:
-    return None
-  if cast_type == Types.INT:
-    if value_type == str:
-      value = float(value)
-    try:
-      return int(value)
-    except:
-      Error('Cannot cast int.')
-  elif cast_type == Types.FLOAT:
-    try:
-      return float(value)
-    except:
-      Error('Cannot cast float.')
-  elif cast_type == Types.CHAR:
-    try:
-      assert len(value) == 1
-      return str(value)
-    except:
-      Error('Cannot cast char.')
-  elif cast_type == Types.BOOL:
-    try:
-      return bool(value)
-    except:
-      Error('Cannot cast bool.')
-  else:
-    Error(f'Unrecognized type {cast_type}.')

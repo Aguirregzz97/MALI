@@ -758,13 +758,13 @@ def parse_and_generate_object_code(s):
   parser.parse(s, tracking=True)
 
   # Quadruples printing for debugging
-  if not error:
-    pp.pprint(sq.classes)
-    q_count = 0
-    for q, vq in zip(sq.quadruples, sq.visual_quadruples):
-      print('{0:<5} {1:<40} {2:<40}'.format(
-          str(q_count) + ':', str(q), str(vq)))
-      q_count += 1
+  # if not error:
+  #   pp.pprint(sq.classes)
+  #   q_count = 0
+  #   for q, vq in zip(sq.quadruples, sq.visual_quadruples):
+  #     print('{0:<5} {1:<40} {2:<40}'.format(
+  #         str(q_count) + ':', str(q), str(vq)))
+  #     q_count += 1
 
   if error:
     return

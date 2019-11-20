@@ -8,7 +8,7 @@ class Page {
   }
 
   public void print(int n, int m) {
-    write n, ' ', m, '$';
+    write n, ' ', m, '\n';
   }
 }
 
@@ -66,11 +66,11 @@ main {
   student->init(1, 500, 20);
   student2->init(2, 600, 30);
 
-  write "Debe ser 1 500 20", '$';
-  write student->id, ' ', student.book->cost, ' ', student.book.page->num, '$';
+  write "Debe ser 1 500 20", '\n';
+  write student->id, ' ', student.book->cost, ' ', student.book.page->num, '\n';
 
-  write "Debe ser 2 600 30", '$';
-  write student2->id, ' ', student2.book->cost, ' ', student2.book.page->num, '$';
+  write "Debe ser 2 600 30", '\n';
+  write student2->id, ' ', student2.book->cost, ' ', student2.book.page->num, '\n';
 
   x = 5;
   y = 5;
@@ -80,9 +80,9 @@ main {
   o = student2->get5();
   r = m + o;
 
-  write "Debe ser 25 5", '$';
+  write "Debe ser 25 5", '\n';
   student2.book.page->print(m + z + student->get5() + student2->get5(), student->get5());
 
-  write "Debe ser 10 10", '$';
+  write "Debe ser 10 10", '\n';
   student2.book.page->print(z, get5());
 }

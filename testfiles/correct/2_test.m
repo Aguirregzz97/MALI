@@ -33,9 +33,9 @@ main {
 
   r->init(6);
 
-  write "Debe imprimir 25: ", s->Area(), '$';
-  write "Debe imprimir 20: ", s->Perimetro(), '$';
+  write "Debe imprimir 25: ", s->Area(), '\n';
+  write "Debe imprimir 20: ", s->Perimetro(), '\n';
 
-  write "Debe imprimir 36: ", r->Area(), '$';
-  write "Debe imprimir 24: ", r->Perimetro(), '$';
+  write "Debe imprimir 36: ", r->Area(), '\n';
+  write "Debe imprimir 24: ", r->Perimetro(), '\n';
 }

@@ -6,6 +6,7 @@ from implementation.utils.constants import *
 import re
 import copy
 
+
 # Semantic table filling.
 
 classes = {'#global': new_class_dict(name='#global', parent=None)}
@@ -187,7 +188,12 @@ const_avail = Available(CONSTANT_LOWER_LIMIT, CONSTANT_UPPER_LIMIT)
 '''Provides methods to get the next available address for a const of a given
    data type.'''
 
-constants_with_addresses = {}
+constants_with_addresses = {
+    Types.INT: {},
+    Types.FLOAT: {},
+    Types.CHAR: {},
+    Types.BOOL: {},
+}
 '''Generated constants annotated with their address.'''
 
 operator_stack = []
@@ -432,13 +438,13 @@ def get_or_create_cte_address(value, val_type):
   Returns error if there are no more addresses available.
   '''
   global constants_with_addresses
-  if value in constants_with_addresses:
-    return constants_with_addresses[value]
+  if value in constants_with_addresses[val_type]:
+    return constants_with_addresses[val_type][value]
   else:
     address = const_avail.next(val_type)
     if not address:
       return f'Too many \'{val_type}\' constants'
-    constants_with_addresses[value] = address
+    constants_with_addresses[val_type][value] = address
     return address
 
 
@@ -474,13 +480,18 @@ def find_and_build_operand(raw_operand, mark_assigned=False):
     operand.set_type(Types.BOOL)
     operand.set_address(address)
   elif t == str:
-    if re.match(r"\'.\'", raw_operand):
-      address = get_or_create_cte_address(raw_operand[1:-1], Types.CHAR)
+    if re.match(r'\'(.|\\.)\'', raw_operand):
+      if re.match(r'\'\\.\'', raw_operand):
+        char_raw_operand = ord(raw_operand[1:-1].encode('utf-8')
+                                                .decode('unicode_escape'))
+      else:
+        char_raw_operand = ord(raw_operand[1:-1])
+      address = get_or_create_cte_address(char_raw_operand, Types.CHAR)
       if not address:
         operand.set_error('Too many char constants.')
       operand.set_type(Types.CHAR)
       operand.set_address(address)
-      operand.set_raw(raw_operand[1:-1])
+      operand.set_raw(char_raw_operand)
     else:
       populate_local_var(operand, mark_assigned)
   return operand
@@ -560,7 +571,7 @@ def solve_operation_or_continue(ops: [Operations]):
 def solve_if_unary_operation():
   operator = top(operator_stack)
   if (operator in
-      (Operations.PLUS_UNARY, Operations.MINUS_UNARY, Operations.NOT)):
+          (Operations.PLUS_UNARY, Operations.MINUS_UNARY, Operations.NOT)):
     operand = operand_stack.pop()
     op_type = type_stack.pop()
     result_type = semantic_cube[op_type][operator]
@@ -643,7 +654,7 @@ def register_condition():
   '''
   global operand_stack, type_stack
   exp_type = type_stack.pop()
-  if exp_type != Types.BOOL and exp_type != Types.INT:
+  if exp_type not in var_types:
     return 'Evaluated expression is not boolean'
   result = operand_stack.pop()
   generate_quadruple(Operations.GOTOF, result, None, None)
@@ -1074,7 +1085,9 @@ def generate_output():
       value = None
     data[v['#address']] = value
 
-  constants = invert_dict(constants_with_addresses)
+  constants = {}
+  for values in constants_with_addresses.values():
+    constants.update(invert_dict(values))
 
   # Clean symbol table for use in virtual machine.
   # TODO: delete inherited and info from arrays.

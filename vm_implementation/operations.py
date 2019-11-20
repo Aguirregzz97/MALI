@@ -1,6 +1,6 @@
 # Operations run by the MALI language VM.
 
-from vm_implementation.utils.memory import MemoryManager, Error  # pylint: disable=unused-wildcard-import
+from vm_implementation.memory import MemoryManager, Error  # pylint: disable=unused-wildcard-import
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
 memory: MemoryManager
@@ -40,15 +40,18 @@ def next_q():
   q += 1
 
 
-def op_plus_unary(a, b, c):
+def op_plus_unary(op_address: int, n: None, result_address: int):
+  memory.set(result_address, + memory.get(op_address))
   next_q()
 
 
-def op_minus_unary(a, b, c):
+def op_minus_unary(op_address: int, n: None, result_address: int):
+  memory.set(result_address, - memory.get(op_address))
   next_q()
 
 
-def op_not(a, b, c):
+def op_not(op_address: int, n: None, result_address: int):
+  memory.set(result_address, int(not memory.get(op_address)))
   next_q()
 
 
@@ -153,11 +156,8 @@ def op_write(n1: None, n2: None, op):
   if type(op) == str:
     print(op, end='')
   else:
-    elem = memory.get(op)
-    if elem == '$':
-      print()
-    else:
-      print(elem, end='')
+    elem = memory.get(op, printable=True)
+    print(elem, end='')
   next_q()
 
 

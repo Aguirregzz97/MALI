@@ -15,5 +15,5 @@ func int fib(int n) {
 }
 
 main {
-  write fib(30), '$';
+  write fib(10), '\n';
 }

@@ -1,5 +1,5 @@
 func int fib(int n) {
-  # write n, '$';
+  #write n, '$';
   if (n <= 1) {
     return n;
   };
@@ -10,6 +10,6 @@ main {
   var {
     int n;
   }
-  n = 30;
-  write fib(n), '$';
+  n = 10;
+  write fib(n), '\n';
 }

@@ -10,7 +10,7 @@ class Animal {
   }
 
   public void PrintAnimal() {
-    write nombre, ' ', edad, '$';
+    write nombre, ' ', edad, '\n';
   }
 
   public char GetName() {
@@ -40,15 +40,15 @@ class Perro extends Mamifero {
 
   init(char n, int e, bool o, char r) : Mamifero(n, e, o) {
     raza = r;
-    #write r, ' ', raza, '$';
+    #write r, ' ', raza, '\n';
     nombre = 'L';
     #edad = 0;
-    #write oviparo, '$';
+    #write oviparo, '\n';
   }
 
   public void PrintPerro() {
     # PrintMamifero();
-    write edad, " ", raza, '$';
+    write edad, " ", raza, '\n';
   }
 }
 
@@ -63,7 +63,7 @@ main {
   p->PrintPerro();
 
   write "Debe ser: s L: ";
-  write p->GetName(), ' ', p->nombre, '$';
+  write p->GetName(), ' ', p->nombre, '\n';
 
   write "Debe ser: s 6: ";
   p->PrintAnimal();

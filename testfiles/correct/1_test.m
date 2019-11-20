@@ -32,8 +32,8 @@ class Perro extends Animal {
     var {
       int z;
     }
-    write "Woof Woof", '$';
-    write edad, '$';
+    write "Woof Woof", '\n';
+    write edad, '\n';
   }
 
   public int calculateB(int a){
@@ -61,7 +61,7 @@ func void printAnimal(Animal a) {
 
 func void printAlgo() {
 
-  write "Algo", '$';
+  write "Algo", '\n';
 }
 
 func int calculateA(int b){
@@ -83,35 +83,45 @@ main {
   cont = 5;
 
   w = 5;
-  write w, '$';
-  write "Xs", '$';
+  write w, '\n';
+  write "Xs", '\n';
   x[1][2] = 2;
-  write x[1][2], '$';
+  write x[1][2], '\n';
   x[2][x[1][2]] = 3;
 
   z = -1;
   y = +2;
   flag = not true;
+
+  write z, ' ', y, ' ', flag, '\n';
+
   w = 0;
   b = 0;
   c = 0;
 
   z = w * y + b * c + 100 * (7.8 + 2);
 
-  write z, '$';
+  write z, '\n';
 
   if (y > b) {
-    write "True", '$';
+    write "True", '\n';
   } elif (y < b) {
-    write "False", '$';
+    write "False", '\n';
   } elif (c < b) {
-    write "False2", '$';
+    write "False2", '\n';
   } else {
-    write "Neither", '$';
+    write "Neither", '\n';
   };
 
+
+  #if ('\0') {
+  #  write "True";
+  #} else {
+  #  write "False";
+  #};
+
   while(cont < 10) {
-    write "CICLO", '$';
+    write "CICLO", '\n';
     cont = cont + 1;
   };
 
@@ -119,43 +129,43 @@ main {
 
   y = 535;
 
-  write "1", '$';
+  write "1", '\n';
 
   a->init(5, 's', 'c');
 
-  write "2", '$';
+  write "2", '\n';
 
   y = a->edad;
 
-  write "3", '$';
+  write "3", '\n';
 
   a->Ladrar();
 
-  write "4", '$';
+  write "4", '\n';
 
   y = a->calculateB(5);
 
-  write "5", '$';
+  write "5", '\n';
 
   printAlgo();
 
-  write "6", '$';
+  write "6", '\n';
 
   y = calculateA(5);
 
-  write "7", '$';
+  write "7", '\n';
 
   printAlgo();
 
-  write "8", '$';
+  write "8", '\n';
 
   perro->init(6, 'l', 'c');
 
-  write "9", '$';
+  write "9", '\n';
 
   perro->Ladrar();
 
-  write "10", '$';
+  write "10", '\n';
 
-  write "Calculo del arreglo x[2][", x[1][2], "] = ", x[2][x[1][2]], '$';
+  write "Calculo del arreglo x[2][", x[1][2], "] = ", x[2][x[1][2]], '\n';
 }
