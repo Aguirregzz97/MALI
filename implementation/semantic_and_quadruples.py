@@ -49,7 +49,6 @@ def seen_class(class_name: str):
 
   Returns error if the class name was already used.
   '''
-
   if class_name in classes:
     return f"Repeated class name: {class_name}"
   else:
@@ -64,23 +63,21 @@ def class_parent(class_parent: str):
 
   Returns error if parent does not exist.
   '''
-
   if class_parent not in classes:
     return f"Undeclared class parent: {class_parent}"
-  else:
-    current_class['#parent'] = class_parent
 
-    current_class['#funcs']['#attributes']['#vars'] = copy.deepcopy(
-        classes[class_parent]['#funcs']['#attributes']['#vars'])
+  current_class['#parent'] = class_parent
 
-    for var in current_class['#funcs']['#attributes']['#vars'].values():
-      var_avail.next(var['#type'])
-      var['#inherited'] = True
+  current_class['#funcs']['#attributes']['#vars'] = copy.deepcopy(
+      classes[class_parent]['#funcs']['#attributes']['#vars'])
+
+  for var in current_class['#funcs']['#attributes']['#vars'].values():
+    var_avail.next(var['#type'])
+    var['#inherited'] = True
 
 
 def finish_class():
   '''Prepares variables for the next class to be parsed.'''
-
   global current_class, current_function, current_access, var_avail, temp_avail
   current_class = classes['#global']
   current_function = current_class['#funcs']['#attributes']
@@ -94,7 +91,6 @@ def seen_func(func_name: str):
 
   Returns error if the function name was already used within the class.
   '''
-
   global func_size, current_class, current_function, var_avail, temp_avail
   func_size = 0
   if func_name in current_class['#funcs']:
@@ -108,7 +104,6 @@ def seen_func(func_name: str):
 
 def seen_access(new_access: Access):
   '''Registers the read access type.'''
-
   global current_access
   current_access = new_access
 
@@ -119,7 +114,6 @@ def seen_type(new_type: Types):
   Returns error if data type does not exist (Ex.: Creating an instance of a
   non-existent class).
   '''
-
   global current_type
   if new_type not in func_types and (
           new_type not in classes):
@@ -133,12 +127,12 @@ def var_name(var_name: str, assigned=False):
   Returns error if variable is redeclared.
   Returns error if function runs out of variable addresses.
   '''
-
   adjust = 0
   if (var_name in current_function['#vars'] and
       not current_function['#vars'][var_name]['#inherited']):
     return f"Redeclared variable: {var_name}"
   if (var_name in current_function['#vars'] and
+      current_function['#vars'][var_name]['#inherited'] and
       current_function['#vars'][var_name]['#access'] != Access.PRIVATE):
     address = current_function['#vars'][var_name]['#address']
   else:
@@ -243,7 +237,6 @@ def address_or_else(operand: Operand, is_visual=False):
   Returns operand address if is_visual is set to False.
   Returns operand raw value if is_visual is set to True.
   '''
-
   if operand is not None:
     if isinstance(operand, Operand):
       if is_visual:
@@ -260,7 +253,6 @@ def generate_quadruple(a: Operations, b: Operand, c: Operand, d: Operand):
 
   Also generates visual quadruple and appens to visual_quadruples list.
   '''
-
   global q_count, quadruples, visual_quadruples
 
   left_operand = address_or_else(b)
@@ -299,7 +291,6 @@ def find_and_populate(operand: Operand, prefix: dict, access: [Access],
   Returns True if variable/attribute was found.
   Returns False if variable/attribute was not found.
   '''
-
   global expecting_init
   raw_operand = operand.get_raw()
   var = prefix.get(raw_operand, None)
@@ -318,7 +309,7 @@ def find_and_populate(operand: Operand, prefix: dict, access: [Access],
   if var['#access'] not in access:
     operand.set_error(f'Variable \'{raw_operand}\' cannot be accessed.')
     return True
-  elif var['#inherited']:
+  elif var['#inherited'] and var['#access'] == Access.PRIVATE:
     return False
   else:
     operand.set_type(var['#type'])
@@ -326,7 +317,7 @@ def find_and_populate(operand: Operand, prefix: dict, access: [Access],
     return True
 
 
-def populate_instance_call(operand: Operand, check_init_called=True):
+def populate_instance_attribute_call(operand: Operand, check_init_called=True):
   '''Search for attribute in owner_class and its parents.
 
   Used to search for attributes within instances.
@@ -336,14 +327,11 @@ def populate_instance_call(operand: Operand, check_init_called=True):
   Returns error if function is not found / out of scope.
   Returns error if operand has error.
   '''
-
-  curr_class = owner_class['#name']
-  while curr_class:
-    class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
-    if find_and_populate(operand, class_attributes, [Access.PUBLIC], False,
-                         False, check_init_called):
-      return
-    curr_class = classes[curr_class]['#parent']
+  class_attributes = (classes[owner_class['#name']]
+                             ['#funcs']['#attributes']['#vars'])
+  if find_and_populate(operand, class_attributes, [Access.PUBLIC], False,
+                       False, check_init_called):
+    return
 
   if not operand.get_error():
     operand.set_error(f'\'{operand.get_raw()}\' not in scope.')
@@ -357,7 +345,6 @@ def populate_instance_func_call(func_data: FuncData, is_init=False):
   Returns error if function is not found / out of scope.
   Returns error if operand has error.
   '''
-
   global expecting_init
   func_name = func_data.func_name
 
@@ -386,7 +373,6 @@ def populate_local_var(operand: Operand, mark_assigned=False,
   Returns error if not found.
   Returns error if operand has error.
   '''
-
   # Search for var in function's local vars.
   check_assigned_var = not is_instance
   function_vars = current_function['#vars']
@@ -400,15 +386,13 @@ def populate_local_var(operand: Operand, mark_assigned=False,
                        [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE],
                        check_assigned_var, mark_assigned, is_instance):
     return
-  # Search for var in the attributes of inherited classes.
-  curr_class = current_class['#parent']
-  while curr_class:
-    class_attributes = classes[curr_class]['#funcs']['#attributes']['#vars']
-    if find_and_populate(operand, class_attributes,
-                         [Access.PUBLIC, Access.PROTECTED],
-                         check_assigned_var, mark_assigned, is_instance):
-      return
-    curr_class = classes[curr_class]['#parent']
+
+  # Search for var in the global vars from the class.
+  global_vars = classes['#global']['#funcs']['#attributes']['#vars']
+  if find_and_populate(operand, global_vars,
+                       [Access.PUBLIC, Access.PROTECTED, Access.PRIVATE],
+                       check_assigned_var, mark_assigned, is_instance):
+    return
 
   if not operand.get_error():
     operand.set_error(f'Variable \'{operand.get_raw()}\' not in scope.')
@@ -416,12 +400,27 @@ def populate_local_var(operand: Operand, mark_assigned=False,
 
 def populate_local_func_call(func_data: FuncData):
   '''Finds func in class and parents, and popualtes FuncData.'''
-
   func_name = func_data.func_name
   if func_name in owner_class['#funcs']:
-    if owner_class['#funcs'][func_name]['#access'] != Access.PUBLIC:
-      func_data.error = f'\'{func_name}\' not in scope.'
-  func_data.func_type = owner_class['#funcs'][func_name]['#type']
+    func_data.func_type = owner_class['#funcs'][func_name]['#type']
+    func_data.class_name = owner_class['#name']
+    return
+
+  curr_class = owner_class['#parent']
+  while curr_class:
+    if (func_name in classes[curr_class]['#funcs'] and
+        classes[curr_class]['#funcs'][func_name]['#access'] != Access.PRIVATE):
+      func_data.func_type = classes[curr_class]['#funcs'][func_name]['#type']
+      func_data.class_name = curr_class
+      return
+    curr_class = classes[curr_class]['#parent']
+
+  if func_name in classes['#global']['#funcs']:
+    func_data.func_type = classes['#global']['#funcs'][func_name]['#type']
+    func_data.class_name = '#global'
+    return
+
+  func_data.error = f'\'{func_name}\' not in scope.'
 
 
 def get_or_create_cte_address(value, val_type):
@@ -432,7 +431,6 @@ def get_or_create_cte_address(value, val_type):
 
   Returns error if there are no more addresses available.
   '''
-
   global constants_with_addresses
   if value in constants_with_addresses:
     return constants_with_addresses[value]
@@ -454,7 +452,6 @@ def find_and_build_operand(raw_operand, mark_assigned=False):
   Sets operand to error if it runs out of addresses for a data type.
   Sets operand to error if var/attribute was not found.
   '''
-
   t = type(raw_operand)
   operand = Operand(raw_operand)
   if t == int:
@@ -498,7 +495,6 @@ def register_operand(raw_operand, mark_assigned=False):
 
   Return error if Operand was populated with error.
   '''
-
   global operand_stack, types_stack
   operand = find_and_build_operand(raw_operand, mark_assigned)
   if operand.get_error():
@@ -509,7 +505,6 @@ def register_operand(raw_operand, mark_assigned=False):
 
 def register_operator(operator: str):
   '''Append the received operator to the operator stack.'''
-
   global operator_stack
   operator_stack.append(operator)
 
@@ -519,7 +514,6 @@ def build_temp_operand(op_type: Types, assignable=False):
 
   Returns error if it runs out of addresses.
   '''
-
   global current_function
   operand = Operand()
   address = temp_avail.next(op_type)
@@ -542,7 +536,6 @@ def solve_operation_or_continue(ops: [Operations]):
   Returns error if operation cannot be performed on the given operands.
   Returns error if trying to perform an operation on a call to a void function.
   '''
-
   global operator_stack, operand_stack, types_stack
   operator = top(operator_stack)
   if operator in ops:
@@ -566,7 +559,6 @@ def solve_operation_or_continue(ops: [Operations]):
 
 def pop_fake_bottom():
   '''Pops fake bottom from the operator stack.'''
-
   global operator_stack
   operator_stack.pop()
 
@@ -577,7 +569,6 @@ def do_assign():
   Returns error if expression cannot be assigned to variable.
   Returns error if trying to assign a call to a void function.
   '''
-
   global operator_stack, operand_stack, types_stack
   left_operand = operand_stack.pop()
   left_type = types_stack.pop()
@@ -599,7 +590,6 @@ def do_write(s=None):
 
   Returns error if trying to print a call to a void function.
   '''
-
   global operand_stack, types_stack
   if s:
     operand = Operand(s[1:-1])
@@ -618,7 +608,6 @@ def do_read():
 
   This operand will trigger the virtual machine to read from terminal.
   '''
-
   global operand_stack, types_stack
   operand = Operand('#read')
   operand.set_address('#read')
@@ -632,7 +621,6 @@ def register_condition():
 
   Returns error if the operand is not boolean.
   '''
-
   global operand_stack, types_stack
   exp_type = types_stack.pop()
   if exp_type != Types.BOOL:
@@ -650,7 +638,6 @@ def register_else():
   Pops from the jump stack the goto-false quadruple from the if begining, and
   sets the position.
   '''
-
   generate_quadruple(Operations.GOTO, None, None, None)
   false = jump_stack.pop()
   jump_stack.append(q_count-1)
@@ -659,20 +646,17 @@ def register_else():
 
 def register_end_if():
   '''Add position to the goto quadruple of the true block of the if.'''
-
   end = jump_stack.pop()
   quadruples[end][3] = q_count
 
 
 def register_while():
   '''Append while start to the jump stack.'''
-
   jump_stack.append(q_count)
 
 
 def register_end_while():
   '''Generate goto quadruple to return to while condition'''
-
   end = jump_stack.pop()
   quadruples[end][3] = q_count+1
   ret = jump_stack.pop()
@@ -685,7 +669,6 @@ def register_function_beginning():
   This will be used by the vm to know where to go when getting the gosub
   operation.
   '''
-
   current_function['#start'] = q_count
 
 
@@ -694,7 +677,6 @@ def set_current_type_void():
 
   Used when parsing the main function and constructors.
   '''
-
   global current_type
   current_type = Types.VOID
 
@@ -702,7 +684,6 @@ def set_current_type_void():
 def register_main_beginning():
   '''Sets the position where the main function starts on the initial
      quadruple.'''
-
   quadruples[0][3] = q_count
   visual_quadruples[0][3] = q_count
 
@@ -714,7 +695,6 @@ def register_func_end(is_main=False):
 
   Returns error if non-void function has no returns.
   '''
-
   global pending_returns
   if current_function['#type'] != Types.VOID and len(pending_returns) == 0:
     return ('No return statement on non-void function' +
@@ -737,7 +717,6 @@ def register_return():
   Returns error if returning value type cannot be assigned to function's return
   type.
   '''
-
   global operand_stack, types_stack, pending_returns
   function_type = current_function['#type']
   if function_type == Types.VOID:
@@ -760,7 +739,6 @@ def switch_instance(instance_name: str, is_first=False):
 
   Returns error if operand has error.
   '''
-
   global owner_class
 
   if expecting_init:
@@ -774,7 +752,7 @@ def switch_instance(instance_name: str, is_first=False):
     populate_local_var(instance, is_instance=True)
   else:
     owner_class = classes[class_call_stack[-1][-1].get_type()]
-    populate_instance_call(instance)
+    populate_instance_attribute_call(instance)
 
   if instance.get_error():
     return instance.get_error()
@@ -795,7 +773,6 @@ def seen_instance_attribute(attribute_name):
 
   Returns error if operand has error.
   '''
-
   global owner_class
 
   if expecting_init:
@@ -803,7 +780,7 @@ def seen_instance_attribute(attribute_name):
 
   attribute = Operand(attribute_name)
   owner_class = classes[class_call_stack[-1][-1].get_type()]
-  populate_instance_call(attribute)
+  populate_instance_attribute_call(attribute)
 
   if attribute.get_error():
     return attribute.get_error()
@@ -835,7 +812,6 @@ def seen_instance_func(func_name: str, is_init=False):
 
   Return error if FuncData has error.
   '''
-
   global owner_class
   func_data = FuncData(func_name)
   owner_class = classes[class_call_stack[-1][-1].get_type()]
@@ -856,7 +832,6 @@ def call_parent(parent_name: str):
   Return error if class had no defined parent.
   Return error if operan has error.
   '''
-
   global owner_class
   if not current_class['#parent']:
     return (f"\'{current_class['#name']}\' has no parent class but tries "
@@ -886,13 +861,11 @@ def seen_local_func(func_name: str):
 
   Return error if FuncData has error.
   '''
-
   global owner_class
 
   func_data = FuncData(func_name)
   owner_class = current_class
   populate_local_func_call(func_data)
-  func_data.class_name = current_class['#name']
 
   if func_data.error:
     return func_data.error
@@ -906,14 +879,12 @@ def seen_local_func(func_name: str):
 
 def start_passing_params():
   '''Prepares to receive params by appending empty list to param_stack.'''
-
   operator_stack.append(Operations.FAKE_BOTTOM)
   param_stack.append([])
 
 
 def register_param():
   '''Appends evaluated expression to top list in param_stack'''
-
   param = operand_stack.pop()
   if param == Types.VOID:
     return 'Expression returns no value.'
@@ -935,7 +906,6 @@ def done_passing_params(is_local=False):
   quantity.
   Returns error if param cannot be assigned.
   '''
-
   if not is_local:
     for instance in class_call_stack[-1]:
       generate_quadruple(Operations.ENTER_INSTANCE, instance,
@@ -943,6 +913,7 @@ def done_passing_params(is_local=False):
   generate_quadruple(Operations.ERA, func_call_stack[-1].class_name,
                      func_call_stack[-1].func_name, None)
 
+  print(func_call_stack[-1].class_name, func_call_stack[-1].func_name)
   func = (classes[func_call_stack[-1].class_name]['#funcs']
                  [func_call_stack[-1].func_name])
 
@@ -1075,7 +1046,6 @@ def arr_access_5():
 
 def generate_output():
   '''Generates object code to be read by the virtual machine.'''
-
   global classes
 
   data = {}

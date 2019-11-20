@@ -47,6 +47,7 @@ class Perro extends Mamifero {
   }
 
   public void PrintPerro() {
+    # PrintMamifero();
     write edad, " ", raza, '$';
   }
 }

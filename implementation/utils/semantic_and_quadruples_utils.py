@@ -40,7 +40,7 @@ def new_func_dict(name: str, func_type: Types):
   return func_dict
 
 
-def new_class_dict(name: str, parent='#global'):
+def new_class_dict(name: str, parent=None):
   '''Generates dictionary for a class.
 
   This is meant to be added to the symbol table.
