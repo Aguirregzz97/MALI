@@ -1,3 +1,5 @@
+# Memomry structure used by the MALI language's VM.
+
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 import sys
 
@@ -249,14 +251,14 @@ class MemoryManager:
       else:
         value = self.__instance_stack[-1].get(address)
     else:
-      raise Error(f'Invalid address {address}.')
+      Error(f'Invalid address {address}.')
     global is_pointer
     if is_pointer:
       is_pointer = False
       if value:
         value = self.get(value)
     if value is None:
-      raise Error('Segmentation Fault.')
+      Error('Segmentation Fault.')
     return value
 
   def push_instance(self, address, class_name):
@@ -322,23 +324,22 @@ def cast_value(cast_type, value):
     try:
       return int(value)
     except:
-      raise Error('Cannot cast int.')
+      Error('Cannot cast int.')
   elif cast_type == Types.FLOAT:
     try:
       return float(value)
     except:
-      raise Error('Cannot cast float.')
+      Error('Cannot cast float.')
   elif cast_type == Types.CHAR:
     try:
       assert len(value) == 1
       return str(value)
     except:
-      raise Error('Cannot cast char.')
+      Error('Cannot cast char.')
   elif cast_type == Types.BOOL:
     try:
       return bool(value)
     except:
-      raise Error('Cannot cast bool.')
+      Error('Cannot cast bool.')
   else:
-    raise Error(f'Unrecognized type {cast_type}.')
-
+    Error(f'Unrecognized type {cast_type}.')

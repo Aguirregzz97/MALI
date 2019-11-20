@@ -1,4 +1,4 @@
-# Constants used for MALI language.
+# Constants used by the MALI language compiler.
 
 from collections import defaultdict
 from enum import Enum, IntEnum, auto

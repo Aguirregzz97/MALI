@@ -1,3 +1,5 @@
+# MALI language's VM.
+
 from vm_implementation.operations import *  # pylint: disable=unused-wildcard-import
 
 program_name = ''
@@ -39,6 +41,8 @@ operations = [
 
 
 def run(input):
+  '''Grab the object code file and run it.'''
+
   quadruples = input['quadruples']
   set_input(input)
 

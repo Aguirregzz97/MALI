@@ -1,3 +1,5 @@
+# Constants used by the MALI language's vm.
+
 from enum import Enum
 
 BLOCK_SIZE = 1_000
@@ -20,6 +22,7 @@ INSTANCE_UPPER_LIMIT = PROCEDURE_UPPER_LIMIT
 CTE_LOWER_LIMIT = INSTANCE_UPPER_LIMIT
 CTE_UPPER_LIMIT = CTE_LOWER_LIMIT + BLOCK_SIZE * TYPES_AMOUNT - 1
 
+
 class Types(Enum):
   INT = 'int'
   FLOAT = 'float'
@@ -31,10 +34,11 @@ class Types(Enum):
   POINTER = 'pointer'
   READ = 'read'
 
+
 raw_var_types = (
-  'int',
-  'float',
-  'char',
-  'bool',
-  'pointer',
+    'int',
+    'float',
+    'char',
+    'bool',
+    'pointer',
 )

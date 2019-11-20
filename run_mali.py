@@ -1,3 +1,5 @@
+# Run vm for MALI language.
+
 import sys
 from vm_implementation.vm import run
 

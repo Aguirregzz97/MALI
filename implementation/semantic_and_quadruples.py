@@ -90,7 +90,7 @@ def seen_func(func_name: str):
   global func_size, current_class, current_function, var_avail, temp_avail
   func_size = 0
   if func_name in current_class['#funcs']:
-    return f"Redeclared function {func_name}"
+    return f"Redeclared function \'{func_name}\'"
   else:
     current_class['#funcs'][func_name] = new_func_dict(func_name, current_type)
     current_function = current_class['#funcs'][func_name]
@@ -115,7 +115,7 @@ def seen_type(new_type: Types):
   global current_type
   if new_type not in func_types and (
           new_type not in classes):
-    return f"{new_type} is not a class nor data type"
+    return f"\'{new_type}\' is not a class nor data type"
   current_type = new_type
 
 
@@ -139,7 +139,8 @@ def var_name(var_name: str, assigned=False):
         adjust = GLOBAL_ADJUSTMENT
 
     current_function['#vars'][var_name] = (
-        new_var_dict(current_type, address-adjust, current_access, assigned=assigned))
+        new_var_dict(current_type, address-adjust, current_access,
+                     assigned=assigned))
 
     if is_param:
       current_function['#param_count'] += 1
@@ -223,8 +224,6 @@ param_stack = []
 pila_dimensionada = []
 '''Dimensions stack used to parse dimensionated variable accesses.'''
 
-# TODO: remove
-
 
 def address_or_else(operand: Operand, is_visual=False):
   '''Used by generate_quadruple() to generate visual quadruples.
@@ -302,10 +301,10 @@ def find_and_populate(operand: Operand, prefix: dict, access: [Access],
     if mark_assigned:
       var['#assigned'] = True
     elif not var['#assigned']:
-      operand.set_error(f'Variable {raw_operand} used before assignment.')
+      operand.set_error(f'Variable \'{raw_operand}\' used before assignment.')
       return True
   if var['#access'] not in access:
-    operand.set_error(f'Variable {raw_operand} cannot be accessed.')
+    operand.set_error(f'Variable \'{raw_operand}\' cannot be accessed.')
     return True
   else:
     operand.set_type(var['#type'])
@@ -333,7 +332,7 @@ def populate_instance_call(operand: Operand, check_init_called=True):
     curr_class = classes[curr_class]['#parent']
 
   if not operand.get_error():
-    operand.set_error(f'{operand.get_raw()} not in scope.')
+    operand.set_error(f'\'{operand.get_raw()}\' not in scope.')
 
 
 def populate_instance_func_call(func_data: FuncData, is_init=False):
@@ -360,7 +359,7 @@ def populate_instance_func_call(func_data: FuncData, is_init=False):
     curr_class = classes[curr_class]['#parent']
 
   if not func_data.error:
-    func_data.error = f'{func_name} not defined in scope.'
+    func_data.error = f'\'{func_name}\' not defined in scope.'
 
 
 def populate_local_var(operand: Operand, mark_assigned=False,
@@ -398,7 +397,7 @@ def populate_local_var(operand: Operand, mark_assigned=False,
     curr_class = classes[curr_class]['#parent']
 
   if not operand.get_error():
-    operand.set_error(f'Variable {operand.get_raw()} not in scope.')
+    operand.set_error(f'Variable \'{operand.get_raw()}\' not in scope.')
 
 
 def populate_local_func_call(func_data: FuncData):
@@ -407,7 +406,7 @@ def populate_local_func_call(func_data: FuncData):
   func_name = func_data.func_name
   if func_name in owner_class['#funcs']:
     if owner_class['#funcs'][func_name]['#access'] != Access.PUBLIC:
-      func_data.error = f'{func_name} not in scope.'
+      func_data.error = f'\'{func_name}\' not in scope.'
   func_data.func_type = owner_class['#funcs'][func_name]['#type']
 
 
@@ -426,7 +425,7 @@ def get_or_create_cte_address(value, val_type):
   else:
     address = const_avail.next(val_type)
     if not address:
-      return f'Too many {val_type} constants'
+      return f'Too many \'{val_type}\' constants'
     constants_with_addresses[value] = address
     return address
 
@@ -542,7 +541,7 @@ def solve_operation_or_continue(ops: [Operations]):
     if not result_type:
       if left_type == Types.VOID or right_type == Types.VOID:
         return f'Expression returns no value.'
-      return (f'Type mismatch: Invalid operation {operator} on given operand')
+      return f'Type mismatch: Invalid operation \'{operator}\' on given operand'
     temp = build_temp_operand(result_type)
     if temp.get_error():
       return temp.get_error()
@@ -573,7 +572,7 @@ def do_assign():
   if not semantic_cube[assigning_type][left_type][Operations.EQUAL]:
     if left_type == Types.VOID:
       return f'Expression returns no value.'
-    return (f'Type mismatch: expression cannot be assigned')
+    return f'Type mismatch: expression cannot be assigned'
   generate_quadruple(Operations.EQUAL, left_operand, None, assigning_operand)
   operand_stack.append(assigning_operand)
   types_stack.append(assigning_type)
@@ -607,8 +606,8 @@ def do_read():
   '''
 
   global operand_stack, types_stack
-  operand = Operand('read')
-  operand.set_address('read')
+  operand = Operand('#read')
+  operand.set_address('#read')
   operand.set_type(Types.READ)
   operand_stack.append(operand)
   types_stack.append(Types.READ)
@@ -732,7 +731,7 @@ def register_return():
   return_val = operand_stack.pop()
   return_type = types_stack.pop()
   if not semantic_cube[function_type][return_type][Operations.EQUAL]:
-    return f'Cannot return type {return_type} as {function_type}'
+    return f'Cannot return type \'{return_type}\' as \'{function_type}\''
   pending_returns.append(q_count)
   generate_quadruple(Operations.RETURN, return_val, None, None)
 
@@ -846,10 +845,10 @@ def call_parent(parent_name: str):
 
   global owner_class
   if not current_class['#parent']:
-    return (f"{current_class['#name']} has no parent class but tries "
-            + f'to extend {parent_name} in constructor')
+    return (f"\'{current_class['#name']}\' has no parent class but tries "
+            + f'to extend \'{parent_name}\' in constructor')
   elif parent_name != current_class['#parent']:
-    return f"{parent_name} is not {current_class['#name']}'s parent"
+    return f"\'{parent_name}\' is not \'{current_class['#name']}'s\' parent"
   owner_class = classes[parent_name]
 
   class_op = Operand(classes[parent_name]['#name'])
@@ -930,18 +929,19 @@ def done_passing_params(is_local=False):
   generate_quadruple(Operations.ERA, func_call_stack[-1].class_name,
                      func_call_stack[-1].func_name, None)
 
-  func = classes[func_call_stack[-1].class_name]['#funcs'][func_call_stack[-1].func_name]
+  func = (classes[func_call_stack[-1].class_name]['#funcs']
+                 [func_call_stack[-1].func_name])
 
   expecting_params = func['#param_count']
   assigning_params = list(func['#vars'].values())
   if len(param_stack[-1]) != expecting_params:
-    return (f"{func['#name']} expects {expecting_params}, but "
+    return (f"\'{func['#name']}\' expects {expecting_params}, but "
             + f'{len(param_stack[-1])} were given')
   count = 0
   for sending_param in param_stack[-1]:
-    if not semantic_cube[assigning_params[count]['#type']][sending_param.get_type()][Operations.EQUAL]:
-      return (f'Incompatible param {count+1} on call to ' +
-              f"{func['#name']}")
+    if not (semantic_cube[assigning_params[count]['#type']]
+                         [sending_param.get_type()][Operations.EQUAL]):
+      return f"Incompatible param #{count+1} on call to \'{func['#name']}\'"
     generate_quadruple(Operations.PARAM, sending_param, None, count)
     count += 1
   param_stack.pop()
@@ -1012,9 +1012,9 @@ def arr_access_2():
   elif id in classes['#global']['#funcs']['#attributes']['#vars']:
     var = classes['#global']['#funcs']['#attributes']['#vars'][id]
   else:
-    return f'Variable {id} does not exist'
+    return f'Variable \'{id}\' does not exist'
   if '#dims' not in var:
-    return f'Variable {id} has no dimensions'
+    return f'Variable \'{id}\' has no dimensions'
   pila_dimensionada.append((var, 1))
   operator_stack.append(Operations.FAKE_BOTTOM)
 

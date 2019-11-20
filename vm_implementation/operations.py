@@ -1,4 +1,6 @@
-from vm_implementation.utils.memory import MemoryManager # pylint: disable=unused-wildcard-import
+# Operations run by the MALI language VM.
+
+from vm_implementation.utils.memory import MemoryManager, Error  # pylint: disable=unused-wildcard-import
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
 memory: MemoryManager
@@ -10,6 +12,8 @@ params = None
 
 
 def set_input(input):
+  '''Grab data from the object code file.'''
+
   global memory, symbol_table
   symbol_table = input['symbol_table']
   memory = MemoryManager(symbol_table)
@@ -21,14 +25,17 @@ def set_input(input):
 
 
 def should_end():
+  '''Access method for end.'''
   return end
 
 
 def get_q():
+  '''Access method for quadruple position.'''
   return q
 
 
 def next_q():
+  '''Increase quadruple position counter.'''
   global q
   q += 1
 
@@ -45,84 +52,108 @@ def op_not(a, b, c):
   next_q()
 
 
-def op_times(a, b, c):
-  memory.set(c, memory.get(a) * memory.get(b))
+def op_times(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform multiplication.'''
+  memory.set(result_address,
+             memory.get(l_op_address) * memory.get(r_op_address))
   next_q()
 
 
-def op_div(a, b, c):
-  b_val = memory.get(b)
+def op_div(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform division. Marks error if div by 0.'''
+  b_val = memory.get(r_op_address)
   if b_val == 0:
-    return 'Division by 0.'
-  memory.set(c, memory.get(a) / b_val)
+    Error('Division by 0.')
+  memory.set(result_address, memory.get(l_op_address) / b_val)
   next_q()
 
 
-def op_plus(a, b, c):
-  memory.set(c, memory.get(a) + memory.get(b))
+def op_plus(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform addition.'''
+  memory.set(result_address,
+             memory.get(l_op_address) + memory.get(r_op_address))
   next_q()
 
 
-def op_minus(a, b, c):
-  memory.set(c, memory.get(a) - memory.get(b))
+def op_minus(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform substraction.'''
+  memory.set(result_address,
+             memory.get(l_op_address) - memory.get(r_op_address))
   next_q()
 
 
-def op_less_than(a, b, c):
-  memory.set(c, memory.get(a) < memory.get(b))
+def op_less_than(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform less than comparison.'''
+  memory.set(result_address,
+             memory.get(l_op_address) < memory.get(r_op_address))
   next_q()
 
 
-def op_more_than(a, b, c):
-  memory.set(c, memory.get(a) > memory.get(b))
+def op_more_than(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform more than comparison.'''
+  memory.set(result_address,
+             memory.get(l_op_address) > memory.get(r_op_address))
   next_q()
 
 
-def op_different(a, b, c):
-  memory.set(c, memory.get(a) != memory.get(b))
+def op_different(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform different than comparison.'''
+  memory.set(result_address,
+             memory.get(l_op_address) != memory.get(r_op_address))
   next_q()
 
 
-def op_is_equal(a, b, c):
-  memory.set(c, memory.get(a) == memory.get(b))
+def op_is_equal(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform is equal to comparison.'''
+  memory.set(result_address,
+             memory.get(l_op_address) == memory.get(r_op_address))
   next_q()
 
 
-def op_less_equal(a, b, c):
-  memory.set(c, memory.get(a) <= memory.get(b))
+def op_less_equal(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform less equal to comparison.'''
+  memory.set(result_address,
+             memory.get(l_op_address) <= memory.get(r_op_address))
   next_q()
 
 
-def op_more_equal(a, b, c):
-  memory.set(c, memory.get(a) >= memory.get(b))
+def op_more_equal(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform more equal to comparison.'''
+  memory.set(result_address,
+             memory.get(l_op_address) >= memory.get(r_op_address))
   next_q()
 
 
-def op_or(a, b, c):
-  memory.set(c, memory.get(a) or memory.get(b))
+def op_or(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform or comparison.'''
+  memory.set(result_address,
+             memory.get(l_op_address) or memory.get(r_op_address))
   next_q()
 
 
-def op_and(a, b, c):
-  memory.set(c, memory.get(a)
-             and memory.get(b))
+def op_and(l_op_address: int, r_op_address: int, result_address: int):
+  '''Perform and comparison.'''
+  memory.set(result_address,
+             memory.get(l_op_address) and memory.get(r_op_address))
   next_q()
 
 
-def op_equal(a, b, c):
-  if a == 'read':
+def op_equal(l_op, n: None, result_address: int):
+  '''Perform assignment. Either from user input or operand.'''
+  if l_op == '#read':
     read = input()
-    memory.set(c, read)
+    memory.set(result_address, read)
   else:
-    memory.set(c, memory.get(a))
+    memory.set(result_address, memory.get(l_op))
   next_q()
 
 
-def op_write(a, b, c):
-  if type(c) == str:
-    print(c, end='')
+def op_write(n1: None, n2: None, op):
+  '''Perform console print. Either operand or str.'''
+  if type(op) == str:
+    print(op, end='')
   else:
-    elem = memory.get(c)
+    elem = memory.get(op)
     if elem == '$':
       print()
     else:
@@ -130,72 +161,84 @@ def op_write(a, b, c):
   next_q()
 
 
-def op_goto(a, b, c):
+def op_goto(n1: None, n2: None, position: int):
+  '''Perform goto.'''
   global q
-  q = c
+  q = position
 
 
-def op_gotof(a, b, c):
+def op_gotof(op_address: int, n: None, position: int):
+  '''Perform goto if given op is false.'''
   global q
-  if not memory.get(a):
-    q = c
+  if not memory.get(op_address):
+    q = position
   else:
     next_q()
 
 
-def op_gosub(a, b, c):
+def op_gosub(class_name: str, func_name: str, n: None):
+  '''Change context to function.'''
   global q, aux_q
   aux_q.append(q + 1)
-  q = symbol_table[a]['#funcs'][b]['#start']
+  q = symbol_table[class_name]['#funcs'][func_name]['#start']
   memory.push_new_procedure()
 
 
-def op_param(a, b, c):
-  address = params[c]['#address']
-  memory.set(address, memory.get(a), assigning_param=True)
+def op_param(op_address: int, n: None, param_number: int):
+  '''Perform parameter pass to upcoming function.'''
+  address = params[param_number]['#address']
+  memory.set(address, memory.get(op_address), assigning_param=True)
   next_q()
 
 
-def op_era(a, b, c):
+def op_era(class_name: str, func_name: str, n: None):
+  '''Create activation registry for given function.'''
   global params
-  memory.prepare_new_procedure(a, b)
-  params = list(symbol_table[a]['#funcs'][b]['#vars'].values())
+  memory.prepare_new_procedure(class_name, func_name)
+  params = list(symbol_table[class_name]['#funcs'][func_name]['#vars'].values())
   next_q()
 
 
-def op_return(a, b, c):
+def op_return(op_address: int, n1: None, endproc_position: int):
+  '''Perform return on function.'''
   global q
-  memory.set_return(memory.get(a))
-  q = c
+  memory.set_return(memory.get(op_address))
+  q = endproc_position
 
 
-def op_endproc(a, b, c):
+def op_endproc(n1: None, n2: None, n3: None):
+  '''Perform endproc.'''
   global q, aux_q
   memory.pop_procedure()
   q = aux_q.pop()
 
 
-def op_end(a, b, c):
+def op_end(n1: None, n2: None, n3: None):
+  '''Perform execution end.'''
   global end
   end = True
 
 
-def op_enter_instance(a, b, c):
-  memory.push_instance(a, c)
+def op_enter_instance(instnace_address: int, b, class_type: str):
+  '''Change context to given instance.'''
+  memory.push_instance(instnace_address, class_type)
   next_q()
 
 
-def op_exit_instance(a, b, c):
+def op_exit_instance(n1: None, n2: None, n3: None):
+  '''Pop current instance.'''
   memory.pop_instance()
   next_q()
 
 
-def op_get_return(a, b, c):
-  memory.set(a, memory.get_return())
+def op_get_return(result_address, n1: None, n2: None):
+  '''Grab return value.'''
+  memory.set(result_address, memory.get_return())
   next_q()
 
 
-def op_ver(a, b, c):
-  if not b <= memory.get(a) <= c:
-    return f'Index {memory.get(a)} out of range'
+def op_ver(op_address, lower_limit, upper_limit):
+  '''Verify that index is within accepted bounds.'''
+  if not lower_limit <= memory.get(op_address) <= upper_limit:
+    Error('Index out of bounds.')
   next_q()
