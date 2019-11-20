@@ -6,7 +6,13 @@ from implementation.utils.constants import *  # pylint: disable=unused-wildcard-
 # Symbol table utils.
 
 
-def new_var_dict(var_type, address, access=Access.PUBLIC, assigned=False):
+def new_var_dict(var_type: Types, address: int, access=Access.PUBLIC,
+                 assigned=False):
+  '''Generates dictionary for a variable/attribute.
+
+  This is meant to be added to the symbol table.
+  '''
+
   var_dict = {
       '#assigned': assigned,
       '#type': var_type,
@@ -16,7 +22,12 @@ def new_var_dict(var_type, address, access=Access.PUBLIC, assigned=False):
   return var_dict
 
 
-def new_func_dict(name, func_type):
+def new_func_dict(name: str, func_type: Types):
+  '''Generates dictionary for a function/method.
+
+  This is meant to be added to the symbol table.
+  '''
+
   func_dict = {
       '#name': name,
       '#type': func_type,
@@ -28,7 +39,12 @@ def new_func_dict(name, func_type):
   return func_dict
 
 
-def new_class_dict(name, parent='#global'):
+def new_class_dict(name: str, parent='#global'):
+  '''Generates dictionary for a class.
+
+  This is meant to be added to the symbol table.
+  '''
+
   class_dict = {
       '#name': name,
       '#parent': parent,
@@ -40,7 +56,14 @@ def new_class_dict(name, parent='#global'):
 
 
 class Available:
-  def __init__(self, begin, limit, types=avail_types):
+  '''Keeps track of the next available address.'''
+
+  def __init__(self, begin: int, limit: int, types=avail_types):
+    '''Takes an initial address, limit address, and types.
+
+    Divides the available addresses into the received types.
+    '''
+
     self.__begin = begin
     self.__limit = limit
 
@@ -54,7 +77,9 @@ class Available:
       }
       type_begin += length + 1
 
-  def next(self, op_type):
+  def next(self, op_type: Types):
+    '''Returns the next available address for a given type.'''
+
     if op_type not in self.__type:
       op_type = Types.CLASS
 
@@ -67,6 +92,11 @@ class Available:
     return next_val
 
   def displace(self, op_type, displace_size):
+    '''Displaces the next available address for a given type.
+
+    This is meant to be used by dimensionated variables.
+    '''
+
     if op_type not in self.__type:
       op_type = Types.CLASS
 
@@ -77,13 +107,24 @@ class Available:
     self.__type[op_type]['next'] += displace_size - 1
     return True
 
+
 # Intermediate code generation utils
+
 class Operand:
+  '''Carries attributes of an Operand'''
+
   def __init__(self, raw=None):
     self.__raw = raw
-    self.__addr = None
-    self.__type = None
+    '''String name of the operand.'''
+
+    self.__addr: int
+    '''Address of the operand.'''
+
+    self.__type: Types
+    '''Type of the operand.'''
+
     self.__err = None
+    '''Error that can be set when populating the operand.'''
 
   def set_raw(self, raw):
     self.__raw = raw
@@ -104,8 +145,17 @@ class Operand:
 
 
 class FuncData:
+  '''Carries attributes of a function.'''
+
   def __init__(self, func_name):
     self.func_name = func_name
-    self.class_name = None
-    self.func_type = None
+    '''String with function name.'''
+
+    self.class_name: str
+    '''String with belonging class name.'''
+
+    self.func_type: Types
+    '''Return type of the function.'''
+
     self.error = None
+    '''Error that can be set when populating the func.'''

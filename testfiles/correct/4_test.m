@@ -60,6 +60,7 @@ main {
   var {
     Student student, student2;
     int n, m, o, p, q, r;
+    float f;
   }
 
   student->init(1, 500, 20);

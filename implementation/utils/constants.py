@@ -39,10 +39,11 @@ class Access(Enum):
   PRIVATE = auto()
   PROTECTED = auto()
 
+
 str_access = {
-  'public' : Access.PUBLIC,
-  'private' : Access.PRIVATE,
-  'protected' : Access.PROTECTED
+    'public': Access.PUBLIC,
+    'private': Access.PRIVATE,
+    'protected': Access.PROTECTED
 }
 
 
@@ -81,27 +82,28 @@ class Operations(IntEnum):
 
 
 str_operations = {
-  'unary+': Operations.PLUS_UNARY,
-  'unary-': Operations.MINUS_UNARY,
-  'unarynot': Operations.NOT,
-  '*': Operations.TIMES,
-  '/': Operations.DIV,
-  '+': Operations.PLUS,
-  '-': Operations.MINUS,
-  '<': Operations.LESS_THAN,
-  '>': Operations.MORE_THAN,
-  '<>': Operations.DIFFERENT,
-  '==': Operations.IS_EQUAL,
-  '<=': Operations.LESS_EQUAL,
-  '>=': Operations.MORE_EQUAL,
-  'or': Operations.OR,
-  'and': Operations.AND,
-  '=': Operations.EQUAL,
-  '(': Operations.FAKE_BOTTOM
+    'unary+': Operations.PLUS_UNARY,
+    'unary-': Operations.MINUS_UNARY,
+    'unarynot': Operations.NOT,
+    '*': Operations.TIMES,
+    '/': Operations.DIV,
+    '+': Operations.PLUS,
+    '-': Operations.MINUS,
+    '<': Operations.LESS_THAN,
+    '>': Operations.MORE_THAN,
+    '<>': Operations.DIFFERENT,
+    '==': Operations.IS_EQUAL,
+    '<=': Operations.LESS_EQUAL,
+    '>=': Operations.MORE_EQUAL,
+    'or': Operations.OR,
+    'and': Operations.AND,
+    '=': Operations.EQUAL,
+    '(': Operations.FAKE_BOTTOM
 }
 
 
-semantic_cube = defaultdict(lambda : defaultdict(lambda : defaultdict(lambda : None)))
+semantic_cube = defaultdict(
+    lambda: defaultdict(lambda: defaultdict(lambda: None)))
 
 semantic_cube[Types.INT][Types.INT][Operations.AND] = Types.BOOL
 semantic_cube[Types.INT][Types.INT][Operations.OR] = Types.BOOL

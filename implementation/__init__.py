@@ -1,1 +1,1 @@
-from .parser import parse_string, generate_output
+from .parser import parse_and_generate_object_code

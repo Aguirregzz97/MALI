@@ -91,6 +91,7 @@ t_CTE_STR = r'("[^"]*")'
 t_CTE_CH = r'\'.\''
 t_ARROW = r'->'
 
+# Tokens that require manipualtion before being sent to the parser.
 
 def t_ID(t):
   r'[a-zA-Z_][a-zA-Z_0-9]*'

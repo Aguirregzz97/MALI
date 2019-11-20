@@ -26,20 +26,17 @@ def p_program(p):
              | classes main
              | vars main
              | main'''
-  add_to_tree('program', p)
 
 
 def p_classes(p):
   '''classes : class classes
              | class'''
-  add_to_tree('classes', p)
 
 
 def p_class(p):
   '''class : CLASS ID r_seen_class classblock r_finish_class
            | CLASS ID r_seen_class EXTENDS ID r_class_parent classblock \
              r_finish_class'''
-  add_to_tree('class', p)
 
 
 def p_classblock(p):
@@ -47,59 +44,49 @@ def p_classblock(p):
                 | LEFT_B init methods RIGHT_B
                 | LEFT_B attributes init RIGHT_B
                 | LEFT_B init RIGHT_B'''
-  add_to_tree('classblock', p)
 
 
 def p_attributes(p):
   '''attributes : ATTR LEFT_B attr_dec RIGHT_B'''
-  add_to_tree('attributes', p)
 
 
 def p_attr_dec(p):
   '''attr_dec : access var attr_dec
               | access var'''
-  add_to_tree('attr_dec', p)
 
 
 def p_init(p):
   '''init : INIT r_seen_init LEFT_P param RIGHT_P init_factor r_finish_func'''
-  add_to_tree('init', p)
 
 
 def p_init_factor(p):
   '''init_factor : r_start_func proc_block
                  | COLON r_start_func ID r_call_parent param_pass_local \
                    proc_block'''
-  add_to_tree('init_factor', p)
 
 
 def p_methods(p):
   '''methods : access proc r_set_access methods
              | access proc r_set_access'''
-  add_to_tree('methods', p)
 
 
 def p_access(p):
   '''access : PUBLIC r_seen_access
             | PRIVATE r_seen_access
             | PROTECTED r_seen_access'''
-  add_to_tree('access', p)
 
 
 def p_vars(p):
   '''vars : VAR LEFT_B vars_dec RIGHT_B'''
-  add_to_tree('vars', p)
 
 
 def p_vars_dec(p):
   '''vars_dec : var vars_dec
               | var'''
-  add_to_tree('vars_dec', p)
 
 
 def p_var(p):
   '''var : complex_type var_aux SC'''
-  add_to_tree('var', p)
 
 
 def p_var_aux(p):
@@ -107,7 +94,6 @@ def p_var_aux(p):
              | ID r_var_name
              | ID r_var_name_arr arr_dim COMMA var_aux
              | ID r_var_name_arr arr_dim'''
-  add_to_tree('var_aux', p)
 
 
 def p_arr_dim(p):
@@ -124,7 +110,6 @@ def p_type(p):
           | FLOAT r_seen_type
           | CHAR r_seen_type
           | BOOL r_seen_type'''
-  add_to_tree('type', p)
 
 
 def p_complex_type(p):
@@ -135,7 +120,6 @@ def p_complex_type(p):
 def p_modules(p):
   '''modules : FUNCTION proc modules
              | FUNCTION proc'''
-  add_to_tree('modules', p)
 
 
 def p_proc(p):
@@ -143,20 +127,17 @@ def p_proc(p):
             r_finish_func
           | VOID r_seen_type ID r_funcName LEFT_P param RIGHT_P r_start_func \
             proc_block r_finish_func'''
-  add_to_tree('proc', p)
 
 
 def p_proc_block(p):
   '''proc_block : LEFT_B vars statements RIGHT_B
                 | LEFT_B vars RIGHT_B
                 | block'''
-  add_to_tree('proc_block', p)
 
 
 def p_param(p):
   '''param : r_seen_param params r_finish_param
            | r_seen_param r_finish_param'''
-  add_to_tree('param', p)
 
 
 def p_params(p):
@@ -164,13 +145,11 @@ def p_params(p):
             | complex_type ID r_var_name
             | complex_type ID r_var_name_arr arr_index COMMA params
             | complex_type ID r_var_name_arr arr_index'''
-  add_to_tree('params', p)
 
 
 def p_statements(p):
   '''statements : statement SC statements
                 | statement SC'''
-  add_to_tree('statements', p)
 
 
 def p_statement(p):
@@ -180,7 +159,6 @@ def p_statement(p):
                | write
                | if
                | while'''
-  add_to_tree('statement', p)
 
 
 def p_assign(p):
@@ -191,7 +169,6 @@ def p_assign(p):
   e = sq.do_assign()
   if e:
     handle_error(p.lineno(1), p.lexpos(1), e)
-  add_to_tree('assign', p)
 
 
 def p_call(p):
@@ -240,12 +217,10 @@ def p_param_pass_aux(p):
 
 def p_return(p):
   '''return : RETURN expression r_seen_return'''
-  add_to_tree('return', p)
 
 
 def p_write(p):
   '''write : WRITE words'''
-  add_to_tree('write', p)
 
 
 def p_words(p):
@@ -253,12 +228,10 @@ def p_words(p):
            | CTE_STR r_do_write_str
            | expression r_do_write COMMA words
            | expression r_do_write'''
-  add_to_tree('words', p)
 
 
 def p_if(p):
   '''if : IF condition'''
-  add_to_tree('if', p)
 
 
 def p_condition(p):
@@ -267,23 +240,20 @@ def p_condition(p):
                | LEFT_P expression RIGHT_P r_seen_cond block ELSE \
                  r_seen_else block r_seen_end_if
                | LEFT_P expression RIGHT_P r_seen_cond block r_seen_end_if'''
-  add_to_tree('condition', p)
 
 
 def p_while(p):
   '''while : WHILE r_seen_while LEFT_P expression RIGHT_P r_seen_cond block \
              r_seen_end_while'''
-  add_to_tree('while', p)
 
 
 def p_arraccess(p):
   '''arraccess : ID r_seen_operand r_arr_access_2 arr_index '''
-  add_to_tree('arraccess', p)
 
 
 def p_arr_index(p):
   '''arr_index : LEFT_SB expression r_arr_access_3 RIGHT_SB arr_index_aux'''
-  add_to_tree('arr_index', p)
+
 
 def p_arr_index_aux(p):
   '''arr_index_aux : r_arr_access_4 arr_index
@@ -293,24 +263,20 @@ def p_arr_index_aux(p):
 def p_block(p):
   '''block : LEFT_B statements RIGHT_B
            | LEFT_B RIGHT_B'''
-  add_to_tree('block', p)
 
 
 def p_main(p):
   '''main : MAIN r_seen_main proc_block r_finish_main'''
-  add_to_tree('main', p)
 
 
 def p_expression(p):
   '''expression : exp r_seen_exp AND r_seen_operator expression
                 | exp r_seen_exp'''
-  add_to_tree('expression', p)
 
 
 def p_exp(p):
   '''exp : xp r_seen_xp OR r_seen_operator exp
          | xp r_seen_xp'''
-  add_to_tree('exp', p)
 
 
 def p_xp(p):
@@ -321,40 +287,34 @@ def p_xp(p):
         | x r_seen_x LESS_ET r_seen_operator xp
         | x r_seen_x MORE_ET r_seen_operator xp
         | x r_seen_x'''
-  add_to_tree('xp', p)
 
 
 def p_x(p):
   '''x : term r_seen_term PLUS r_seen_operator x
        | term r_seen_term MINUS r_seen_operator x
        | term r_seen_term'''
-  add_to_tree('x', p)
 
 
 def p_term(p):
   '''term : factor r_seen_factor TIMES r_seen_operator term
           | factor r_seen_factor DIV r_seen_operator term
           | factor r_seen_factor'''
-  add_to_tree('term', p)
 
 
 def p_factor(p):
   '''factor : not LEFT_P r_seen_operator expression RIGHT_P r_pop_fake_bottom
             | not sign cte'''
-  add_to_tree('factor', p)
 
 
 def p_not(p):
   '''not : NOT
          | empty'''
-  add_to_tree('not', p)
 
 
 def p_sign(p):
   '''sign : PLUS
          | MINUS
          | empty'''
-  add_to_tree('sign', p)
 
 
 def p_cte(p):
@@ -364,13 +324,11 @@ def p_cte(p):
          | CTE_CH r_seen_operand
          | arraccess
          | call'''
-  add_to_tree('cte', p)
 
 
 # Rule used to create an cfg epsilon-like value.
 def p_empty(p):
   '''empty :'''
-  add_to_tree('empty', p)
 
 
 # Semantic rules.
@@ -444,7 +402,7 @@ def p_r_finish_param(p):
 
 def p_r_call_parent(p):
   'r_call_parent : '
-  e = sq.call_parent(parent=p[-1])
+  e = sq.call_parent(parent_name=p[-1])
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
@@ -752,6 +710,7 @@ def p_e_program_disorder(p):
 # Syntax error printing.
 
 def handle_error(line, lexpos, mssg):
+  '''Print error message and set error state to true'''
   global error
   error = True
   error_prefix(line, lexpos, input_str)
@@ -773,17 +732,17 @@ parser.defaulted_states = {}
 
 # Run parser and generate output.
 
-def parse_string(s):
+def parse_and_generate_object_code(s):
+  '''Parse string, compile string, and return output.
+
+  Sets global input_str with string to be parsed, which is used for error
+  recovery.
+  '''
   global input_str
   input_str = s
-  try:
-    parser.parse(s, tracking=True)
-  except:
-    pass
+  parser.parse(s, tracking=True)
 
-
-def generate_output():
-  '''
+  # Quadruples printing for debugging
   if not error:
     pp.pprint(sq.classes)
     q_count = 0
@@ -791,11 +750,13 @@ def generate_output():
       print('{0:<5} {1:<40} {2:<40}'.format(
           str(q_count) + ':', str(q), str(vq)))
       q_count += 1
-  '''
 
   if error:
     return
   output = sq.generate_output()
+
+  # Output printing for debugging.
   # pp.pprint(output)
   # out = eval(str(output))
+
   return str(output)

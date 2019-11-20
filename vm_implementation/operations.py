@@ -1,4 +1,4 @@
-from vm_implementation.utils.memory import MemoryManager, get_type  # pylint: disable=unused-wildcard-import
+from vm_implementation.utils.memory import MemoryManager # pylint: disable=unused-wildcard-import
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
 memory: MemoryManager

@@ -313,9 +313,12 @@ def top(l):
 
 
 def cast_value(cast_type, value):
+  value_type = type(value)
   if value is None:
     return None
   if cast_type == Types.INT:
+    if value_type == str:
+      value = float(value)
     try:
       return int(value)
     except:
@@ -339,32 +342,3 @@ def cast_value(cast_type, value):
   else:
     raise Error(f'Unrecognized type {cast_type}.')
 
-
-def get_type(address):
-  if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
-    adjusted_address = address - DATA_LOWER_LIMIT
-  elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
-    adjusted_address = address - CTE_LOWER_LIMIT
-  elif ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
-    adjusted_address = address - ATTRIBUTE_LOWER_LIMIT
-  elif VAR_LOWER_LIMIT <= address <= VAR_UPPER_LIMIT:
-    adjusted_address = address - VAR_LOWER_LIMIT
-  elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
-    adjusted_address = address - TEMP_LOWER_LIMIT
-  else:
-    raise Error('Invalid address.')
-
-  if ADJUSTED_INT_BEGIN <= adjusted_address <= ADJUSTED_INT_LIMIT:
-    return Types.INT
-  elif ADJUSTED_FLOAT_BEGIN <= adjusted_address <= ADJUSTED_FLOAT_LIMIT:
-    return Types.FLOAT
-  elif ADJUSTED_CHAR_BEGIN <= adjusted_address <= ADJUSTED_CHAR_LIMIT:
-    return Types.CHAR
-  elif ADJUSTED_BOOL_BEGIN <= adjusted_address <= ADJUSTED_BOOL_LIMIT:
-    return Types.BOOL
-  elif ADJUSTE_INSTANCE_BEGIN <= adjusted_address <= ADJUSTED_INSTANCE_LIMIT:
-    return Types.CLASS
-  elif ADJUSTED_POINTER_BEGIN <= adjusted_address <= ADJUSTED_POINTER_LIMIT:
-    return Types.POINTER
-  else:
-    raise Error('Invalid address.')

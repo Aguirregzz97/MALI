@@ -1,7 +1,8 @@
-from implementation.parser import *
+# Run compiler from MALI language.
+
+from implementation.parser import *  # pylint: disable=unused-wildcard-import
 import sys
 
-program_name = ''
 
 if __name__ == '__main__':
   if len(sys.argv) is not 2:
@@ -13,10 +14,7 @@ if __name__ == '__main__':
 
   # Compile program.
   with open(program_name, 'r', newline='\n') as file:
-    parse_string(file.read())
-
-  # Generate object code file.
-  output = generate_output()
-  if output:
-    with open(program_name + 'r', 'w') as file:
-      file.write(output)
+    object_code = parse_and_generate_object_code(file.read())
+    if object_code:
+      with open(program_name + 'r', 'w') as file:
+        file.write(object_code)
