@@ -15,5 +15,9 @@ func int fib(int n) {
 }
 
 main {
-  write fib(10), '\n';
+  if (fib(10) == 55) {
+    write "Finished without errors!", '\n';
+  } else {
+    write "Error calculating fib", '\n';
+  };
 }

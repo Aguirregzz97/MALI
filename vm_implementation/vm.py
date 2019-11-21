@@ -49,7 +49,7 @@ def run(input):
   cont = 100
   while not should_end():
     quadruple = quadruples[get_q()]
-    #print(get_q(), '-', operations[quadruple[0]].__name__, quadruple)
+    # print(get_q(), '-', operations[quadruple[0]].__name__, quadruple)
     e = operations[quadruple[0]](quadruple[1], quadruple[2], quadruple[3])
     if e:
       print(e)

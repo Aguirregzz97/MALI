@@ -45,7 +45,7 @@ def cast_value(cast_type: Types, value):
       Error('Cannot cast char.')
   elif cast_type == Types.BOOL:
     try:
-      return int(value)
+      return int(bool(value))
     except:
       Error('Cannot cast bool.')
   else:

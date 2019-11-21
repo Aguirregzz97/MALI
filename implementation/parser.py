@@ -303,21 +303,23 @@ def p_term(p):
 
 def p_factor(p):
   '''factor : not LEFT_P r_seen_operator expression RIGHT_P r_pop_fake_bottom
-            | not sign cte'''
+            | not cte
+            | sign LEFT_P r_seen_operator expression RIGHT_P r_pop_fake_bottom
+            | sign cte
+            | LEFT_P r_seen_operator expression RIGHT_P r_pop_fake_bottom
+            | cte'''
   e = sq.solve_if_unary_operation()
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
 
 
 def p_not(p):
-  '''not : NOT r_seen_unary_operator
-         | empty'''
+  '''not : NOT r_seen_unary_operator'''
 
 
 def p_sign(p):
   '''sign : PLUS r_seen_unary_operator
-          | MINUS r_seen_unary_operator
-          | empty'''
+          | MINUS r_seen_unary_operator'''
 
 
 def p_cte(p):

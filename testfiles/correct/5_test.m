@@ -7,9 +7,9 @@ func int fib(int n) {
 }
 
 main {
-  var {
-    int n;
-  }
-  n = 10;
-  write fib(n), '\n';
+  if (fib(10) == 55) {
+    write "Finished without errors!", '\n';
+  } else {
+    write "Error calculating fib", '\n';
+  };
 }
