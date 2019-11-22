@@ -29,13 +29,13 @@ main {
     Square s, r;
   }
 
-  s->init(5);
+  s.init(5);
 
-  r->init(6);
+  r.init(6);
 
-  write "Debe imprimir 25: ", s->Area(), '\n';
-  write "Debe imprimir 20: ", s->Perimetro(), '\n';
+  write "Debe imprimir 25: ", s.Area(), '\n';
+  write "Debe imprimir 20: ", s.Perimetro(), '\n';
 
-  write "Debe imprimir 36: ", r->Area(), '\n';
-  write "Debe imprimir 24: ", r->Perimetro(), '\n';
+  write "Debe imprimir 36: ", r.Area(), '\n';
+  write "Debe imprimir 24: ", r.Perimetro(), '\n';
 }

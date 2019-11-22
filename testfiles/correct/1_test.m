@@ -55,7 +55,7 @@ func void printAnimal(Animal a) {
     int x1, y2;
   }
 
-  write a->edad;
+  write a.edad;
   #write a.anios_captivo;
 }
 
@@ -131,19 +131,19 @@ main {
 
   write "1", '\n';
 
-  a->init(5, 's', 'c');
+  a.init(5, 's', 'c');
 
   write "2", '\n';
 
-  y = a->edad;
+  y = a.edad;
 
   write "3", '\n';
 
-  a->Ladrar();
+  a.Ladrar();
 
   write "4", '\n';
 
-  y = a->calculateB(5);
+  y = a.calculateB(5);
 
   write "5", '\n';
 
@@ -159,11 +159,11 @@ main {
 
   write "8", '\n';
 
-  perro->init(6, 'l', 'c');
+  perro.init(6, 'l', 'c');
 
   write "9", '\n';
 
-  perro->Ladrar();
+  perro.Ladrar();
 
   write "10", '\n';
 

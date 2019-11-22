@@ -57,14 +57,14 @@ main {
     Perro p;
   }
 
-  p->init('s', 6, false, 'c');
+  p.init('s', 6, false, 'c');
 
   write "Debe ser: 6 c: ";
-  p->PrintPerro();
+  p.PrintPerro();
 
   write "Debe ser: s L: ";
-  write p->GetName(), ' ', p->nombre, '\n';
+  write p.GetName(), ' ', p.nombre, '\n';
 
   write "Debe ser: s 6: ";
-  p->PrintAnimal();
+  p.PrintAnimal();
 }

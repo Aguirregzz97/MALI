@@ -182,18 +182,18 @@ def p_local_call(p):
 
 def p_instance_call(p):
   '''instance_call : ID r_switch_first_instance instance_path
-                   | ID r_switch_first_instance arrow_call'''
+                   | ID r_switch_first_instance dot_call'''
 
 
 def p_instance_path(p):
   '''instance_path : DOT ID r_switch_instance instance_path
-                   | DOT ID r_switch_instance arrow_call'''
+                   | DOT ID r_switch_instance dot_call'''
 
 
-def p_arrow_call(p):
-  '''arrow_call : ARROW ID r_seen_instance_func param_pass
-                | ARROW INIT r_seen_instance_init param_pass
-                | ARROW ID r_seen_instance_attribute'''
+def p_dot_call(p):
+  '''dot_call : DOT ID r_seen_instance_func param_pass
+                | DOT INIT r_seen_instance_init param_pass
+                | DOT ID r_seen_instance_attribute'''
 
 
 def p_param_pass(p):

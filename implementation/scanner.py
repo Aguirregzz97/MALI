@@ -61,8 +61,7 @@ tokens = [
     'MORE_T',
     'DIFFERENT',
     'LESS_ET',
-    'MORE_ET',
-    'ARROW'
+    'MORE_ET'
 ] + list(reserved.values())
 
 # Regular expressions associated with language's tokens.
@@ -89,7 +88,6 @@ t_LESS_ET = r'<='
 t_MORE_ET = r'>='
 t_CTE_STR = r'("(\\"|[^"])*")'
 t_CTE_CH = r'\'(.|\\.)\''
-t_ARROW = r'->'
 
 
 # Tokens that require manipualtion before being sent to the parser.
