@@ -8,7 +8,6 @@ symbol_table = None
 q = 0
 aux_q = []
 end = False
-params = None
 
 
 def set_input(input):
@@ -184,18 +183,15 @@ def op_gosub(class_name: str, func_name: str, n: None):
   memory.push_new_procedure()
 
 
-def op_param(op_address: int, n: None, param_number: int):
+def op_param(op_address: int, n: None, param_address: int):
   '''Perform parameter pass to upcoming function.'''
-  address = params[param_number]['#address']
-  memory.set(address, memory.get(op_address), assigning_param=True)
+  memory.set(param_address, memory.get(op_address), assigning_param=True)
   next_q()
 
 
 def op_era(class_name: str, func_name: str, n: None):
   '''Create activation registry for given function.'''
-  global params
   memory.prepare_new_procedure(class_name, func_name)
-  params = list(symbol_table[class_name]['#funcs'][func_name]['#vars'].values())
   next_q()
 
 

@@ -80,6 +80,7 @@ def class_parent(class_parent: str):
 def finish_class():
   '''Prepares variables for the next class to be parsed.'''
   global current_class, current_function, current_access, var_avail, temp_avail
+
   current_class = classes['#global']
   current_function = current_class['#funcs']['#attributes']
   current_access = Access.PUBLIC
@@ -128,6 +129,7 @@ def var_name(var_name: str, assigned=False):
   Returns error if variable is redeclared.
   Returns error if function runs out of variable addresses.
   '''
+  global last_declared_var
   adjust = 0
   if (var_name in current_function['#vars'] and
           not current_function['#vars'][var_name]['#inherited']):
@@ -152,9 +154,6 @@ def var_name(var_name: str, assigned=False):
   if is_param:
     current_function['#param_count'] += 1
     current_function['#vars'][var_name]['#assigned'] = True
-  else:
-    current_function['#var_count'] += 1
-  global last_declared_var
   last_declared_var = var_name
 
 
@@ -532,7 +531,6 @@ def build_temp_operand(op_type: Types, assignable=False):
     operand.set_error('Too many variables.')
   current_function['#vars'][address] = new_var_dict(
       op_type, address, assigned=True)
-  current_function['#var_count'] += 1
   operand.set_address(address)
   operand.set_type(op_type)
   operand.set_raw(operand.get_address())
@@ -956,7 +954,8 @@ def done_passing_params(is_local=False):
     if not (semantic_cube[assigning_params[count]['#type']]
                          [sending_param.get_type()][Operations.EQUAL]):
       return f"Incompatible param #{count+1} on call to \'{func['#name']}\'"
-    generate_quadruple(Operations.PARAM, sending_param, None, count)
+    generate_quadruple(Operations.PARAM, sending_param, None,
+                       assigning_params[count]['#address'])
     count += 1
   param_stack.pop()
 
@@ -1092,8 +1091,7 @@ def generate_output():
   # Clean symbol table for use in virtual machine.
   # TODO: delete inherited and info from arrays.
   for v1 in classes.values():
-    if v1['#parent'] == '#global':
-      v1['#parent'] = None
+    del v1['#parent']
     for v2 in v1['#funcs'].values():
       v2['#type'] = v2['#type'].value
       if '#access' in v2:

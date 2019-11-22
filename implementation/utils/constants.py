@@ -157,7 +157,7 @@ semantic_cube[Types.CHAR][Types.CHAR][Operations.EQUAL] = Types.CHAR
 semantic_cube[Types.CHAR][Types.READ][Operations.EQUAL] = Types.CHAR
 semantic_cube[Types.CHAR][Operations.PLUS_UNARY] = None
 semantic_cube[Types.CHAR][Operations.MINUS_UNARY] = None
-semantic_cube[Types.CHAR][Operations.NOT] = None
+semantic_cube[Types.CHAR][Operations.NOT] = Types.CHAR
 
 semantic_cube[Types.BOOL][Types.BOOL][Operations.AND] = Types.BOOL
 semantic_cube[Types.BOOL][Types.BOOL][Operations.OR] = Types.BOOL

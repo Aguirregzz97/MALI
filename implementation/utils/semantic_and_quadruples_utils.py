@@ -34,7 +34,6 @@ def new_func_dict(name: str, func_type: Types):
       '#type': func_type,
       '#access': Access.PUBLIC,
       '#param_count': 0,
-      '#var_count': 0,
       '#vars': {}
   }
   return func_dict

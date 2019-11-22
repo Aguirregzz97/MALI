@@ -17,7 +17,7 @@ is_pointer = False
 class Memory:
   '''Stores values with their address.'''
 
-  def __init__(self, begin: int):
+  def __init__(self, adjust: int):
     self.__int_slots = {}
     '''Memory slots for int values.'''
 
@@ -36,45 +36,35 @@ class Memory:
     self.__pointer_slots = {}
     '''Memory slots for pointer values.'''
 
-    self.__int_begin = begin
-    self.__int_limit = self.__int_begin + BLOCK_SIZE - 1
-    self.__float_begin = self.__int_limit + 1
-    self.__float_limit = self.__float_begin + BLOCK_SIZE - 1
-    self.__char_begin = self.__float_limit + 1
-    self.__char_limit = self.__char_begin + BLOCK_SIZE - 1
-    self.__bool_begin = self.__char_limit + 1
-    self.__bool_limit = self.__bool_begin + BLOCK_SIZE - 1
-    self.__instance_pointer_begin = self.__bool_limit + 1
-    self.__instance_pointer_limit = self.__instance_pointer_begin + BLOCK_SIZE - 1
-    self.__pointer_begin = self.__instance_pointer_limit + 1
-    self.__pointer_limit = self.__pointer_begin + BLOCK_SIZE - 1
-    '''Assigns available addresses starting form begin parameter.'''
+    self.__address_adjust = adjust
+    '''Address adjustment for the memory block.'''
 
-  def set(self, address: int, value, assign=False):
+  def set(self, unadjusted_address: int, value, assign=False):
     '''Set given address with given value.
 
     Find value type by the address and save it in the corresponding slot.
     '''
-    if self.__int_begin <= address <= self.__int_limit:
+    address = unadjusted_address - self.__address_adjust
+    if INT_LOWER_LIMIT <= address <= INT_UPPER_LIMIT:
       self.__int_slots[address] = cast_value(Types.INT, value)
-    elif self.__float_begin <= address <= self.__float_limit:
+    elif FLOAT_LOWER_LIMIT <= address <= FLOAT_UPPER_LIMIT:
       self.__float_slots[address] = cast_value(Types.FLOAT, value)
-    elif self.__char_begin <= address <= self.__char_limit:
+    elif CHAR_LOWER_LIMIT <= address <= CHAR_UPPER_LIMIT:
       self.__char_slots[address] = cast_value(Types.CHAR, value)
-    elif self.__bool_begin <= address <= self.__bool_limit:
+    elif BOOL_LOWER_LIMIT <= address <= BOOL_UPPER_LIMIT:
       self.__bool_slots[address] = cast_value(Types.BOOL, value)
-    elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
+    elif CLASS_LOWER_LIMIT <= address <= CLASS_UPPER_LIMIT:
       self.__instance_slots[address] = Instance(value)
-    elif self.__pointer_begin <= address <= self.__pointer_limit:
+    elif POINTER_LOWER_LIMIT <= address <= POINTER_UPPER_LIMIT:
       if address in self.__pointer_slots.keys() and self.__pointer_slots[address]:
         global pending_to_set
         pending_to_set = self.__pointer_slots[address]
       else:
         self.__pointer_slots[address] = value
     else:
-      raise Exception(f"Memory.Set {address}: value out of range.")
+      raise Exception(f"Memory.Set {address, unadjusted_address}: value out of range.")
 
-  def get(self, address: int, printable=False):
+  def get(self, unadjusted_address: int, printable=False):
     '''Get value stored in given address
 
     Finds value type by the address and searches for the value in the
@@ -82,26 +72,27 @@ class Memory:
 
     Returns value.
     '''
-    if self.__int_begin <= address <= self.__int_limit:
+    address = unadjusted_address - self.__address_adjust
+    if INT_LOWER_LIMIT <= address <= INT_UPPER_LIMIT:
       return self.__int_slots.get(address, None)
-    elif self.__float_begin <= address <= self.__float_limit:
+    elif FLOAT_LOWER_LIMIT <= address <= FLOAT_UPPER_LIMIT:
       return self.__float_slots.get(address, None)
-    elif self.__char_begin <= address <= self.__char_limit:
+    elif CHAR_LOWER_LIMIT <= address <= CHAR_UPPER_LIMIT:
       if printable:
         return chr(self.__char_slots.get(address, 0))
       return self.__char_slots.get(address, None)
-    elif self.__bool_begin <= address <= self.__bool_limit:
+    elif BOOL_LOWER_LIMIT <= address <= BOOL_UPPER_LIMIT:
       if printable:
         return bool(self.__bool_slots.get(address, None))
       return self.__bool_slots.get(address, None)
-    elif self.__instance_pointer_begin <= address <= self.__instance_pointer_limit:
+    elif CLASS_LOWER_LIMIT <= address <= CLASS_UPPER_LIMIT:
       return self.__instance_slots[address]
-    elif self.__pointer_begin <= address <= self.__pointer_limit:
+    elif POINTER_LOWER_LIMIT <= address <= POINTER_UPPER_LIMIT:
       global is_pointer
       is_pointer = True
       return self.__pointer_slots[address]
     else:
-      raise Exception(f"Memory.Get {address}: value out of range.")
+      raise Exception(f"Memory.Get {address, unadjusted_address}: value out of range.")
 
   def print_memory(self, prefix):
     '''Print memory for debugging.'''
@@ -175,14 +166,11 @@ class Instance:
 
     # Prepare all the attributes that will be used by the instance.
     if class_name != '#global':
-      curr_class = class_name
-      while curr_class:
-        curr_attributes = (symbol_table[curr_class]['#funcs']['#attributes']
-                                       ['#vars'].values())
-        for attribute in curr_attributes:
-          if attribute['#type'] not in raw_var_types:
-            self.set(attribute['#address'], attribute['#type'])
-        curr_class = symbol_table[curr_class]['#parent']
+      curr_attributes = (symbol_table[class_name]['#funcs']['#attributes']
+                         ['#vars'].values())
+      for attribute in curr_attributes:
+        if attribute['#type'] not in raw_var_types:
+          self.set(attribute['#address'], attribute['#type'])
 
   def set(self, address: int, value, assigning_param=False):
     '''Set given address to given value.
