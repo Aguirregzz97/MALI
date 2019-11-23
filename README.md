@@ -4,15 +4,47 @@ MALI is an imperative, procedural, object-oriented programming language,
 compiled through Python and executed through a Python implemented virtual
 machine.
 
-<!-- ##### Table of contents
-[Data Types](#data_types) -->
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<!-- **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)* -->
 
-<!-- ##### Table of Contents
-[Headers](#headers)
-[Emphasis](#emphasis)
-...snip...
-<a name="headers"/>
-## Headers -->
+- [Program structure](#program-structure)
+- [Data Types](#data-types)
+  - [Primitive types](#primitive-types)
+    - [Literals](#literals)
+  - [Class types](#class-types)
+- [Scopes](#scopes)
+- [Global Space Members](#global-space-members)
+  - [Global Variables](#global-variables)
+  - [Functions](#functions)
+- [Classes](#classes)
+  - [Class Members](#class-members)
+  - [Access Types](#access-types)
+  - [Defining a Class](#defining-a-class)
+    - [Defining a Class with Inheritance](#defining-a-class-with-inheritance)
+    - [Member overriding](#member-overriding)
+- [Statements](#statements)
+  - [Calling Functions](#calling-functions)
+  - [Instantiating Classes](#instantiating-classes)
+- [Control Statements](#control-statements)
+  - [Condition Statement](#condition-statement)
+  - [Loop Statement](#loop-statement)
+- [Expressions](#expressions)
+  - [Arithmetic Operators](#arithmetic-operators)
+  - [Logical Operators](#logical-operators)
+  - [Relational Operators](#relational-operators)
+  - [Assignment Operatos](#assignment-operatos)
+  - [Associativity](#associativity)
+  - [Precedence](#precedence)
+    - [Modifying Precedence of Operators](#modifying-precedence-of-operators)
+  - [Logical Arithmetic](#logical-arithmetic)
+    - [Rules to consider](#rules-to-consider)
+- [Special Functions](#special-functions)
+    - [Write](#write)
+    - [Read](#read)
+- [Comments](#comments)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Program structure
 
@@ -42,6 +74,17 @@ The MALI language allows for the following primitive types:
 
 The language follows arithmetic logic, operations can be performed with char and
 bool values as if they were numeric.
+
+#### Literals
+
+The following table explains how to represent literals:
+
+Data Type | Representation | Example
+--------- | -------------- | -------
+Integer | Numeric value | 0, 1, 2, ...
+Float | Numeric value with decimal points | 0, 1, 2.0, 3.5, ...
+Char | Single char with single quotes | 'a', 'b', '\n'
+Bool | | true, false
 
 ### Class types
 
@@ -372,6 +415,21 @@ with any primitive data type:
         foo(65);
       }
 
+    ```
+    if (1) {...};
+
+    if ('\0') {...};
+    ```
+
+  * Boolean values are casted in the following way:
+
+      Data Type | True Values | False Values
+      --------- | ----------- | ------------
+      Integer | Non-zero values | zero
+      Float | Non-zero values | zero
+      char | Any character but null character | null character '\0'
+
+
 ## Special Functions
 
 The language provides the following special functions:
@@ -382,7 +440,9 @@ Allows you to print elements to console:
 
 write *expressions*;
 
-    write var_name, 1, 1.5, 'a', true;
+    write var_name, 1, 1.5, 'a', true, "string";
+
+* Note that strings can only be used
 
 #### Read
 
