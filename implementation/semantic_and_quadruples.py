@@ -75,7 +75,6 @@ def class_parent(class_parent: str):
   for var in current_class['#funcs']['#attributes']['#vars'].values():
     var_avail.next(var['#type'])
     var['#inherited'] = True
-    var['#assigned'] = False
 
 
 def finish_class():
@@ -145,16 +144,19 @@ def var_name(var_name: str, assigned=False):
       return 'Too many variables.'
     if current_function['#name'] == '#attributes':
       adjust = ATTRIBUTES_ADJUSTMENT
+      assigned = True
       if current_class['#name'] == '#global':
         adjust = GLOBAL_ADJUSTMENT
+        assigned = True
+
+  if is_param:
+    current_function['#param_count'] += 1
+    assigned = True
 
   current_function['#vars'][var_name] = (
       new_var_dict(current_type, address-adjust, current_access,
                    assigned=assigned))
 
-  if is_param:
-    current_function['#param_count'] += 1
-    current_function['#vars'][var_name]['#assigned'] = True
   last_declared_var = var_name
 
 
@@ -888,24 +890,6 @@ def call_parent(parent_name: str):
   func_data.class_name = classes[parent_name]['#name']
 
   func_call_stack.append(func_data)
-
-  assigned_addresses = []
-  q_aux = classes[parent_name]['#funcs']['init']['#start']
-  while quadruples[q_aux][0] != Operations.ENDPROC:
-    if (quadruples[q_aux][0] == Operations.EQUAL and
-        ATTRIBUTE_LOWER_LIMIT <= quadruples[q_aux][3] <= ATTRIBUTE_UPPER_LIMIT):
-      assigned_addresses.append(quadruples[q_aux][3])
-    q_aux += 1
-
-  for var in current_class['#funcs']['#attributes']['#vars'].values():
-    if var['#address'] in assigned_addresses and var['#inherited']:
-      var['#assigned'] = True
-
-
-  # for var in current_class['#funcs']['#attributes']['#vars'].values():
-  #   var_avail.next(var['#type'])
-  #   var['#inherited'] = True
-  #   var['#assigned'] = False
 
 
 def seen_local_func(func_name: str):

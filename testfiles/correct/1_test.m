@@ -131,45 +131,25 @@ main {
 
   y = 535;
 
-  write "1", '\n';
-
   a.init(5, 's', 'c');
-
-  write "2", '\n';
-
-  y = a.edad;
-
-  write "3", '\n';
 
   a.Ladrar();
 
-  a.Comer();
+  y = a.edad;
 
-  write "4", '\n';
+  a.Comer();
 
   y = a.calculateB(5);
 
-  write "5", '\n';
-
   printAlgo();
-
-  write "6", '\n';
 
   y = calculateA(5);
 
-  write "7", '\n';
-
   printAlgo();
-
-  write "8", '\n';
 
   perro.init(6, 'l', 'c');
 
-  write "9", '\n';
-
   perro.Ladrar();
-
-  write "10", '\n';
 
   write "Calculo del arreglo x[2][", x[1][2], "] = ", x[2][x[1][2]], '\n';
 }
