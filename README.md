@@ -442,7 +442,9 @@ write *expressions*;
 
     write var_name, 1, 1.5, 'a', true, "string";
 
-* Note that strings can only be used
+* Note that literal strings can only be used for printing. They should be
+  enclosed by double quotes.
+
 
 #### Read
 
