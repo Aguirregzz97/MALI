@@ -295,7 +295,7 @@ class MemoryManager:
       if value:
         value = self.get(value)
     if value is None and validate:
-      Error('Segmentation Fault.')
+      Error('Accessing unassigned memory space.')
     return value
 
   def push_instance(self, address: int, class_name: str):

@@ -757,9 +757,8 @@ def parse_and_generate_object_code(s):
   '''
   global input_str
   input_str = s
-  parser.parse(s, tracking=True)
   try:
-    pass
+    parser.parse(s, tracking=True)
   except:
     pass
 
