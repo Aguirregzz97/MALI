@@ -75,6 +75,7 @@ def class_parent(class_parent: str):
   for var in current_class['#funcs']['#attributes']['#vars'].values():
     var_avail.next(var['#type'])
     var['#inherited'] = True
+    var['#assigned'] = False
 
 
 def finish_class():
@@ -887,6 +888,24 @@ def call_parent(parent_name: str):
   func_data.class_name = classes[parent_name]['#name']
 
   func_call_stack.append(func_data)
+
+  assigned_addresses = []
+  q_aux = classes[parent_name]['#funcs']['init']['#start']
+  while quadruples[q_aux][0] != Operations.ENDPROC:
+    if (quadruples[q_aux][0] == Operations.EQUAL and
+        ATTRIBUTE_LOWER_LIMIT <= quadruples[q_aux][3] <= ATTRIBUTE_UPPER_LIMIT):
+      assigned_addresses.append(quadruples[q_aux][3])
+    q_aux += 1
+
+  for var in current_class['#funcs']['#attributes']['#vars'].values():
+    if var['#address'] in assigned_addresses and var['#inherited']:
+      var['#assigned'] = True
+
+
+  # for var in current_class['#funcs']['#attributes']['#vars'].values():
+  #   var_avail.next(var['#type'])
+  #   var['#inherited'] = True
+  #   var['#assigned'] = False
 
 
 def seen_local_func(func_name: str):

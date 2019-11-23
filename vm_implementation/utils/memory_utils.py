@@ -8,7 +8,7 @@ class Error:
   '''Prints error message and stops execution.'''
 
   def __init__(self, message: str):
-    print("Error:", message)
+    print("\nError:", message)
     sys.exit()
 
 

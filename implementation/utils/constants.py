@@ -5,6 +5,8 @@ from enum import Enum, IntEnum, auto
 
 # Memory addresses thresholds.
 
+ATTRIBUTE_LOWER_LIMIT = 7_000
+ATTRIBUTE_UPPER_LIMIT = 12_999
 VAR_LOWER_LIMIT = 13_000
 VAR_UPPER_LIMIT = 18_999
 TEMP_LOWER_LIMIT = 19_000

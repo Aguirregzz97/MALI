@@ -9,10 +9,11 @@ class Animal {
       int a;
     }
     edad = e;
+    anios_captivo = e;
   }
 
   public void Comer() {
-    write "Que rico";
+    write "Que rico", anios_captivo, '\n';
   }
 }
 
@@ -23,9 +24,10 @@ class Perro extends Animal {
 
   # El e dentro de Animal es una expresion que se agrega a los cuadruplos pero que no se
   # saca porque aun no programamos la llamada a funcion
-  init(int i, char n, char r) : Animal(i) {
+  init(int e, char n, char r) : Animal(e) {
     nombre = n;
     raza = r;
+    #edad = e;
   }
 
   public void Ladrar() {
@@ -140,6 +142,8 @@ main {
   write "3", '\n';
 
   a.Ladrar();
+
+  a.Comer();
 
   write "4", '\n';
 
