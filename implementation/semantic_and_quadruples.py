@@ -735,6 +735,13 @@ def register_func_end(is_main=False):
   else:
     generate_quadruple(Operations.ENDPROC, None, None, None)
 
+  # Delete the function's variables (but not the parameters).
+  count = 0
+  for var in current_function['#vars']:
+    if count > current_function['#param_count']:
+      del var
+    count += 1
+
 
 def register_return():
   '''Generate return quadruple.
@@ -1076,38 +1083,23 @@ def generate_output():
   '''Generates object code to be read by the virtual machine.'''
   global classes
 
-  data = {}
-  for v in classes['#global']['#funcs']['#attributes']['#vars'].values():
-    if type(v['#type']) == str:
-      value = v['#type']
-    else:
-      value = None
-    data[v['#address']] = value
-
   constants = {}
   for values in constants_with_addresses.values():
     constants.update(invert_dict(values))
 
   # Clean symbol table for use in virtual machine.
-  # TODO: delete inherited and info from arrays.
-  for v1 in classes.values():
-    del v1['#parent']
-    for v2 in v1['#funcs'].values():
-      v2['#type'] = v2['#type'].value
-      if '#access' in v2:
-        del v2['#access']
-      for v3 in v2['#vars'].values():
-        del v3['#assigned']
-        if type(v3['#type']) != str:
-          v3['#type'] = v3['#type'].value
-        if '#access' in v3:
-          del v3['#access']
-
-  del classes['#global']['#funcs']['#attributes']
+  for clas in classes.values():
+    del clas['#funcs']['#attributes']
+    del clas['#parent']
+    for func in clas['#funcs'].values():
+      del func['#name']
+      del func['#type']
+      del func['#access']
+      del func['#param_count']
+      del func['#vars']
 
   return {
-      'symbol_table': classes,
-      'data': data,
       'constants': constants,
-      'quadruples': quadruples
+      'quadruples': quadruples,
+      'symbol_table': classes
   }

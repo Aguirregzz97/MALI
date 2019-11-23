@@ -12,12 +12,11 @@ end = False
 
 def set_input(input):
   '''Grab data from the object code file.'''
-
   global memory, symbol_table
   symbol_table = input['symbol_table']
-  memory = MemoryManager(symbol_table)
-  for address, value in input['data'].items():
-    memory.set(address, value)
+  memory = MemoryManager()
+  # for address, value in input['data'].items():
+  #   memory.set(address, value)
   for address, value in input['constants'].items():
     memory.set(address, value)
   memory.push_new_procedure()

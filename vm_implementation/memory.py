@@ -3,10 +3,6 @@
 from vm_implementation.utils.memory_utils import *  # pylint: disable=unused-wildcard-import
 from vm_implementation.utils.constants import *  # pylint: disable=unused-wildcard-import
 
-
-symbol_table = None
-'''Symbol table from the object code.'''
-
 pending_to_set = None
 '''Used to assign pointers.'''
 
@@ -54,7 +50,7 @@ class Memory:
     elif BOOL_LOWER_LIMIT <= address <= BOOL_UPPER_LIMIT:
       self.__bool_slots[address] = cast_value(Types.BOOL, value)
     elif CLASS_LOWER_LIMIT <= address <= CLASS_UPPER_LIMIT:
-      self.__instance_slots[address] = Instance(value)
+      self.__instance_slots[address] = Instance()
     elif POINTER_LOWER_LIMIT <= address <= POINTER_UPPER_LIMIT:
       if address in self.__pointer_slots.keys() and self.__pointer_slots[address]:
         global pending_to_set
@@ -62,7 +58,8 @@ class Memory:
       else:
         self.__pointer_slots[address] = value
     else:
-      raise Exception(f"Memory.Set {address, unadjusted_address}: value out of range.")
+      raise Exception(
+          f"Memory.Set {address, unadjusted_address}: value out of range.")
 
   def get(self, unadjusted_address: int, printable=False):
     '''Get value stored in given address
@@ -86,13 +83,14 @@ class Memory:
         return bool(self.__bool_slots.get(address, None))
       return self.__bool_slots.get(address, None)
     elif CLASS_LOWER_LIMIT <= address <= CLASS_UPPER_LIMIT:
-      return self.__instance_slots[address]
+      return self.__instance_slots.get(address, None)
     elif POINTER_LOWER_LIMIT <= address <= POINTER_UPPER_LIMIT:
       global is_pointer
       is_pointer = True
       return self.__pointer_slots[address]
     else:
-      raise Exception(f"Memory.Get {address, unadjusted_address}: value out of range.")
+      raise Exception(
+          f"Memory.Get {address, unadjusted_address}: value out of range.")
 
   def print_memory(self, prefix):
     '''Print memory for debugging.'''
@@ -154,7 +152,7 @@ class Procedure:
 class Instance:
   '''Structure of a class intance.'''
 
-  def __init__(self, class_name: str):
+  def __init__(self):
     self.__attributes = Memory(ATTRIBUTE_LOWER_LIMIT)
 
     self.__procedure_stack = []
@@ -163,14 +161,6 @@ class Instance:
     self.__next_procedure = None
     '''Instance of the next Procedure. Assigned on ERA and pushed to
        procedure_stack on GOSUB.'''
-
-    # Prepare all the attributes that will be used by the instance.
-    if class_name != '#global':
-      curr_attributes = (symbol_table[class_name]['#funcs']['#attributes']
-                         ['#vars'].values())
-      for attribute in curr_attributes:
-        if attribute['#type'] not in raw_var_types:
-          self.set(attribute['#address'], attribute['#type'])
 
   def set(self, address: int, value, assigning_param=False):
     '''Set given address to given value.
@@ -202,15 +192,11 @@ class Instance:
       raise Exception(f"Instance.Get {address}: Value out of range.")
 
   def prepare_new_procedure(self, class_name: str, func_name: str):
-    '''Creates a new procedure and prepares its variables.
+    '''Creates a new procedure.
 
     Called by ERA. Keeps procedure on aux var until GOSUB is called.
     '''
     self.__next_procedure = Procedure()
-    var = symbol_table[class_name]['#funcs'][func_name]['#vars'].values()
-    for v in var:
-      if v['#type'] not in raw_var_types:
-        self.__next_procedure.set(v['#address'], v['#type'])
 
   def push_new_procedure(self):
     '''Pushes next procedure to procedure stack.
@@ -240,17 +226,14 @@ class Instance:
 class MemoryManager:
   '''Provides methods for Memory management.'''
 
-  def __init__(self, st: dict):
-    global symbol_table
-    symbol_table = st
-
+  def __init__(self):
     self.__data_segment = Memory(DATA_LOWER_LIMIT)
     '''Instance of Memory with global variables.'''
 
     self.__constant_segment = Memory(CTE_LOWER_LIMIT)
     '''Instance of Memory with constant values'''
 
-    self.__instance_stack = [Instance('#global')]
+    self.__instance_stack = [Instance()]
     '''Stack of Instance instances.'''
 
     self.__return = None
@@ -289,7 +272,7 @@ class MemoryManager:
         pending_to_set = None
         self.set(new_address, value, assigning_param)
 
-  def get(self, address: int, printable=False):
+  def get(self, address: int, printable=False, validate=True):
     '''Get value stored on a given address.
 
     Determines wheter the address is a global variable, constant value, or
@@ -311,14 +294,18 @@ class MemoryManager:
       is_pointer = False
       if value:
         value = self.get(value)
-    if value is None:
+    if value is None and validate:
       Error('Segmentation Fault.')
     return value
 
   def push_instance(self, address: int, class_name: str):
     '''Appends a new instance to the instance stack.'''
     self.__depth -= 1
-    self.__instance_stack.append(self.get(address))
+    instance = self.get(address, validate=False)
+    if not instance:
+      self.set(address, None)
+      instance = self.get(address)
+    self.__instance_stack.append(instance)
 
   def pop_instance(self):
     '''Pops instance from the instance stack.'''
