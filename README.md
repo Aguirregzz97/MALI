@@ -72,8 +72,7 @@ The MALI language allows for the following primitive types:
 * Bool: stores true (1) or false (0).
   * E.g.: true, fasle.
 
-The language follows arithmetic logic, operations can be performed with char and
-bool values as if they were numeric.
+The language follows arithmetic logic: [Logical Arithmetic](#logical-arithmetic)
 
 #### Literals
 
@@ -94,8 +93,9 @@ Besides the primitive types, MALI allows to define class instances.
     instanceName.attribute;
     instanceName.method();
 
-Please read the following sections for more information about class instances,
-and class members' calling.
+* For more information on how to define classes: [Classes](#classes) <br>
+* For more information on how to call instance members:
+  [Instantiating Classes](#instantiating-classes)
 
 ## Scopes
 
@@ -399,7 +399,7 @@ with any primitive data type:
     int a;
     a = 1 + 1.5 + 'a' + true;   # The result will be caster to an integer.
 
-#### Rules to consider
+#### Logical Arithmetic Rules to Consider
 
 * Any operation can be performed with any primitive data type.
 * Assigning the result of an expression will cast the result to the assigning
