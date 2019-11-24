@@ -46,12 +46,3 @@ class Types(Enum):
   VOID = 'void'
   POINTER = 'pointer'
   READ = 'read'
-
-
-raw_var_types = (
-    'int',
-    'float',
-    'char',
-    'bool',
-    'pointer',
-)
