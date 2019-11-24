@@ -445,7 +445,6 @@ write *expressions*;
 * Note that literal strings can only be used for printing. They should be
   enclosed by double quotes.
 
-
 #### Read
 
 Allows you to read user input from the console:
