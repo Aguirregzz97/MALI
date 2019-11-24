@@ -1,7 +1,8 @@
 # Run vm for MALI language.
 
-import sys
 from vm_implementation.vm import run
+import sys
+import os
 
 if __name__ == '__main__':
   if len(sys.argv) is not 2:
@@ -15,4 +16,11 @@ if __name__ == '__main__':
   with open(program_name, 'r', newline='\n') as file:
     input = eval(file.read())
 
-  run(input)
+  try:
+    run(input)
+  except KeyboardInterrupt:
+    print('Execution interrupted.')
+    try:
+      sys.exit(0)
+    except SystemExit:
+      os._exit(0)

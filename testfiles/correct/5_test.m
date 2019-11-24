@@ -7,9 +7,14 @@ func int fib(int n) {
 }
 
 main {
-  if (fib(10) == 55) {
-    write "Finished without errors!", '\n';
+  var {
+    int n, fib;
+  }
+  n = 10;
+  fib = fib(n);
+  if (fib == 55) {
+    write "Success! fib(", n, ") = ", fib, '\n';
   } else {
-    write "Error calculating fib", '\n';
+    write "Error! fib(", n, ") = ", fib, '\n';
   };
 }

@@ -38,7 +38,7 @@ machine.
   - [Precedence](#precedence)
     - [Modifying Precedence of Operators](#modifying-precedence-of-operators)
   - [Logical Arithmetic](#logical-arithmetic)
-    - [Rules to consider](#rules-to-consider)
+    - [Logical Arithmetic Rules to Consider](#logical-arithmetic-rules-to-consider)
 - [Special Functions](#special-functions)
     - [Write](#write)
     - [Read](#read)
