@@ -285,7 +285,7 @@ You can include an else block:
       write false;
     };
 
-You can also else-if blocks:
+You can also include else-if blocks:
 
     if (a > 1) {
       write "More than 1";
