@@ -56,7 +56,7 @@ def p_attr_dec(p):
 
 
 def p_init(p):
-  '''init : INIT r_seen_init LEFT_P param RIGHT_P init_factor r_finish_func'''
+  '''init : INIT r_seen_init LEFT_P params RIGHT_P init_factor r_finish_func'''
 
 
 def p_init_factor(p):
@@ -117,15 +117,18 @@ def p_complex_type(p):
                   | ID r_seen_type'''
 
 
+def p_func_type(p):
+  '''func_type : type
+               | VOID r_seen_type'''
+
+
 def p_modules(p):
   '''modules : FUNCTION proc modules
              | FUNCTION proc'''
 
 
 def p_proc(p):
-  '''proc : type ID r_funcName LEFT_P param RIGHT_P r_start_func proc_block \
-            r_finish_func
-          | VOID r_seen_type ID r_funcName LEFT_P param RIGHT_P r_start_func \
+  '''proc : func_type ID r_funcName LEFT_P params RIGHT_P r_start_func \
             proc_block r_finish_func'''
 
 
@@ -135,16 +138,16 @@ def p_proc_block(p):
                 | block'''
 
 
-def p_param(p):
-  '''param : r_seen_param params r_finish_param
-           | r_seen_param r_finish_param'''
-
-
 def p_params(p):
-  '''params : complex_type ID r_var_name COMMA params
-            | complex_type ID r_var_name
-            | complex_type ID r_var_name_arr arr_index COMMA params
-            | complex_type ID r_var_name_arr arr_index'''
+  '''params : r_seen_param param r_finish_param
+            | r_seen_param r_finish_param'''
+
+
+def p_param(p):
+  '''param : complex_type ID r_var_name COMMA param
+           | complex_type ID r_var_name'''
+  # | complex_type ID r_var_name_arr arr_index COMMA param
+  # | complex_type ID r_var_name_arr arr_index
 
 
 def p_statements(p):
@@ -302,12 +305,19 @@ def p_term(p):
 
 
 def p_factor(p):
-  '''factor : not LEFT_P r_seen_operator expression RIGHT_P r_pop_fake_bottom
-            | not cte
-            | sign LEFT_P r_seen_operator expression RIGHT_P r_pop_fake_bottom
-            | sign cte
-            | LEFT_P r_seen_operator expression RIGHT_P r_pop_fake_bottom
-            | cte'''
+  '''factor : sign factor_aux
+            | factor_aux'''
+  e = sq.solve_if_unary_operation()
+  if e:
+    handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_factor_aux(p):
+  '''factor_aux : not LEFT_P r_seen_operator expression RIGHT_P \
+                  r_pop_fake_bottom
+                | LEFT_P r_seen_operator expression RIGHT_P r_pop_fake_bottom
+                | not cte
+                | cte'''
   e = sq.solve_if_unary_operation()
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)

@@ -376,12 +376,12 @@ is right associative.
 The next list shows the precedence of operator from higher to lower:
 
 * not
-* or
-* and
 * +, - (unary)
 * *, /
 * +, -
 * \>, <, >=, <=, ==, <>
+* or
+* and
 * =
 
 #### Modifying Precedence of Operators
