@@ -329,7 +329,6 @@ To call a dimensionated variable, use the following syntax:
 
     a = x[3];  # Assign the value in the third position of x to a.
 
-
 ## Expressions
 
 ### Arithmetic Operators
