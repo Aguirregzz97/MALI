@@ -310,6 +310,26 @@ while (*condition*) { <br>
       cont = cont + 1;
     };
 
+## Dimensionated variables
+
+Dimensionated can be defined using the following syntax:
+
+*data_type* *var_name*[*integer_literal*];
+
+    int x[5];  # Array of 5 positions.
+
+Note that the size of the dimension can only be specified with integer literals.
+<br>
+Also note that there is no limit to the number of dimensions a variable can
+have. <br>
+
+To call a dimensionated variable, use the following syntax:
+
+*var_name*[expression];
+
+    a = x[3];  # Assign the value in the third position of x to a.
+
+
 ## Expressions
 
 ### Arithmetic Operators

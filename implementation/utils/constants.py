@@ -177,8 +177,8 @@ semantic_cube[Types.BOOL][Types.BOOL][Operations.TIMES] = Types.INT
 semantic_cube[Types.BOOL][Types.BOOL][Operations.DIV] = Types.INT
 semantic_cube[Types.BOOL][Types.BOOL][Operations.EQUAL] = Types.BOOL
 semantic_cube[Types.BOOL][Types.READ][Operations.EQUAL] = Types.BOOL
-semantic_cube[Types.BOOL][Operations.PLUS_UNARY] = Types.BOOL
-semantic_cube[Types.BOOL][Operations.MINUS_UNARY] = Types.BOOL
+semantic_cube[Types.BOOL][Operations.PLUS_UNARY] = Types.INT
+semantic_cube[Types.BOOL][Operations.MINUS_UNARY] = Types.INT
 semantic_cube[Types.BOOL][Operations.NOT] = Types.BOOL
 
 semantic_cube[Types.INT][Types.FLOAT][Operations.AND] = semantic_cube[Types.FLOAT][Types.INT][Operations.AND] = Types.BOOL
@@ -204,10 +204,10 @@ semantic_cube[Types.INT][Types.CHAR][Operations.DIFFERENT] = semantic_cube[Types
 semantic_cube[Types.INT][Types.CHAR][Operations.IS_EQUAL] = semantic_cube[Types.CHAR][Types.INT][Operations.IS_EQUAL] = Types.BOOL
 semantic_cube[Types.INT][Types.CHAR][Operations.LESS_EQUAL] = semantic_cube[Types.CHAR][Types.INT][Operations.LESS_EQUAL] = Types.BOOL
 semantic_cube[Types.INT][Types.CHAR][Operations.MORE_EQUAL] = semantic_cube[Types.CHAR][Types.INT][Operations.MORE_EQUAL] = Types.BOOL
-semantic_cube[Types.INT][Types.CHAR][Operations.PLUS] = semantic_cube[Types.CHAR][Types.INT][Operations.PLUS] = Types.CHAR
-semantic_cube[Types.INT][Types.CHAR][Operations.MINUS] = semantic_cube[Types.CHAR][Types.INT][Operations.MINUS] = Types.CHAR
-semantic_cube[Types.INT][Types.CHAR][Operations.TIMES] = semantic_cube[Types.CHAR][Types.INT][Operations.TIMES] = Types.CHAR
-semantic_cube[Types.INT][Types.CHAR][Operations.DIV] = semantic_cube[Types.CHAR][Types.INT][Operations.DIV] = Types.CHAR
+semantic_cube[Types.INT][Types.CHAR][Operations.PLUS] = semantic_cube[Types.CHAR][Types.INT][Operations.PLUS] = Types.INT
+semantic_cube[Types.INT][Types.CHAR][Operations.MINUS] = semantic_cube[Types.CHAR][Types.INT][Operations.MINUS] = Types.INT
+semantic_cube[Types.INT][Types.CHAR][Operations.TIMES] = semantic_cube[Types.CHAR][Types.INT][Operations.TIMES] = Types.INT
+semantic_cube[Types.INT][Types.CHAR][Operations.DIV] = semantic_cube[Types.CHAR][Types.INT][Operations.DIV] = Types.INT
 semantic_cube[Types.INT][Types.CHAR][Operations.EQUAL] = Types.INT
 semantic_cube[Types.CHAR][Types.INT][Operations.EQUAL] = Types.CHAR
 
@@ -267,10 +267,10 @@ semantic_cube[Types.CHAR][Types.BOOL][Operations.DIFFERENT] = semantic_cube[Type
 semantic_cube[Types.CHAR][Types.BOOL][Operations.IS_EQUAL] = semantic_cube[Types.BOOL][Types.CHAR][Operations.IS_EQUAL] = Types.BOOL
 semantic_cube[Types.CHAR][Types.BOOL][Operations.LESS_EQUAL] = semantic_cube[Types.BOOL][Types.CHAR][Operations.LESS_EQUAL] = Types.BOOL
 semantic_cube[Types.CHAR][Types.BOOL][Operations.MORE_EQUAL] = semantic_cube[Types.BOOL][Types.CHAR][Operations.MORE_EQUAL] = Types.BOOL
-semantic_cube[Types.CHAR][Types.BOOL][Operations.PLUS] = semantic_cube[Types.BOOL][Types.CHAR][Operations.PLUS] = Types.CHAR
-semantic_cube[Types.CHAR][Types.BOOL][Operations.MINUS] = semantic_cube[Types.BOOL][Types.CHAR][Operations.MINUS] = Types.CHAR
-semantic_cube[Types.CHAR][Types.BOOL][Operations.TIMES] = semantic_cube[Types.BOOL][Types.CHAR][Operations.TIMES] = Types.CHAR
-semantic_cube[Types.CHAR][Types.BOOL][Operations.DIV] = semantic_cube[Types.BOOL][Types.CHAR][Operations.DIV] = Types.CHAR
+semantic_cube[Types.CHAR][Types.BOOL][Operations.PLUS] = semantic_cube[Types.BOOL][Types.CHAR][Operations.PLUS] = Types.INT
+semantic_cube[Types.CHAR][Types.BOOL][Operations.MINUS] = semantic_cube[Types.BOOL][Types.CHAR][Operations.MINUS] = Types.INT
+semantic_cube[Types.CHAR][Types.BOOL][Operations.TIMES] = semantic_cube[Types.BOOL][Types.CHAR][Operations.TIMES] = Types.INT
+semantic_cube[Types.CHAR][Types.BOOL][Operations.DIV] = semantic_cube[Types.BOOL][Types.CHAR][Operations.DIV] = Types.INT
 semantic_cube[Types.CHAR][Types.BOOL][Operations.EQUAL] = Types.CHAR
 semantic_cube[Types.BOOL][Types.CHAR][Operations.EQUAL] = Types.BOOL
 semantic_cube[Types.BOOL][Types.READ][Operations.EQUAL] = Types.BOOL
