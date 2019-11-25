@@ -845,6 +845,10 @@ def seen_instance_attribute(attribute_name):
 
 
 def seen_assigning_instance_attribute(attribute_name: str):
+  '''Register attribute that will be assigned ones the expression is parsed.
+
+  Returns error if attribute is not found or is not accessible.
+  '''
   global owner_class
 
   attribute = Operand(attribute_name)
@@ -858,7 +862,10 @@ def seen_assigning_instance_attribute(attribute_name: str):
 
 
 def assign_instance_attribute():
+  '''Perform assignement on instance attribute.
 
+  Returns error if types cannot be assigned.
+  '''
   for instance in class_call_stack[-1]:
     generate_quadruple(Operations.ENTER_INSTANCE, instance,
                        None, instance.get_type())
@@ -866,7 +873,8 @@ def assign_instance_attribute():
   attribute = func_call_stack.pop()
   assigning = operand_stack.pop()
 
-  if not semantic_cube[assigning.get_type()][attribute.get_type()][Operations.EQUAL]:
+  if not (semantic_cube[assigning.get_type()][attribute.get_type()]
+                       [Operations.EQUAL]):
     return 'Incompatible types on assignment.'
 
   generate_quadruple(Operations.SET_FOREIGN, None, None, None)
