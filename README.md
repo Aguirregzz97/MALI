@@ -29,6 +29,7 @@ machine.
 - [Control Statements](#control-statements)
   - [Condition Statement](#condition-statement)
   - [Loop Statement](#loop-statement)
+- [Dimensionated variables](#dimensionated-variables)
 - [Expressions](#expressions)
   - [Arithmetic Operators](#arithmetic-operators)
   - [Logical Operators](#logical-operators)
