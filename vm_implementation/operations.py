@@ -184,7 +184,11 @@ def op_gosub(class_name: str, func_name: str, n: None):
 
 def op_param(op_address: int, n: None, param_address: int):
   '''Perform parameter pass to upcoming function.'''
-  memory.set(param_address, memory.get(op_address), assigning_param=True)
+  if op_address == '#read':
+    read = input()
+    memory.set(param_address, read, assigning_param=True)
+  else:
+    memory.set(param_address, memory.get(op_address), assigning_param=True)
   next_q()
 
 

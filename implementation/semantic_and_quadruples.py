@@ -873,8 +873,9 @@ def assign_instance_attribute():
   attribute = func_call_stack.pop()
   assigning = operand_stack.pop()
 
-  if not (semantic_cube[assigning.get_type()][attribute.get_type()]
+  if not (semantic_cube[attribute.get_type()][assigning.get_type()]
                        [Operations.EQUAL]):
+    print(assigning.get_type(), attribute.get_type())
     return 'Incompatible types on assignment.'
 
   generate_quadruple(Operations.SET_FOREIGN, None, None, None)

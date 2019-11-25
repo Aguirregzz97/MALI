@@ -88,7 +88,7 @@ main {
 
   n = 555;
 
-  student2.book.cost = n;
+  student2.book.cost = read;
   student.book.cost = student2.book.cost;
 
   write student.book.cost, ' ', student2.book.cost, '\n';
