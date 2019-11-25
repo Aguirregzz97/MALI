@@ -237,3 +237,13 @@ def op_ver(op_address, lower_limit, upper_limit):
   if not lower_limit <= memory.get(op_address) <= upper_limit:
     Error('Index out of bounds.')
   next_q()
+
+
+def op_set_foreign(n1: None, n2: None, n3: None):
+  memory.setting_param = True
+  next_q()
+
+
+def op_unset_foreign(n1: None, n2: None, n3: None):
+  memory.setting_param = False
+  next_q()

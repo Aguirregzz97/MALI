@@ -37,6 +37,8 @@ operations = [
     op_get_return,  # 29
     None,  # 30 (fake bottom)
     op_ver,  # 31
+    op_set_foreign,  # 32
+    op_unset_foreign,  # 33
 ]
 
 

@@ -81,6 +81,8 @@ class Operations(IntEnum):
   GET_RETURN = 29
   FAKE_BOTTOM = 30
   VER = 31
+  SET_FOREIGN = 32
+  UNSET_FOREIGN = 33
 
 
 str_operations = {

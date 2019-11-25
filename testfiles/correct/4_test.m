@@ -48,7 +48,7 @@ var {
   int x, y, z;
 }
 
-func int get5() {
+func int get10() {
   return 10;
 }
 
@@ -84,5 +84,12 @@ main {
   student2.book.page.print(m + z + student.get5() + student2.get5(), student.get5());
 
   write "Debe ser 10 10", '\n';
-  student2.book.page.print(z, get5());
+  student2.book.page.print(z, get10());
+
+  n = 555;
+
+  student2.book.cost = n;
+  student.book.cost = student2.book.cost;
+
+  write student.book.cost, ' ', student2.book.cost, '\n';
 }

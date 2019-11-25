@@ -375,8 +375,8 @@ is right associative.
 
 The next list shows the precedence of operator from higher to lower:
 
-* not
 * +, - (unary)
+* not
 * *, /
 * +, -
 * \>, <, >=, <=, ==, <>

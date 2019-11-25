@@ -833,6 +833,7 @@ def seen_instance_attribute(attribute_name):
   while len(class_call_stack[-1]) > 0:
     generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
     class_call_stack[-1].pop()
+  class_call_stack.pop()
 
   if attribute.get_type() in var_types:
     temp = build_temp_operand(attribute.get_type())
@@ -841,6 +842,41 @@ def seen_instance_attribute(attribute_name):
     type_stack.append(temp.get_type())
   else:
     return f'Invalid return type on expression.'
+
+
+def seen_assigning_instance_attribute(attribute_name: str):
+  global owner_class
+
+  attribute = Operand(attribute_name)
+  owner_class = classes[class_call_stack[-1][-1].get_type()]
+  populate_instance_attribute_call(attribute)
+
+  if attribute.get_error():
+    return attribute.get_error()
+
+  func_call_stack.append(attribute)
+
+
+def assign_instance_attribute():
+
+  for instance in class_call_stack[-1]:
+    generate_quadruple(Operations.ENTER_INSTANCE, instance,
+                       None, instance.get_type())
+
+  attribute = func_call_stack.pop()
+  assigning = operand_stack.pop()
+
+  if not semantic_cube[assigning.get_type()][attribute.get_type()][Operations.EQUAL]:
+    return 'Incompatible tpes on assignment.'
+
+  generate_quadruple(Operations.SET_FOREIGN, None, None, None)
+  generate_quadruple(Operations.PARAM, assigning, None, attribute)
+  generate_quadruple(Operations.UNSET_FOREIGN, None, None, None)
+
+  while len(class_call_stack[-1]) > 0:
+    generate_quadruple(Operations.EXIT_INSTANCE, None, None, None)
+    class_call_stack[-1].pop()
+  class_call_stack.pop()
 
 
 def seen_instance_func(func_name: str, is_init=False):
@@ -952,6 +988,8 @@ def done_passing_params(is_local=False):
   generate_quadruple(Operations.ERA, func_call_stack[-1].class_name,
                      func_call_stack[-1].func_name, None)
 
+  generate_quadruple(Operations.SET_FOREIGN, None, None, None)
+
   func = (classes[func_call_stack[-1].class_name]['#funcs']
                  [func_call_stack[-1].func_name])
   expecting_params = func['#param_count']
@@ -968,6 +1006,8 @@ def done_passing_params(is_local=False):
                        assigning_params[count]['#address'])
     count += 1
   param_stack.pop()
+
+  generate_quadruple(Operations.UNSET_FOREIGN, None, None, None)
 
   generate_quadruple(Operations.GOSUB, func_call_stack[-1].class_name,
                      func_call_stack[-1].func_name, None)

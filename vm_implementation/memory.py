@@ -143,10 +143,10 @@ class Procedure:
 
   def print_procedure(self, prefix):
     '''Print procedure for debugging.'''
-    print(prefix, 'vars')
-    self.__vars.print_memory(prefix + '\t')
     print(prefix, 'temps')
     self.__temps.print_memory(prefix + '\t')
+    print(prefix, 'vars')
+    self.__vars.print_memory(prefix + '\t')
 
 
 class Instance:
@@ -239,7 +239,7 @@ class MemoryManager:
     self.__return = None
     '''Saves value returned by function.'''
 
-    self.__setting_param = False
+    self.setting_param = False
     '''If true, sets values on next_procedure.'''
 
     self.__depth = 0
@@ -262,10 +262,10 @@ class MemoryManager:
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
       self.__constant_segment.set(address, value)
     else:
-      if self.__setting_param and not assigning_param:
+      if self.setting_param and not assigning_param:
         self.__instance_stack[self.__depth-1].set(address, value)
       else:
-        self.__instance_stack[-1].set(address, value, self.__setting_param)
+        self.__instance_stack[-1].set(address, value, self.setting_param)
       global pending_to_set
       if pending_to_set:
         new_address = pending_to_set
@@ -283,7 +283,7 @@ class MemoryManager:
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
       value = self.__constant_segment.get(address, printable)
     elif INSTANCE_LOWER_LIMIT <= address <= INSTANCE_UPPER_LIMIT:
-      if self.__setting_param:
+      if self.setting_param:
         value = self.__instance_stack[self.__depth-1].get(address, printable)
       else:
         value = self.__instance_stack[-1].get(address, printable)
@@ -315,12 +315,10 @@ class MemoryManager:
 
   def prepare_new_procedure(self, class_name: str, func_name: str):
     '''Calls prepare_new_procedure() on current instance.'''
-    self.__setting_param = True
     self.__instance_stack[-1].prepare_new_procedure(class_name, func_name)
 
   def push_new_procedure(self):
     '''Calls push_new_procedure() on current instance.'''
-    self.__setting_param = False
     self.__depth = 0
     self.__instance_stack[-1].push_new_procedure()
 
@@ -344,6 +342,7 @@ class MemoryManager:
     self.__data_segment.print_memory('\t')
     print('Constant segment')
     self.__constant_segment.print_memory('\t')
-    print('CURRENT INSTANCE')
-    if len(self.__instance_stack):
-      self.__instance_stack[-1].print_instance('\t')
+    print('Instances')
+    for instance in self.__instance_stack:
+      print('-------------------------')
+      instance.print_instance('\t')

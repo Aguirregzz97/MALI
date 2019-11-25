@@ -56,7 +56,7 @@ def p_attr_dec(p):
 
 
 def p_init(p):
-  '''init : INIT r_seen_init LEFT_P params RIGHT_P init_factor r_finish_func'''
+  '''init : INIT r_seen_init params init_factor r_finish_func'''
 
 
 def p_init_factor(p):
@@ -128,7 +128,7 @@ def p_modules(p):
 
 
 def p_proc(p):
-  '''proc : func_type ID r_funcName LEFT_P params RIGHT_P r_start_func \
+  '''proc : func_type ID r_funcName params r_start_func \
             proc_block r_finish_func'''
 
 
@@ -139,8 +139,8 @@ def p_proc_block(p):
 
 
 def p_params(p):
-  '''params : r_seen_param param r_finish_param
-            | r_seen_param r_finish_param'''
+  '''params : LEFT_P r_seen_param param r_finish_param RIGHT_P
+            | LEFT_P r_seen_param r_finish_param RIGHT_P'''
 
 
 def p_param(p):
@@ -157,6 +157,7 @@ def p_statements(p):
 
 def p_statement(p):
   '''statement : assign
+               | instance_attribute_assign
                | call
                | return
                | write
@@ -170,6 +171,28 @@ def p_assign(p):
             | ID r_seen_assigning_operand EQUAL READ r_do_read
             | arraccess EQUAL READ r_do_read'''
   e = sq.do_assign()
+  if e:
+    handle_error(p.lineno(1), p.lexpos(1), e)
+
+
+def p_instance_attribute_assign(p):
+  '''instance_attribute_assign : instance_go EQUAL expression
+                               | instance_go EQUAL READ r_do_read'''
+  sq.assign_instance_attribute()
+
+
+def p_instance_go(p):
+  '''instance_go : ID r_switch_first_instance instance_go_path'''
+
+
+def p_instance_go_path(p):
+  '''instance_go_path : DOT ID r_switch_instance instance_go_path
+                      | DOT ID r_seen_assigning_instance_attribute'''
+
+
+def p_r_seen_assigning_instance_attribute(p):
+  '''r_seen_assigning_instance_attribute : '''
+  e = sq.seen_assigning_instance_attribute(p[-1])
   if e:
     handle_error(p.lineno(1), p.lexpos(1), e)
 
@@ -195,8 +218,8 @@ def p_instance_path(p):
 
 def p_dot_call(p):
   '''dot_call : DOT ID r_seen_instance_func param_pass
-                | DOT INIT r_seen_instance_init param_pass
-                | DOT ID r_seen_instance_attribute'''
+              | DOT INIT r_seen_instance_init param_pass
+              | DOT ID r_seen_instance_attribute'''
 
 
 def p_param_pass(p):
@@ -283,12 +306,12 @@ def p_exp(p):
 
 
 def p_xp(p):
-  '''xp : x r_seen_x MORE_T r_seen_operator xp
-        | x r_seen_x LESS_T r_seen_operator xp
-        | x r_seen_x DIFFERENT r_seen_operator xp
-        | x r_seen_x ISEQUAL r_seen_operator xp
-        | x r_seen_x LESS_ET r_seen_operator xp
-        | x r_seen_x MORE_ET r_seen_operator xp
+  '''xp : x r_seen_x MORE_T r_seen_operator x r_seen_x
+        | x r_seen_x LESS_T r_seen_operator x r_seen_x
+        | x r_seen_x DIFFERENT r_seen_operator x r_seen_x
+        | x r_seen_x ISEQUAL r_seen_operator x r_seen_x
+        | x r_seen_x LESS_ET r_seen_operator x r_seen_x
+        | x r_seen_x MORE_ET r_seen_operator x r_seen_x
         | x r_seen_x'''
 
 
@@ -305,7 +328,7 @@ def p_term(p):
 
 
 def p_factor(p):
-  '''factor : sign factor_aux
+  '''factor : not factor_aux
             | factor_aux'''
   e = sq.solve_if_unary_operation()
   if e:
@@ -313,10 +336,10 @@ def p_factor(p):
 
 
 def p_factor_aux(p):
-  '''factor_aux : not LEFT_P r_seen_operator expression RIGHT_P \
+  '''factor_aux : sign LEFT_P r_seen_operator expression RIGHT_P \
                   r_pop_fake_bottom
                 | LEFT_P r_seen_operator expression RIGHT_P r_pop_fake_bottom
-                | not cte
+                | sign cte
                 | cte'''
   e = sq.solve_if_unary_operation()
   if e:
