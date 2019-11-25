@@ -178,7 +178,9 @@ def p_assign(p):
 def p_instance_attribute_assign(p):
   '''instance_attribute_assign : instance_go EQUAL expression
                                | instance_go EQUAL READ r_do_read'''
-  sq.assign_instance_attribute()
+  e = sq.assign_instance_attribute()
+  if e:
+    handle_error(p.lineno(1), p.lexpos(1), e)
 
 
 def p_instance_go(p):
@@ -188,13 +190,6 @@ def p_instance_go(p):
 def p_instance_go_path(p):
   '''instance_go_path : DOT ID r_switch_instance instance_go_path
                       | DOT ID r_seen_assigning_instance_attribute'''
-
-
-def p_r_seen_assigning_instance_attribute(p):
-  '''r_seen_assigning_instance_attribute : '''
-  e = sq.seen_assigning_instance_attribute(p[-1])
-  if e:
-    handle_error(p.lineno(1), p.lexpos(1), e)
 
 
 def p_call(p):
@@ -675,6 +670,13 @@ def p_r_seen_assigning_operand(p):
   e = sq.register_operand(p[-1], mark_assigned=True)
   if e:
     handle_error(p.lineno(-1), p.lexpos(-1), e)
+
+
+def p_r_seen_assigning_instance_attribute(p):
+  '''r_seen_assigning_instance_attribute : '''
+  e = sq.seen_assigning_instance_attribute(p[-1])
+  if e:
+    handle_error(p.lineno(1), p.lexpos(1), e)
 
 
 def p_r_arr_dim(p):

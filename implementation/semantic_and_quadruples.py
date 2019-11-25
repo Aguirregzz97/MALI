@@ -867,7 +867,7 @@ def assign_instance_attribute():
   assigning = operand_stack.pop()
 
   if not semantic_cube[assigning.get_type()][attribute.get_type()][Operations.EQUAL]:
-    return 'Incompatible tpes on assignment.'
+    return 'Incompatible types on assignment.'
 
   generate_quadruple(Operations.SET_FOREIGN, None, None, None)
   generate_quadruple(Operations.PARAM, assigning, None, attribute)
