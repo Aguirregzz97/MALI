@@ -229,7 +229,7 @@ expecting_init = False
 class_call_stack = []
 '''Class call stack used to parse function and method calls.'''
 
-func_call_stack = []
+proc_call_stack = []
 '''Function call stack used to parse function and method calls.'''
 
 param_stack = []
@@ -858,7 +858,7 @@ def seen_assigning_instance_attribute(attribute_name: str):
   if attribute.get_error():
     return attribute.get_error()
 
-  func_call_stack.append(attribute)
+  proc_call_stack.append(attribute)
 
 
 def assign_instance_attribute():
@@ -870,7 +870,7 @@ def assign_instance_attribute():
     generate_quadruple(Operations.ENTER_INSTANCE, instance,
                        None, instance.get_type())
 
-  attribute = func_call_stack.pop()
+  attribute = proc_call_stack.pop()
   assigning = operand_stack.pop()
 
   if not (semantic_cube[attribute.get_type()][assigning.get_type()]
@@ -892,7 +892,7 @@ def seen_instance_func(func_name: str, is_init=False):
   '''Register call to a function from an instance.
 
   Populate FuncData from func name.
-  Append func to func_call_stack.
+  Append func to proc_call_stack.
 
   Return error if FuncData has error.
   '''
@@ -904,14 +904,14 @@ def seen_instance_func(func_name: str, is_init=False):
   if func_data.error:
     return func_data.error
 
-  func_call_stack.append(func_data)
+  proc_call_stack.append(func_data)
 
 
 def call_parent(parent_name: str):
   '''Prepare the call to an inherited parent method.
 
   Populate operand with parent name and append to class_call_stack.
-  Populate FuncData with parent's init and append to func_call_stack.
+  Populate FuncData with parent's init and append to proc_call_stack.
 
   Return error if class had no defined parent.
   Return error if operan has error.
@@ -934,14 +934,14 @@ def call_parent(parent_name: str):
   func_data.func_type = Types.VOID
   func_data.class_name = classes[parent_name]['#name']
 
-  func_call_stack.append(func_data)
+  proc_call_stack.append(func_data)
 
 
 def seen_local_func(func_name: str):
   '''Actions on call to local function.
 
   Append operand with current class to class_call_stack.
-  Append FuncData to func_call_stack.
+  Append FuncData to proc_call_stack.
 
   Return error if FuncData has error.
   '''
@@ -956,9 +956,9 @@ def seen_local_func(func_name: str):
 
   class_op = Operand(current_class['#name'])
   class_op.set_type(current_class['#name'])
-  class_call_stack.append([class_op])
+  class_call_stack.append([])
 
-  func_call_stack.append(func_data)
+  proc_call_stack.append(func_data)
 
 
 def start_passing_params():
@@ -994,13 +994,13 @@ def done_passing_params(is_local=False):
     for instance in class_call_stack[-1]:
       generate_quadruple(Operations.ENTER_INSTANCE, instance,
                          None, instance.get_type())
-  generate_quadruple(Operations.ERA, func_call_stack[-1].class_name,
-                     func_call_stack[-1].func_name, None)
+  generate_quadruple(Operations.ERA, proc_call_stack[-1].class_name,
+                     proc_call_stack[-1].func_name, None)
 
   generate_quadruple(Operations.SET_FOREIGN, None, None, None)
 
-  func = (classes[func_call_stack[-1].class_name]['#funcs']
-                 [func_call_stack[-1].func_name])
+  func = (classes[proc_call_stack[-1].class_name]['#funcs']
+                 [proc_call_stack[-1].func_name])
   expecting_params = func['#param_count']
   assigning_params = list(func['#vars'].values())
   if len(param_stack[-1]) != expecting_params:
@@ -1018,8 +1018,8 @@ def done_passing_params(is_local=False):
 
   generate_quadruple(Operations.UNSET_FOREIGN, None, None, None)
 
-  generate_quadruple(Operations.GOSUB, func_call_stack[-1].class_name,
-                     func_call_stack[-1].func_name, None)
+  generate_quadruple(Operations.GOSUB, proc_call_stack[-1].class_name,
+                     proc_call_stack[-1].func_name, None)
 
   if not is_local:
     while len(class_call_stack[-1]) > 0:
@@ -1027,15 +1027,15 @@ def done_passing_params(is_local=False):
       class_call_stack[-1].pop()
   class_call_stack.pop()
 
-  if func_call_stack[-1].func_type in var_types:
-    temp = build_temp_operand(func_call_stack[-1].func_type)
+  if proc_call_stack[-1].func_type in var_types:
+    temp = build_temp_operand(proc_call_stack[-1].func_type)
     generate_quadruple(Operations.GET_RETURN, temp, None, None)
     operand_stack.append(temp)
     type_stack.append(temp.get_type())
   else:
     operand_stack.append(Types.VOID)
     type_stack.append(Types.VOID)
-  func_call_stack.pop()
+  proc_call_stack.pop()
 
   operator_stack.pop()
 
