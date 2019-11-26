@@ -11,7 +11,7 @@ main {
 
   cont = 0;
   while (cont < 5) {
-    write arr[cont], '\n';
+    write arr[arr[cont]], '\n';
     cont = cont + 1;
   };
 

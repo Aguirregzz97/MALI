@@ -1094,7 +1094,7 @@ def arr_access_2():
 def arr_access_3():
   var, dim = pila_dimensionada[-1]
   index = operand_stack[-1]
-  if index.get_type() not in var_types != Types.POINTER:
+  if index.get_type() not in var_types and index.get_type() != Types.POINTER:
     return 'Invalid type for index'
   generate_quadruple(Operations.VER, index, 0, var['#dims'][dim - 1]['#limsup'])
   if len(var['#dims']) > dim:
