@@ -19,7 +19,6 @@ def set_input(input):
   #   memory.set(address, value)
   for address, value in input['constants'].items():
     memory.set(address, value)
-  memory.push_new_procedure()
 
 
 def should_end():
@@ -69,10 +68,17 @@ def op_div(l_op_address: int, r_op_address: int, result_address: int):
   next_q()
 
 
-def op_plus(l_op_address: int, r_op_address: int, result_address: int):
+def op_plus(l_op_address: int, r_op_address: int, result_address):
   '''Perform addition.'''
+  if type(result_address) == str:
+    result_address = int(result_address[1:-1])
+    setting_pointer = True
+  else:
+    setting_pointer = False
+
   memory.set(result_address,
-             memory.get(l_op_address) + memory.get(r_op_address))
+             memory.get(l_op_address) + memory.get(r_op_address),
+             setting_pointer=setting_pointer)
   next_q()
 
 

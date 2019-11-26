@@ -105,11 +105,11 @@ main {
 
   write z, '\n';
 
-  if (y > b) {
+  if (1 > 1) {
     write "True", '\n';
-  } elif (y < b) {
+  } elif (2 < 2) {
     write "False", '\n';
-  } elif (c < b) {
+  } elif (2 < 2) {
     write "False2", '\n';
   } else {
     write "Neither", '\n';

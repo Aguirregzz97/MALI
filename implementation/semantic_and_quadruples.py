@@ -1094,8 +1094,8 @@ def arr_access_2():
 def arr_access_3():
   var, dim = pila_dimensionada[-1]
   index = operand_stack[-1]
-  if index.get_type() != Types.INT and index.get_type() != Types.POINTER:
-    return 'Index has to be an integer'
+  if index.get_type() not in var_types != Types.POINTER:
+    return 'Invalid type for index'
   generate_quadruple(Operations.VER, index, 0, var['#dims'][dim - 1]['#limsup'])
   if len(var['#dims']) > dim:
     aux = operand_stack.pop()
@@ -1126,7 +1126,7 @@ def arr_access_5():
   aux = operand_stack.pop()
   t = build_temp_operand(Types.POINTER)
   generate_quadruple(Operations.PLUS, aux, get_or_create_cte_address(
-      var['#address'], Types.INT), t)
+      var['#address'], Types.INT), f'({t.get_raw()})')
   operand_stack.append(t)
   operator_stack.pop()
 

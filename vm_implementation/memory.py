@@ -35,7 +35,8 @@ class Memory:
     self.__address_adjust = adjust
     '''Address adjustment for the memory block.'''
 
-  def set(self, unadjusted_address: int, value, assign=False):
+  def set(self, unadjusted_address: int, value, assign=False,
+          setting_pointer=False):
     '''Set given address with given value.
 
     Find value type by the address and save it in the corresponding slot.
@@ -52,11 +53,11 @@ class Memory:
     elif CLASS_LOWER_LIMIT <= address <= CLASS_UPPER_LIMIT:
       self.__instance_slots[address] = Instance()
     elif POINTER_LOWER_LIMIT <= address <= POINTER_UPPER_LIMIT:
-      if address in self.__pointer_slots.keys() and self.__pointer_slots[address]:
+      if setting_pointer:
+        self.__pointer_slots[address] = value
+      else:
         global pending_to_set
         pending_to_set = self.__pointer_slots[address]
-      else:
-        self.__pointer_slots[address] = value
     else:
       raise Exception(
           f"Memory.Set {address, unadjusted_address}: value out of range.")
@@ -115,16 +116,16 @@ class Procedure:
     self.__temps = Memory(TEMP_LOWER_LIMIT)
     '''Stores procedure temporals.'''
 
-  def set(self, address: int, value):
+  def set(self, address: int, value, setting_pointer=False):
     '''Set given address to given value.
 
     Determines wheter the address is a variable or a temporal, and calls set on
     the corresponding memory.
     '''
     if VAR_LOWER_LIMIT <= address <= VAR_UPPER_LIMIT:
-      self.__vars.set(address, value)
+      self.__vars.set(address, value, setting_pointer=setting_pointer)
     elif TEMP_LOWER_LIMIT <= address <= TEMP_UPPER_LIMIT:
-      self.__temps.set(address, value)
+      self.__temps.set(address, value, setting_pointer=setting_pointer)
     else:
       raise Exception(f"Procedure.Set {address}: value out of range.")
 
@@ -162,19 +163,22 @@ class Instance:
     '''Instance of the next Procedure. Assigned on ERA and pushed to
        procedure_stack on GOSUB.'''
 
-  def set(self, address: int, value, assigning_param=False):
+  def set(self, address: int, value, assigning_param=False,
+          setting_pointer=False):
     '''Set given address to given value.
 
     Determines wheter the address is an attribute or a variable from a
     procedure, and calls set on the corresponding memory.
     '''
     if ATTRIBUTE_LOWER_LIMIT <= address <= ATTRIBUTE_UPPER_LIMIT:
-      self.__attributes.set(address, value)
+      self.__attributes.set(address, value, setting_pointer=setting_pointer)
     elif PROCEDURE_LOWER_LIMIT <= address <= PROCEDURE_UPPER_LIMIT:
       if assigning_param:
-        self.__next_procedure.set(address, value)
+        self.__next_procedure.set(address, value,
+                                  setting_pointer=setting_pointer)
       else:
-        self.__procedure_stack[-1].set(address, value)
+        self.__procedure_stack[-1].set(address, value,
+                                       setting_pointer=setting_pointer)
     else:
       raise Exception(f"Instance.Set {address}: value out of range.")
 
@@ -204,6 +208,7 @@ class Instance:
     Called by GOSUB.
     '''
     self.__procedure_stack.append(self.__next_procedure)
+    self.__next_procedure = None
 
   def pop_procedure(self):
     '''Pops procedure from procedure stack.
@@ -251,26 +256,30 @@ class MemoryManager:
     self.push_new_procedure()
     self.__depth = 0
 
-  def set(self, address: int, value, assigning_param=False):
+  def set(self, address: int, value, assigning_param=False,
+          setting_pointer=False):
     '''Set given address to given value.
 
     Determines wheter the address is a global variable, constant value, or
     comes from an instance, and calls set on the corresponding memory.
     '''
     if DATA_LOWER_LIMIT <= address <= DATA_UPPER_LIMIT:
-      self.__data_segment.set(address, value)
+      self.__data_segment.set(address, value, setting_pointer=setting_pointer)
     elif CTE_LOWER_LIMIT <= address <= CTE_UPPER_LIMIT:
-      self.__constant_segment.set(address, value)
+      self.__constant_segment.set(address, value,
+                                  setting_pointer=setting_pointer)
     else:
       if self.setting_param and not assigning_param:
-        self.__instance_stack[self.__depth-1].set(address, value)
+        self.__instance_stack[self.__depth-1].set(address, value,
+                                                  setting_pointer=setting_pointer)
       else:
-        self.__instance_stack[-1].set(address, value, self.setting_param)
+        self.__instance_stack[-1].set(address, value, self.setting_param,
+                                      setting_pointer=setting_pointer)
       global pending_to_set
       if pending_to_set:
         new_address = pending_to_set
         pending_to_set = None
-        self.set(new_address, value, assigning_param)
+        self.set(new_address, value, assigning_param=assigning_param)
 
   def get(self, address: int, printable=False, validate=True):
     '''Get value stored on a given address.
@@ -292,8 +301,7 @@ class MemoryManager:
     global is_pointer
     if is_pointer:
       is_pointer = False
-      if value:
-        value = self.get(value)
+      value = self.get(value, printable)
     if value is None and validate:
       Error('Accessing unassigned memory space.')
     return value
