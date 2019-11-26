@@ -12,8 +12,8 @@ main {
   n = 10;
   fib = fib(n);
   if (fib == 55) {
-    write "Success! fib(", n, ") = ", fib, '\n';
+    write "Success!", '\n';
   } else {
-    write "Error! fib(", n, ") = ", fib, '\n';
+    write "Error!", '\n';
   };
 }
