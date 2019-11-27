@@ -1066,6 +1066,8 @@ def done_passing_params(is_local=False):
 
 
 def add_arr_dim(dimension_size):
+  if current_class['#name'] != '#global' and current_function['#name'] == '#attributes' and current_access == Access.PUBLIC:
+    return 'An array may only be global, local, private or protected, not public.'
   if current_type not in var_types:
     return 'An array can store only primitive type_stack'
   if dimension_size < 1:
