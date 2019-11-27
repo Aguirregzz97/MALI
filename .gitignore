@@ -1,6 +1,7 @@
 mali_runtests.py
 parsetab.py
 *.mr
+*.malio
 *.out
 /.vscode
 
