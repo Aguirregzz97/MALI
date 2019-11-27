@@ -152,6 +152,9 @@ def var_name(var_name: str, assigned=False):
   if is_param:
     current_function['#param_count'] += 1
     assigned = True
+    if current_type not in var_types:
+      return (f'Cannot declare {var_name} as a param. ' +
+              'Params can only have primitive types')
 
   current_function['#vars'][var_name] = (
       new_var_dict(current_type, address-adjust, current_access,
