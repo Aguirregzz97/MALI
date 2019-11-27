@@ -14,7 +14,10 @@ if __name__ == '__main__':
 
   # Compile program.
   with open(program_name, 'r', newline='\n') as file:
-    object_code = parse_and_generate_object_code(file.read())
-    if object_code:
-      with open(program_name + 'r', 'w') as file:
-        file.write(object_code)
+    try:
+      object_code = parse_and_generate_object_code(file.read())
+      if object_code:
+        with open(program_name + 'r', 'w') as file:
+          file.write(object_code)
+    except:
+      pass
