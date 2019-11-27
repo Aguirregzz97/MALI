@@ -10,14 +10,12 @@ if __name__ == '__main__':
     raise SyntaxError('mali needs 1 file.')
   program_name = sys.argv[1]
 
-  # TODO: Verificar extension del archivo
-
   # Compile program.
   with open(program_name, 'r', newline='\n') as file:
     try:
       object_code = parse_and_generate_object_code(file.read())
       if object_code:
-        with open(program_name + 'r', 'w') as file:
+        with open(program_name + 'o', 'w') as file:
           file.write(object_code)
     except:
       pass
