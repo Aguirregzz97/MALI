@@ -144,10 +144,14 @@ def p_params(p):
 
 
 def p_param(p):
-  '''param : complex_type ID r_var_name COMMA param
-           | complex_type ID r_var_name'''
+  '''param : param_var COMMA param
+           | param_var'''
   # | complex_type ID r_var_name_arr arr_index COMMA param
   # | complex_type ID r_var_name_arr arr_index
+
+def p_param_var(p):
+  '''param_var : complex_type ID r_var_name
+               | complex_type ID r_var_name arr_dim'''
 
 
 def p_statements(p):
@@ -800,12 +804,12 @@ def parse_and_generate_object_code(s):
 
   # Quadruples printing for debugging
   # if not error:
-  #   pp.pprint(sq.classes)
-  #   q_count = 0
-  #   for q, vq in zip(sq.quadruples, sq.visual_quadruples):
-  #     print('{0:<5} {1:<40} {2:<40}'.format(
-  #         str(q_count) + ':', str(q), str(vq)))
-  #     q_count += 1
+    #pp.pprint(sq.classes)
+    #q_count = 0
+    #for q, vq in zip(sq.quadruples, sq.visual_quadruples):
+      #print('{0:<5} {1:<40} {2:<40}'.format(
+        #str(q_count) + ':', str(q), str(vq)))
+      #q_count += 1
 
   if error:
     return

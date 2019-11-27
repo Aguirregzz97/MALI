@@ -188,13 +188,16 @@ def op_gosub(class_name: str, func_name: str, n: None):
   memory.push_new_procedure()
 
 
-def op_param(op_address: int, n: None, param_address: int):
+def op_param(op_address: int, n: bool, param_address: int):
   '''Perform parameter pass to upcoming function.'''
   if op_address == '#read':
     read = input()
     memory.set(param_address, read, assigning_param=True)
   else:
-    memory.set(param_address, memory.get(op_address), assigning_param=True)
+    if n:
+      memory.set(param_address, memory.get(op_address, validate=False), assigning_param=True)
+    else:
+      memory.set(param_address, memory.get(op_address), assigning_param=True)
   next_q()
 
 

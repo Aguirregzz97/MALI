@@ -989,7 +989,17 @@ def done_passing_params(is_local=False):
   Returns error if passed param quantity is different from the expected
   quantity.
   Returns error if param cannot be assigned.
+  Returns error if param dimension is not as expected.
   '''
+  def validate_dimensions(dim1, dim2):
+    '''Validates if two arrays dimensions are equal.'''
+    if len(dim1) != len(dim2):
+      return False
+    for dim1_size, dim2_size in zip(dim1, dim2):
+      if dim1_size != dim2_size:
+        return False
+    return True
+
   if not is_local:
     for instance in class_call_stack[-1]:
       generate_quadruple(Operations.ENTER_INSTANCE, instance,
@@ -1011,8 +1021,27 @@ def done_passing_params(is_local=False):
     if not (semantic_cube[assigning_params[count]['#type']]
                          [sending_param.get_type()][Operations.EQUAL]):
       return f"Incompatible param #{count+1} on call to \'{func['#name']}\'"
-    generate_quadruple(Operations.PARAM, sending_param, None,
-                       assigning_params[count]['#address'])
+    if '#dims' in assigning_params[count]:
+      sending_param_name = sending_param.get_raw()
+      if sending_param_name in current_function['#vars']:
+        var = current_function['#vars'][sending_param_name]
+      elif sending_param_name in current_class['#funcs']['#attributes']['#vars']:
+        var = current_class['#funcs']['#attributes']['#vars'][sending_param_name]
+      elif sending_param_name in classes['#global']['#funcs']['#attributes']['#vars']:
+        var = classes['#global']['#funcs']['#attributes']['#vars'][sending_param_name]
+      else:
+        return f'Variable \'{sending_param_name}\' does not exist'
+      if '#dims' not in var:
+        return f'Variable \'{sending_param_name}\' has no dimensions'
+      if not validate_dimensions(assigning_params[count]['#dims'], var['#dims']):
+        return f'Variable \'{sending_param_name}\' has different dimensions.'
+      for i in range(var['#r']):
+        generate_quadruple(Operations.PARAM, sending_param, True,
+                         assigning_params[count]['#address'] + i)
+        sending_param.set_address(sending_param.get_address() + 1)
+    else:
+      generate_quadruple(Operations.PARAM, sending_param, None,
+        assigning_params[count]['#address'])
     count += 1
   param_stack.pop()
 
@@ -1081,6 +1110,8 @@ def arr_access_2():
   type_stack.pop()
   if id in current_function['#vars']:
     var = current_function['#vars'][id]
+  elif id in current_class['#funcs']['#attributes']['#vars']:
+    var = current_class['#funcs']['#attributes']['#vars'][id]
   elif id in classes['#global']['#funcs']['#attributes']['#vars']:
     var = classes['#global']['#funcs']['#attributes']['#vars'][id]
   else:
