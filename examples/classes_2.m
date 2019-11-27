@@ -57,9 +57,9 @@ main {
 
   val = addition(addition(250, 250),
                  customer1.bank_account.balance.total);
-  if (val == 1000) {
-    write "Success!", '\n';
-  } else {
-    write "Error!", '\n';
-  };
+
+  write val, '\n';
+
+  customer1.bank_account.balance.total = 0;
+  write customer1.bank_account.balance.total, '\n';
 }
