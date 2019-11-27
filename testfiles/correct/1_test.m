@@ -20,14 +20,16 @@ class Animal {
 class Perro extends Animal {
   attr {
     public char nombre, raza;
+    private int ye[5];
   }
 
   # El e dentro de Animal es una expresion que se agrega a los cuadruplos pero que no se
   # saca porque aun no programamos la llamada a funcion
-  init(int e, char n, char r) : Animal(e) {
+  init(int e, char n, char r[10], char s) : Animal(e) {
     nombre = n;
-    raza = r;
+    raza = r[0];
     #edad = e;
+    ye[1] = 2;
   }
 
   public void Ladrar() {
@@ -35,7 +37,11 @@ class Perro extends Animal {
       int z;
     }
     write "Woof Woof", '\n';
+    write "Woof soy un ", raza, '\n';
     write edad, '\n';
+    write ye[1], '\n';
+    ye[1] = ye[1] * 5;
+    write ye[1], '\n';
   }
 
   public int calculateB(int a){
@@ -66,6 +72,27 @@ func void printAlgo() {
   write "Algo", '\n';
 }
 
+func void printCubo2x2x2(char cubo[2][2][2]){
+  var {
+    int i, j, k;
+  }
+  write "Imprimiendo cubo", '\n';
+  i = 0;
+  while(i < 2){
+    j = 0;
+    while(j < 2){
+      k = 0;
+      while (k < 2){
+        write cubo[i][j][k];
+        k = k + 1;
+      };
+      j = j + 1;
+    };
+    i = i + 1;
+  };
+  write " TKM", '\n';
+}
+
 func int calculateA(int b){
   if (b < 5){
     return b * 5;
@@ -80,6 +107,7 @@ main {
     int x[5][10];
     int z,y,w,b,c;
     bool flag;
+    char d[10], e[2][2][2];
   }
 
   cont = 5;
@@ -130,9 +158,11 @@ main {
   y = b + c;
 
   y = 535;
+  d[0] = 'x';
+  write "Passing", '\n';
+  a.init(5, 's', d, 's');
 
-  a.init(5, 's', 'c');
-
+  a.Ladrar();
   a.Ladrar();
 
   y = a.edad;
@@ -147,9 +177,20 @@ main {
 
   printAlgo();
 
-  perro.init(6, 'l', 'c');
+  perro.init(6, 'l', d, 's');
 
   perro.Ladrar();
 
   write "Calculo del arreglo x[2][", x[1][2], "] = ", x[2][x[1][2]], '\n';
+
+  write "Setteando cubo", '\n';
+  e[0][0][0] = 'M';
+  e[0][0][1] = 'A';
+  e[0][1][0] = 'U';
+  e[0][1][1] = 'G';
+  e[1][0][0] = 'U';
+  e[1][0][1] = 'A';
+  e[1][1][0] = 'M';
+  e[1][1][1] = 'A';
+  printCubo2x2x2(e);
 }
