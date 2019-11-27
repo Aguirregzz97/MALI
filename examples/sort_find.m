@@ -21,13 +21,13 @@ func void sort() {
   };
 }
 
-func bool find(int x) {
+func bool find(int x, int values[10]) {
   var {
     int i;
   }
   i = 0;
-  while (i < n) {
-    if (i == x) {
+  while (i < 10) {
+    if (values[i] == x) {
       return true;
     };
     i = i + 1;
@@ -64,11 +64,11 @@ main {
   };
   write '\n';
 
-  if (find(5)) {
+  if (find(5, arr)) {
     write "Found 5", '\n';
   };
 
-  if (not find(15)) {
+  if (not find(15, arr)) {
     write "Did not find 15", '\n';
   };
 }
