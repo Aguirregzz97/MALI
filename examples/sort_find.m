@@ -2,37 +2,10 @@ var {
   int arr[10], n;
 }
 
-func void print() {
-  var {
-    int i, j;
-  }
-  i = 0;
-  while (i < n) {
-    write arr[i], '\n';
-    i = i + 1;
-  };
-}
-
-func bool validate_sort() {
-  var {
-    int i;
-  }
-
-  i = 0;
-  while (i < n-1) {
-    if (arr[i] > arr[i+1]) {
-      return false;
-    };
-    i = i + 1;
-  };
-  return true;
-}
-
 func void sort() {
   var {
     int i, j, aux;
   }
-
   i = 0;
   while (i < n-1) {
     j = 0;
@@ -52,7 +25,6 @@ func bool find(int x) {
   var {
     int i;
   }
-
   i = 0;
   while (i < n) {
     if (i == x) {
@@ -65,6 +37,7 @@ func bool find(int x) {
 
 main {
   var {
+    int i;
     bool error;
   }
 
@@ -84,24 +57,18 @@ main {
 
   sort();
 
-  #print();
+  i = 0;
+  while (i < n) {
+    write arr[i], ' ';
+    i = i + 1;
+  };
+  write '\n';
 
-  if (not validate_sort()) {
-    write "Error on sort!";
-    error = true;
+  if (find(5)) {
+    write "Found 5", '\n';
   };
 
-  if (not find(5)) {
-    write "Error on find when it exists!";
-    error = true;
-  };
-
-  if (find(15)) {
-    write "Error on find when it does not exists!";
-    error = true;
-  };
-
-  if (not error) {
-    write "Success!", '\n';
+  if (not find(15)) {
+    write "Did not find 15", '\n';
   };
 }

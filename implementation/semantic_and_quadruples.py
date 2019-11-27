@@ -1140,9 +1140,11 @@ def generate_output():
     constants.update(invert_dict(values))
 
   # Clean symbol table for use in virtual machine.
+  del classes['#global']['#funcs']['#main']
   for clas in classes.values():
     del clas['#funcs']['#attributes']
     del clas['#parent']
+    del clas['#name']
     for func in clas['#funcs'].values():
       del func['#name']
       del func['#type']
