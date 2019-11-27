@@ -297,7 +297,7 @@ class MemoryManager:
       else:
         value = self.__instance_stack[-1].get(address, printable)
     else:
-      Error(f'Invalid address {address}.')
+      raise Exception(f'Invalid address {address}.')
     global is_pointer
     if is_pointer:
       is_pointer = False
