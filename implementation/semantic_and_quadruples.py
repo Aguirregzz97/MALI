@@ -1007,8 +1007,6 @@ def done_passing_params(is_local=False):
   generate_quadruple(Operations.ERA, proc_call_stack[-1].class_name,
                      proc_call_stack[-1].func_name, None)
 
-  generate_quadruple(Operations.SET_FOREIGN, None, None, None)
-
   func = (classes[proc_call_stack[-1].class_name]['#funcs']
                  [proc_call_stack[-1].func_name])
   expecting_params = func['#param_count']
@@ -1044,8 +1042,6 @@ def done_passing_params(is_local=False):
         assigning_params[count]['#address'])
     count += 1
   param_stack.pop()
-
-  generate_quadruple(Operations.UNSET_FOREIGN, None, None, None)
 
   generate_quadruple(Operations.GOSUB, proc_call_stack[-1].class_name,
                      proc_call_stack[-1].func_name, None)

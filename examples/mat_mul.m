@@ -3,40 +3,6 @@ var {
   int ren, col;
 }
 
-func void print_raw() {
-  var {
-    int r, c;
-  }
-  r = 0;
-  while (r < ren) {
-    c = 0;
-    while (c < col) {
-      write res[r][c], ' ';
-      c = c + 1;
-    };
-    r = r + 1;
-  };
-}
-
-func bool validate() {
-  var {
-    int r, c;
-  }
-  r = 0;
-  while (r < ren) {
-    c = 0;
-    while (c < col) {
-      if (res[r][c] <> mat1[r][c]) {
-        return false;
-      };
-      c = c + 1;
-    };
-    r = r + 1;
-  };
-
-  return true;
-}
-
 func void multiply() {
   var {
     int r, c, k;
@@ -55,12 +21,6 @@ func void multiply() {
       c = c + 1;
     };
     r = r + 1;
-  };
-
-  # print_raw();
-
-  if (validate()) {
-    write "Success!", '\n';
   };
 }
 
@@ -110,4 +70,15 @@ main {
   res[2][2] = 0;
 
   multiply();
+
+  r = 0;
+  while (r < ren) {
+    c = 0;
+    while (c < col) {
+      write res[r][c], ' ';
+      c = c + 1;
+    };
+    r = r + 1;
+    write '\n';
+  };
 }

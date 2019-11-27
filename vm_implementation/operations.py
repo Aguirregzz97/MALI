@@ -183,6 +183,7 @@ def op_gotof(op_address: int, n: None, position: int):
 def op_gosub(class_name: str, func_name: str, n: None):
   '''Change context to function.'''
   global q, aux_q
+  memory.setting_param = False
   aux_q.append(q + 1)
   q = symbol_table[class_name]['#funcs'][func_name]['#start']
   memory.push_new_procedure()
@@ -195,7 +196,8 @@ def op_param(op_address: int, n: bool, param_address: int):
     memory.set(param_address, read, assigning_param=True)
   else:
     if n:
-      memory.set(param_address, memory.get(op_address, validate=False), assigning_param=True)
+      memory.set(param_address, memory.get(
+          op_address, validate=False), assigning_param=True)
     else:
       memory.set(param_address, memory.get(op_address), assigning_param=True)
   next_q()
@@ -204,6 +206,7 @@ def op_param(op_address: int, n: bool, param_address: int):
 def op_era(class_name: str, func_name: str, n: None):
   '''Create activation registry for given function.'''
   memory.prepare_new_procedure(class_name, func_name)
+  memory.setting_param = True
   next_q()
 
 

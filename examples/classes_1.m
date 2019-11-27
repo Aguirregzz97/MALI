@@ -63,40 +63,21 @@ main {
     Square square;
     Triangle triangle;
     Trapezoid trapezoid;
-    bool error;
   }
-
-  error = false;
 
   rectangle.init(5, 6);
   rectangle.calculate_area();
-  if (rectangle.get_area() <> 30) {
-    write "Error calculating rectangle area", '\n';
-    error = true;
-  };
+  write rectangle.get_area(), '\n';
 
   square.init(5);
   square.calculate_area();
-  if (square.get_area() <> 25) {
-    write "Error calculating square area", '\n';
-    error = true;
-  };
+  write square.get_area(), '\n';
 
   triangle.init(5, 6);
   triangle.calculate_area();
-  if (triangle.get_area() <> 15) {
-    write "Error calculating triangle area", '\n';
-    error = true;
-  };
+  write triangle.get_area(), '\n';
 
   trapezoid.init(5, 6, 7);
   trapezoid.calculate_area();
-  if (trapezoid.get_area() <> 38.5) {
-    write "Error calculating trapezoid area", '\n';
-    error = true;
-  };
-
-  if (not error) {
-    write "Success!", '\n';
-  };
+  write trapezoid.get_area(), '\n';
 }
