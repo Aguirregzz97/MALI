@@ -60,7 +60,6 @@ main {
   while (cont < 10) {
     cont = cont + 1;
   };
-
   if (cont <> 10) {
     write "Error on while", '\n';
     error = true;

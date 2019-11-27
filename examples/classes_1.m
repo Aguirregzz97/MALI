@@ -8,10 +8,6 @@ class Polygon {
     width = w;
   }
 
-  public void calculate_area() {
-    area =  length * width;
-  }
-
   public float get_area() {
     return area;
   }
@@ -20,6 +16,10 @@ class Polygon {
 class Rectangle extends Polygon {
   init (float l, float w) : Polygon(l, w) {
 
+  }
+
+  public void calculate_area() {
+    area =  length * width;
   }
 }
 
