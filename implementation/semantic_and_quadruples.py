@@ -133,7 +133,7 @@ def var_name(var_name: str, assigned=False):
   adjust = 0
   if (var_name in current_function['#vars'] and
           not current_function['#vars'][var_name]['#inherited']):
-    return f"Redeclared variable: {var_name}"
+    return f"Redeclared variable: \'{var_name}\'"
   if (var_name in current_function['#vars'] and
       current_function['#vars'][var_name]['#inherited'] and
           current_function['#vars'][var_name]['#access'] != Access.PRIVATE):
@@ -1035,11 +1035,11 @@ def done_passing_params(is_local=False):
         return f'Variable \'{sending_param_name}\' has different dimensions.'
       for i in range(var['#r']):
         generate_quadruple(Operations.PARAM, sending_param, True,
-                         assigning_params[count]['#address'] + i)
+                           assigning_params[count]['#address'] + i)
         sending_param.set_address(sending_param.get_address() + 1)
     else:
       generate_quadruple(Operations.PARAM, sending_param, None,
-        assigning_params[count]['#address'])
+                         assigning_params[count]['#address'])
     count += 1
   param_stack.pop()
 
