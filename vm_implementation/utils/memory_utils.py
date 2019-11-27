@@ -25,14 +25,16 @@ def cast_value(cast_type: Types, value):
   if value is None:
     return None
   if cast_type == Types.INT:
-    if value_type == str:
-      value = float(value)
     try:
+      if value_type == str:
+        value = int(value)
       return int(value)
     except:
       Error('Cannot cast int.')
   elif cast_type == Types.FLOAT:
     try:
+      if value_type == str:
+        value = float(value)
       return float(value)
     except:
       Error('Cannot cast float.')
